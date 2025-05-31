@@ -18,3 +18,7 @@ Repositório criado para armazenar os arquivos da dissertação do PPgTI
     * Install Containernet, which already includes Mininet-WiFi:
         - Follow the steps to install Containernet according to the repository below
         - Containernet: https://github.com/ramonfontes/containernet
+    * Install VSCode
+        Instaled using snap
+    * Install WireShark
+        Instaled using snap
