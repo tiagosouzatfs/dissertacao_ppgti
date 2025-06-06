@@ -19,6 +19,6 @@ Repositório criado para armazenar os arquivos da dissertação do PPgTI
         - Follow the steps to install Containernet according to the repository below
         - Containernet: https://github.com/ramonfontes/containernet
     * Install VSCode
-        Instaled using snap
+        - Instaled using snap
     * Install WireShark
-        Instaled using snap
+        - Instaled using snap

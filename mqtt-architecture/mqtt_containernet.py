@@ -1,11 +1,11 @@
+from time import sleep
+
 from containernet.net import Containernet
 from containernet.cli import CLI
 from containernet.term import makeTerm
 
 from mininet.node import Controller
 from mininet.log import info, setLogLevel
-
-from time import sleep
 
 
 setLogLevel('info')
@@ -98,6 +98,8 @@ makeTerm(pb3, \
          cmd="bash -c 'mosquitto_pub -h 10.0.0.10 -t sensors/waterlevel -m 10;'"
 )
 #makeTerm(pb3)        
+
+sleep(3)
 
 info("CLI containernet\n")
 CLI(net)
