@@ -1,14 +1,19 @@
-FROM alpine:3.22
+#FROM alpine:3.22.0
 
-# Necessário instalar o pacote build-base para
-#    gcc	Compilador C
-#    g++	Compilador C++
-#    libc-dev	Headers da libc
-#    make	Utilitário de compilação (Makefile)
-#    binutils
-RUN apk update && \
-    apk add --no-cache bash && \
-    apk add --no-cache git build-base
+#RUN apk update && \
+#    apk add --no-cache bash git make build-base ethtool net-tools
+
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    vim \
+    git \
+    build-essential \
+    ethtool \
+    iproute2 \
+    net-tools && \
+    rm -rf /var/lib/apt/lists/*
 
 # Clonar o repositório mqtt-sn-tools
 RUN git clone -b main --single-branch \
