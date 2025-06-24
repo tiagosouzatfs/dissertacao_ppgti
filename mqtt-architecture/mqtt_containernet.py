@@ -4,18 +4,18 @@ from containernet.net import Containernet
 from containernet.cli import CLI
 from containernet.term import makeTerm
 
-from mininet.node import Controller
+#from mininet.node import Controller
 from mininet.log import info, setLogLevel
-
 
 setLogLevel('info')
 
-net = Containernet(controller=Controller)
+#net = Containernet(controller=Controller)
+net = Containernet()
 info("Adicionando controlador\n")
-net.addController('c0')
+#net.addController('c0')
 
 info("Adicionando switch\n")
-s1 = net.addSwitch('s1')
+s1 = net.addSwitch('s1', failMode='standalone')
 
 info("Adicionando broker Mosquitto\n")
 '''
