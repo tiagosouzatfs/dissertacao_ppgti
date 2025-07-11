@@ -41,6 +41,8 @@ const bit<8> MQTTSN_WILLMSGRESP = 0x1D;
 //const bit<8> Encapsulated message = 0xFE;
 //const bit<8> reserved = 0xFF;
 
+/*Vou deixar aqui para testar o uso do header mqttsn_flags_t,
+se der certo, pode apagar essas consts*/
 /*Message MQTT-SN flags*/
 const bit<1> MQTTSN_FLAG_DUP0 = 0;
 const bit<1> MQTTSN_FLAG_DUP1 = 1;
@@ -66,6 +68,14 @@ const bit<8> MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID = 0x02;
 const bit<8> MQTTSN_RETURNCODE_REJECTED_NOT_SUPPORTED = 0x03;
 //const bit<8> MQTTSN_RETURNCODE_???? = 0x04-0xFF; // Reserved
 
+/*Segment UDP*/
+const bit<16> TYPE_UDP = 0x11;
+const bit<16> UDP_PORT = 1884;
+
+/*Segment TCP*/
+const bit<16> TYPE_TCP = 0x06;
+const bit<16> TCP_PORT = 1883;
+
 /*Packet IP*/
 const bit<16> TYPE_IPV4 = 0x800;
 
@@ -82,6 +92,22 @@ typedef bit<48> macAddr;
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
+
+//////////////////// MQTT Headers ////////////////////
+
+/*Message MQTT fixed header*/
+header MQTT_fixed_h {
+    bit<4> controlPacketType;
+    bit<4> flagsPacketType;
+    bit<8> remainingLength;
+}
+
+// Adicionar os headers das mensagens MQTT
+header MQTT_ {
+    /* empty */
+}
+
+//////////////////// MQTT-SN Headers ////////////////////
 
 /*Message MQTT-SN fixed header*/
 header MQTTSN_fixed_h {
@@ -111,7 +137,7 @@ header MQTTSN_connect_h {
     bit<8>     flags;
     bit<8>     protocolId;
     bit<16>    duration;
-    bit<16>    clientId; // TODO: how to do variable length in P4?
+    //bit<16>    clientId; // TODO: how to do variable length in P4?
 }
 
 /*Message MQTT-SN variable header CONNACK*/
@@ -144,7 +170,7 @@ header MQTTSN_willmsg_h {
 header MQTTSN_register_h {
     bit<16>    topicId;
     bit<16>    msgId;
-    bit<8>     topicName; // TODO: how to do variable length in P4?
+    //bit<8>     topicName; // TODO: how to do variable length in P4?
 }
 
 /*Message MQTT-SN variable header REGACK*/
@@ -251,6 +277,16 @@ header MQTTSN_willmsgresp_h {
     bit<8>     returnCode;
 }
 
+/*Message MQTT-SN global flags*/
+header MQTTSN_flags_h {
+    bit<1> dup;
+    bit<2> qos;
+    bit<1> retain;
+    bit<1> will;
+    bit<1> cleanSession;
+    bit<2> topicIdType;
+}
+
 /*Segment UDP*/
 header UDP_h {
     bit<16>    srcPort;
@@ -314,10 +350,22 @@ struct headers {
     MQTTSN_willmsgupd_h mqttsn_willmsgupd;
     MQTTSN_willtopicresp_h mqttsn_willtopicresp;
     MQTTSN_willmsgresp_h mqttsn_willmsgresp;
+    // Se não der certo o uso do header mqttsn_flags_h, pode apagar e usar as consts
+    MQTTSN_flags_h mqttsn_flags;
+    // Adicionar os headers das mensagens MQTT
+    //MQTT_fixed_h mqtt_fixed;
 }
 
 struct metadata {
     /* empty */
+}
+
+//Verificar o uso dos erros definidos abaixo
+// User-defined errors that may be signaled during parsing
+error {
+  IPv4OptionsNotSupported,
+  IPv4IncorrectVersion,
+  IPv4ChecksumError
 }
 
 /*************************************************************************
@@ -329,6 +377,109 @@ parser MyParser(packet_in packet,
                 inout metadata meta,
                 inout standard_metadata_t standard_metadata) {
     
+    state start {
+        packet.extract(hdr.ethernet);
+        transition select(hdr.ethernet.ethertype){
+            TYPE_IPV4: parse_ipv4;
+            default: accept;
+        }
+    }
+    state parse_ipv4 {
+        packet.extract(hdr.ipv4);
+        verify(hdr.ipv4.version == 4, error.IPv4IncorrectVersion);
+        transition select(hdr.ipv4.protocol) {
+            TYPE_UDP: parse_udp;
+            default: accept;
+        }
+    }
+    state parse_udp {
+        packet.extract(hdr.udp);
+        transition select(hdr.udp.dstPort) {
+            UDP_PORT: parse_mqttsn_fixed;
+            default: accept;
+        }
+    }
+    state parse_mqttsn_fixed {
+        packet.extract(hdr.mqttsn_fixed);
+        verify(hdr.mqttsn_fixed.lenght >= 2, error.IPv4OptionsNotSupported);
+        transition select(hdr.mqttsn_fixed.msgType) {
+            MQTTSN_ADVERTISE: parse_mqttsn_advertise;
+            MQTTSN_SEARCHGW: parse_mqttsn_searchgw;
+            MQTTSN_GWINFO: parse_mqttsn_gwinfo;
+            MQTTSN_CONNECT: parse_mqttsn_connect;
+            MQTTSN_CONNACK: parse_mqttsn_connack;
+            MQTTSN_WILLTOPICREQ: parse_mqttsn_willtopicreq;
+            MQTTSN_WILLTOPIC: parse_mqttsn_willtopic;
+            MQTTSN_WILLMSGREQ: parse_mqttsn_willmsgreq;
+            MQTTSN_WILLMSG: parse_mqttsn_willmsg;
+            MQTTSN_REGISTER: parse_mqttsn_register;
+            MQTTSN_REGACK: parse_mqttsn_regack;
+            MQTTSN_PUBLISH: parse_mqttsn_publish;
+            MQTTSN_PUBACK: parse_mqttsn_puback;
+            MQTTSN_PUBREC: parse_mqttsn_pubrec;
+            MQTTSN_PUBREL: parse_mqttsn_pubrel;
+            MQTTSN_PUBCOMP: parse_mqttsn_pubcomp;
+            MQTTSN_SUBSCRIBE: parse_mqttsn_subscribe;
+            MQTTSN_SUBACK: parse_mqttsn_suback;
+            MQTTSN_UNSUBSCRIBE: parse_mqttsn_unsubscribe;
+            MQTTSN_UNSUBACK: parse_mqttsn_unsuback;
+            MQTTSN_PINGREQ: parse_mqttsn_pingreq;
+            MQTTSN_PINGRESP: parse_mqttsn_pingresp;
+            MQTTSN_DISCONNECT: parse_mqttsn_disconnect;
+            MQTTSN_WILLTOPICUPD: parse_mqttsn_willtopicupd;
+            MQTTSN_WILLMSGUPD: parse_mqttsn_willmsgupd;
+            MQTTSN_WILLTOPICRESP: parse_mqttsn_willtopicresp;
+            MQTTSN_WILLMSGRESP: parse_mqttsn_willmsgresp;
+            default: accept; // TODO: handle unknown message types?
+        }
+    }
+    state parse_mqttsn_advertise {
+        packet.extract(hdr.mqttsn_advertise);
+        verify(hdr.mqttsn_fixed.lenght == 5, error.IPv4OptionsNotSupported);
+        transition accept;
+    }
+
+    state parse_mqttsn_searchgw {
+        packet.extract(hdr.mqttsn_searchgw);
+        verify(hdr.mqttsn_fixed.lenght == 3, error.IPv4OptionsNotSupported);
+        transition accept;
+    }
+
+    state parse_mqttsn_gwinfo {
+        packet.extract(hdr.mqttsn_gwinfo);
+        transition select(hdr.mqttsn_fixed.lenght) {
+            3: accept; // só gwId
+            7: parse_mqttsn_gwinfo_with_ip; // gwId + gwAdd
+            default: reject;
+        }
+    }
+    // Estado para tratar o caso em que gwAdd é incluído,
+    // como foi chamado via transition select, não foi necessário
+    // extrair o header mqttsn_gwinfo novamente com outro nome
+    state parse_mqttsn_gwinfo_with_ip {
+        packet.advance(32); // pula os 4 bytes do campo gwAdd
+        transition accept;
+    }
+
+    state parse_mqttsn_connect {
+        packet.extract(hdr.mqttsn_connect);
+        verify(hdr.mqttsn_fixed.lenght >= 6, error.IPv4OptionsNotSupported);
+        // pula a quantidade bits relacionados a veriável clientId
+        packet.advance(hdr.mqttsn_fixed.lenght - 6);
+        transition accept;
+    }
+
+    state parse_mqttsn_connack {
+        packet.extract(hdr.mqttsn_connack);
+        verify(hdr.mqttsn_fixed.lenght == 3, error.IPv4OptionsNotSupported);
+        transition accept;
+    }
+
+    state parse_mqttsn_willtopicreq {
+        // Sem campos variáveis nem fixos, apenas o fixed header
+        verify(hdr.mqttsn_fixed.lenght == 2, error.IPv4OptionsNotSupported);
+        transition accept;
+    }
 }
 
 /*************************************************************************
