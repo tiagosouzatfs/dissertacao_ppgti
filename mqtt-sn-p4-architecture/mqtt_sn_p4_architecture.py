@@ -27,13 +27,13 @@ def topology():
 
     path = os.path.dirname(os.path.abspath(__file__))
     json_file = '/root/mqtt_sn.json' # container directory
-    config = path + '/p4src/rules_statics_forward.txt'
+    config = path + '/routing/rules_statics_forward.txt'
     args = {'json': json_file, 'switch_config': config}
 
     info('*** Adding P4 Switch\n')
     # IPBASE: subnet from eth0 interface,
     s1 = net.addSwitch('s1', cls=DockerP4Switch,
-                       volumes=[path + "/p4src:/root"],
+                       volumes=[path + "./:/root"],
                        dimage="ramonfontes/bmv2", cpu_shares=20,
                        netcfg=True, thriftport=50001,
                        IPBASE="172.17.0.0/16", **args)
