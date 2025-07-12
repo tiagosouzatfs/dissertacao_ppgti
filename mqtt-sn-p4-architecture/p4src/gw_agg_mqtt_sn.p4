@@ -384,6 +384,7 @@ parser MyParser(packet_in packet,
             default: accept;
         }
     }
+
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
         verify(hdr.ipv4.version == 4, error.IPv4IncorrectVersion);
@@ -392,6 +393,7 @@ parser MyParser(packet_in packet,
             default: accept;
         }
     }
+
     state parse_udp {
         packet.extract(hdr.udp);
         transition select(hdr.udp.dstPort) {
@@ -399,6 +401,7 @@ parser MyParser(packet_in packet,
             default: accept;
         }
     }
+
     state parse_mqttsn_fixed {
         packet.extract(hdr.mqttsn_fixed);
         verify(hdr.mqttsn_fixed.lenght >= 2, error.IPv4OptionsNotSupported);
@@ -433,6 +436,7 @@ parser MyParser(packet_in packet,
             default: accept; // TODO: handle unknown message types?
         }
     }
+    
     state parse_mqttsn_advertise {
         packet.extract(hdr.mqttsn_advertise);
         verify(hdr.mqttsn_fixed.lenght == 5, error.IPv4OptionsNotSupported);
@@ -518,7 +522,23 @@ control MyEgress(inout headers hdr,
 
 control MyComputeChecksum(inout headers hdr, 
                           inout metadata meta) {
-    apply {  }
+    apply {
+        update_checksum(
+            hdr.ipv4.isValid(),
+                { hdr.ipv4.version,
+                  hdr.ipv4.ihl,
+                  hdr.ipv4.diffserv,
+                  hdr.ipv4.totalLen,
+                  hdr.ipv4.identification,
+                  hdr.ipv4.flags,
+                  hdr.ipv4.fragOffset,
+                  hdr.ipv4.ttl,
+                  hdr.ipv4.protocol,
+                  hdr.ipv4.srcAddr,
+                  hdr.ipv4.dstAddr },
+            hdr.ipv4.hdrChecksum,
+            HashAlgorithm.csum16);
+    }
 }
 
 /*************************************************************************
@@ -527,7 +547,40 @@ control MyComputeChecksum(inout headers hdr,
 
 control MyDeparser(packet_out packet, 
                    in headers hdr) {
-    apply {  }
+    apply {
+        packet.emit(hdr.ethernet);
+        packet.emit(hdr.ipv4);
+        packet.emit(hdr.udp);
+        packet.emit(hdr.mqttsn_fixed);
+        packert.emit(hdr.mqttsn_advertise);
+        packet.emit(hdr.mqttsn_searchgw);
+        packet.emit(hdr.mqttsn_gwinfo);
+        packet.emit(hdr.mqttsn_connect);
+        packet.emit(hdr.mqttsn_connack);
+        packet.emit(hdr.mqttsn_willtopicreq);
+        packet.emit(hdr.mqttsn_willtopic);
+        packet.emit(hdr.mqttsn_willmsgreq);
+        packet.emit(hdr.mqttsn_willmsg);
+        packet.emit(hdr.mqttsn_register);
+        packet.emit(hdr.mqttsn_regack);
+        packet.emit(hdr.mqttsn_publish);
+        packet.emit(hdr.mqttsn_puback);
+        packet.emit(hdr.mqttsn_pubrec);
+        packet.emit(hdr.mqttsn_pubrel);
+        packet.emit(hdr.mqttsn_pubcomp);
+        packet.emit(hdr.mqttsn_subscribe);
+        packet.emit(hdr.mqttsn_suback);
+        packet.emit(hdr.mqttsn_unsubscribe);
+        packet.emit(hdr.mqttsn_unsuback);
+        packet.emit(hdr.mqttsn_pingreq);
+        packet.emit(hdr.mqttsn_pingresp);
+        packet.emit(hdr.mqttsn_disconnect);
+        packet.emit(hdr.mqttsn_willtopicupd);
+        packet.emit(hdr.mqttsn_willmsgupd);
+        packet.emit(hdr.mqttsn_willtopicresp);
+        packet.emit(hdr.mqttsn_willmsgresp);
+        packet.emit(hdr.mqttsn_flags);
+    }
 }
 
 /*************************************************************************
@@ -543,3 +596,5 @@ V1Switch(
     MyComputeChecksum(),
     MyDeparser()
 ) main;
+
+// p4c --target bmv2 --arch v1model gw_agg_mqtt_sn.p4
