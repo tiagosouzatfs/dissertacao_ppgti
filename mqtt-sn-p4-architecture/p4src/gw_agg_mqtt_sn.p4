@@ -16,7 +16,7 @@ const bit<8> MQTTSN_CONNACK = 0x05;
 const bit<8> MQTTSN_WILLTOPICREQ = 0x06;
 const bit<8> MQTTSN_WILLTOPIC = 0x07;
 const bit<8> MQTTSN_WILLMSGREQ = 0x08;
-const bit<8> MQTTSN_MQTTSN_WILLMSG = 0x09;
+const bit<8> MQTTSN_WILLMSG = 0x09;
 const bit<8> MQTTSN_REGISTER = 0x0A;
 const bit<8> MQTTSN_REGACK = 0x0B;
 const bit<8> MQTTSN_PUBLISH = 0x0C;
@@ -69,11 +69,11 @@ const bit<8> MQTTSN_RETURNCODE_REJECTED_NOT_SUPPORTED = 0x03;
 //const bit<8> MQTTSN_RETURNCODE_???? = 0x04-0xFF; // Reserved
 
 /*Segment UDP*/
-const bit<16> TYPE_UDP = 0x11;
+const bit<8> TYPE_UDP = 0x11;
 const bit<16> UDP_PORT = 1884;
 
 /*Segment TCP*/
-const bit<16> TYPE_TCP = 0x06;
+const bit<8> TYPE_TCP = 0x06;
 const bit<16> TCP_PORT = 1883;
 
 /*Packet IP*/
@@ -130,7 +130,7 @@ header MQTTSN_searchgw_h {
 /*Message MQTT-SN variable header GWINFO*/
 header MQTTSN_gwinfo_h {
     bit<8>      gwId;
-    varbit<32>  gwAdd; // IPv4 address gw (only present if message is sent by a client)
+    bit<32>  gwAdd; // IPv4 address gw (only present if message is sent by a client)
 }
 
 /*Message MQTT-SN variable header CONNECT*/
@@ -138,7 +138,7 @@ header MQTTSN_connect_h {
     bit<8>       flags;
     bit<8>       protocolId;
     bit<16>      duration;
-    varbit<184>  clientId; // max 23 caracteres * 1 byte (8 bits) = 184 bits
+    bit<184>  clientId; // max 23 caracteres * 1 byte (8 bits) = 184 bits
 }
 
 /*Message MQTT-SN variable header CONNACK*/
@@ -154,7 +154,7 @@ header MQTTSN_willtopicreq_h {
 /*Message MQTT-SN variable header WILLTOPIC*/
 header MQTTSN_willtopic_h {
     bit<8>       flags;
-    varbit<255>  willTopic; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  willTopic; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header WILLMSGREQ*/
@@ -164,14 +164,14 @@ header MQTTSN_willmsgreq_h {
 
 /*Message MQTT-SN variable header WILLMSG*/
 header MQTTSN_willmsg_h {
-    varbit<255>  willMsg; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  willMsg; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header REGISTER*/
 header MQTTSN_register_h {
     bit<16>      topicId;
     bit<16>      msgId;
-    varbit<255>  topicName; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  topicName; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header REGACK*/
@@ -186,7 +186,7 @@ header MQTTSN_publish_h {
     bit<8>       flags;
     bit<16>      topicId;
     bit<16>      msgId;
-    varbit<255>  data; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  data; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header PUBACK*/
@@ -216,7 +216,7 @@ header MQTTSN_subscribe_h {
     bit<8>       flags;
     bit<16>      msgId;
     bit<16>      topicId;
-    varbit<255>  topicName; // (opcional) Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  topicName; // (opcional) Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header SUBACK*/
@@ -232,7 +232,7 @@ header MQTTSN_unsubscribe_h {
     bit<8>       flags;
     bit<16>      msgId;
     bit<16>      topicId;
-    varbit<255>  topicName; // (opcional) Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  topicName; // (opcional) Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header UNSUBACK*/
@@ -242,7 +242,7 @@ header MQTTSN_unsuback_h {
 
 /*Message MQTT-SN variable header PINGREQ*/
 header MQTTSN_pingreq_h {
-    varbit<184>  clientId; // (opcional) max 23 caracteres * 1 byte (8 bits) = 184 bits
+    bit<184>  clientId; // (opcional) max 23 caracteres * 1 byte (8 bits) = 184 bits
 }
 
 /*Message MQTT-SN variable header PINGRESP*/
@@ -258,12 +258,12 @@ header MQTTSN_disconnect_h {
 /*Message MQTT-SN variable header WILLTOPICUPD*/
 header MQTTSN_willtopicupd_h {
     bit<8>       flags;
-    varbit<255>  willTopic; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  willTopic; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header WILLMSGUPD*/
 header MQTTSN_willmsgupd_h {
-    varbit<255>  willMsg; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  willMsg; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header WILLTOPICRESP*/
@@ -308,7 +308,6 @@ header IPv4_h {
     bit<16>      hdrChecksum;
     ipv4Addr     srcAddr;
     ipv4Addr     dstAddr;
-    varbit<320>  options;
 }
 
 /*Frame Ethernet*/
@@ -380,7 +379,7 @@ error {
     MQTT_SN_InvalidFlags,
 
     // Parsing geral
-    PacketTooShort,
+    //PacketTooShort,
     MalformedPacket,
     UnknownProtocol
 }
@@ -472,7 +471,7 @@ parser MyParser(packet_in packet,
         transition select(hdr.mqttsn_fixed.length) {
             3: accept; // só gwId
             7: parse_mqttsn_gwinfo_with_ip; // gwId + gwAdd
-            default: reject;
+            default: accept;
         }
     }
 
@@ -715,7 +714,7 @@ control MyComputeChecksum(inout headers hdr,
             hdr.ipv4.isValid(),
                 { hdr.ipv4.version,
                   hdr.ipv4.ihl,
-                  hdr.ipv4.diffserv,
+                  hdr.ipv4.diffServ,
                   hdr.ipv4.totalLen,
                   hdr.ipv4.identification,
                   hdr.ipv4.flags,
@@ -786,6 +785,7 @@ V1Switch(
 ) main;
 
 // docker run -dit --name=p4 --rm ramonfontes/bmv2:latest
-// docker exec -it p4 bash
 // docker cp mqtt-sn-p4-architecture/p4src p4:/tmp/
+// docker exec -it p4 bash
+// cd /tmp/p4src
 // p4c --target bmv2 --arch v1model gw_agg_mqtt_sn.p4
