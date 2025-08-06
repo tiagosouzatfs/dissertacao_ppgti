@@ -111,38 +111,39 @@ header MQTT_ {
 
 /*Message MQTT-SN fixed header*/
 header MQTTSN_fixed_h {
-    bit<8>      lenght;
-    bit<8>      msgType;
+    bit<8>  length;
+    //varbit<24>      length;
+    bit<8>  msgType;
 }
 
 /*Message MQTT-SN variable header ADVERTISE*/
 header MQTTSN_advertise_h {
-    bit<8>     gwId;
-    bit<16>    duration;
+    bit<8>   gwId;
+    bit<16>  duration;
 }
 
 /*Message MQTT-SN variable header SEARCHGW*/
 header MQTTSN_searchgw_h {
-    bit<8>     radius;
+    bit<8>  radius;
 }
 
 /*Message MQTT-SN variable header GWINFO*/
 header MQTTSN_gwinfo_h {
-    bit<8>     gwId;
-    bit<16>    gwAdd; // TODO: how to do variable length in P4? // IPv4 address (only present if message is sent by a client)
+    bit<8>      gwId;
+    varbit<32>  gwAdd; // IPv4 address gw (only present if message is sent by a client)
 }
 
 /*Message MQTT-SN variable header CONNECT*/
 header MQTTSN_connect_h {
-    bit<8>     flags;
-    bit<8>     protocolId;
-    bit<16>    duration;
-    //bit<16>    clientId; // TODO: how to do variable length in P4?
+    bit<8>       flags;
+    bit<8>       protocolId;
+    bit<16>      duration;
+    varbit<184>  clientId; // max 23 caracteres * 1 byte (8 bits) = 184 bits
 }
 
 /*Message MQTT-SN variable header CONNACK*/
 header MQTTSN_connack_h {
-    bit<8>     returnCode;
+    bit<8>  returnCode;
 }
 
 /*Message MQTT-SN variable header WILLTOPICREQ*/
@@ -152,8 +153,8 @@ header MQTTSN_willtopicreq_h {
 
 /*Message MQTT-SN variable header WILLTOPIC*/
 header MQTTSN_willtopic_h {
-    bit<8>     flags;
-    bit<8>     willTopic; // TODO: how to do variable length in P4?
+    bit<8>       flags;
+    varbit<255>  willTopic; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header WILLMSGREQ*/
@@ -163,86 +164,85 @@ header MQTTSN_willmsgreq_h {
 
 /*Message MQTT-SN variable header WILLMSG*/
 header MQTTSN_willmsg_h {
-    bit<8>     willMsg; // TODO: how to do variable length in P4?
+    varbit<255>  willMsg; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header REGISTER*/
 header MQTTSN_register_h {
-    bit<16>    topicId;
-    bit<16>    msgId;
-    //bit<8>     topicName; // TODO: how to do variable length in P4?
+    bit<16>      topicId;
+    bit<16>      msgId;
+    varbit<255>  topicName; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header REGACK*/
 header MQTTSN_regack_h {
-    bit<16>    topicId;
-    bit<16>    msgId;
-    bit<8>     returnCode;
+    bit<16>  topicId;
+    bit<16>  msgId;
+    bit<8>   returnCode;
 }
 
 /*Message MQTT-SN variable header PUBLISH*/
 header MQTTSN_publish_h {
-    bit<8>     flags;
-    bit<16>    topicId;
-    bit<16>    msgId;
-    bit<8>     data; // TODO: how to do variable length in P4?
+    bit<8>       flags;
+    bit<16>      topicId;
+    bit<16>      msgId;
+    varbit<255>  data; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header PUBACK*/
 header MQTTSN_puback_h {
-    bit<16>    topicId;
-    bit<16>    msgId;
-    bit<8>     returnCode;
+    bit<16>  topicId;
+    bit<16>  msgId;
+    bit<8>   returnCode;
 }
 
 /*Message MQTT-SN variable header PUBREC*/
 header MQTTSN_pubrec_h {
-    bit<16>    msgId;
+    bit<16>  msgId;
 }
 
 /*Message MQTT-SN variable header PUBREL*/
 header MQTTSN_pubrel_h {
-    bit<16>    msgId;
+    bit<16>  msgId;
 }
 
 /*Message MQTT-SN variable header PUBCOMP*/
 header MQTTSN_pubcomp_h {
-    bit<16>    msgId;
+    bit<16>  msgId;
 }
 
 /*Message MQTT-SN variable header SUBSCRIBE*/
 header MQTTSN_subscribe_h {
-    bit<8>     flags;
-    bit<16>    msgId;
-    bit<16>    topicId; 
-    // or bit<8>     topicName; // TODO: how to do variable length in P4?
+    bit<8>       flags;
+    bit<16>      msgId;
+    bit<16>      topicId;
+    varbit<255>  topicName; // (opcional) Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header SUBACK*/
 header MQTTSN_suback_h {
-    bit<8>     flags;
-    bit<16>    topicId;
-    bit<16>    msgId;
-    bit<8>     returnCode;
+    bit<8>   flags;
+    bit<16>  topicId;
+    bit<16>  msgId;
+    bit<8>   returnCode;
 }
 
 /*Message MQTT-SN variable header UNSUBSCRIBE*/
 header MQTTSN_unsubscribe_h {
-    bit<8>     flags;
-    bit<16>    msgId;
-    bit<16>    topicId;
-    // or bit<8>     topicName; // TODO: how to do variable length in P4?
+    bit<8>       flags;
+    bit<16>      msgId;
+    bit<16>      topicId;
+    varbit<255>  topicName; // (opcional) Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header UNSUBACK*/
 header MQTTSN_unsuback_h {
-    bit<16>    msgId;
+    bit<16>  msgId;
 }
 
 /*Message MQTT-SN variable header PINGREQ*/
 header MQTTSN_pingreq_h {
-    /* empty */
-    //bit<8>    clientId; // optional // TODO: how to do variable length in P4?
+    varbit<184>  clientId; // (opcional) max 23 caracteres * 1 byte (8 bits) = 184 bits
 }
 
 /*Message MQTT-SN variable header PINGRESP*/
@@ -252,70 +252,70 @@ header MQTTSN_pingresp_h {
 
 /*Message MQTT-SN variable header DISCONNECT*/
 header MQTTSN_disconnect_h {
-    /* empty */
-    //bit<16>    duration; // optional
+    bit<16>  duration; // (opcional)
 }
 
 /*Message MQTT-SN variable header WILLTOPICUPD*/
 header MQTTSN_willtopicupd_h {
-    bit<8>     flags;
-    bit<8>     willTopic; // TODO: how to do variable length in P4?
+    bit<8>       flags;
+    varbit<255>  willTopic; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header WILLMSGUPD*/
 header MQTTSN_willmsgupd_h {
-    bit<8>     willMsg; // TODO: how to do variable length in P4?
+    varbit<255>  willMsg; // Depende se a mensagem length é de 1 ou 3 bytes
 }
 
 /*Message MQTT-SN variable header WILLTOPICRESP*/
 header MQTTSN_willtopicresp_h {
-    bit<8>     returnCode;
+    bit<8>  returnCode;
 }
 
 /*Message MQTT-SN variable header WILLMSGRESP*/
 header MQTTSN_willmsgresp_h {
-    bit<8>     returnCode;
+    bit<8>  returnCode;
 }
 
 /*Message MQTT-SN global flags*/
 header MQTTSN_flags_h {
-    bit<1> dup;
-    bit<2> qos;
-    bit<1> retain;
-    bit<1> will;
-    bit<1> cleanSession;
-    bit<2> topicIdType;
+    bit<1>  dup;
+    bit<2>  qos;
+    bit<1>  retain;
+    bit<1>  will;
+    bit<1>  cleanSession;
+    bit<2>  topicIdType;
 }
 
 /*Segment UDP*/
 header UDP_h {
     bit<16>    srcPort;
     bit<16>    dstPort;
-    bit<16>    lenght;
+    bit<16>    length;
     bit<16>    checksum;
 }
 
 /*Packet IP*/
 header IPv4_h {
-    bit<4>     version;
-    bit<4>     ihl;
-    bit<8>     diffServ;
-    bit<16>    totalLen;
-    bit<16>    identification;
-    bit<3>     flags;
-    bit<13>    fragOffset;
-    bit<8>     ttl;
-    bit<8>     protocol;
-    bit<16>    hdrChecksum;
-    ipv4Addr   srcAddr;
-    ipv4Addr   dstAddr;
+    bit<4>       version;
+    bit<4>       ihl;
+    bit<8>       diffServ;
+    bit<16>      totalLen;
+    bit<16>      identification;
+    bit<3>       flags;
+    bit<13>      fragOffset;
+    bit<8>       ttl;
+    bit<8>       protocol;
+    bit<16>      hdrChecksum;
+    ipv4Addr     srcAddr;
+    ipv4Addr     dstAddr;
+    varbit<320>  options;
 }
 
 /*Frame Ethernet*/
 header Ethernet_h {
-    macAddr    dstAddr;
-    macAddr    srcAddr;
-    bit<16>    ethertype;
+    macAddr  dstAddr;
+    macAddr  srcAddr;
+    bit<16>  ethertype;
 }
 
 struct headers {
@@ -360,12 +360,29 @@ struct metadata {
     /* empty */
 }
 
-//Verificar o uso dos erros definidos abaixo
-// User-defined errors that may be signaled during parsing
+// Erros customizados para validação de headers
 error {
-  IPv4OptionsNotSupported,
-  IPv4IncorrectVersion,
-  IPv4ChecksumError
+    // Ethernet
+    UnsupportedEtherType,
+
+    // IPv4
+    IPv4IncorrectVersion,
+    IPv4HeaderLengthError,
+    IPv4ChecksumError,
+    IPv4UnsupportedProtocol,
+
+    // UDP
+    UDPIncorrectLength,
+
+    // MQTT-SN
+    MQTT_SN_InvalidLength,
+    MQTT_SN_UnsupportedMessageType,
+    MQTT_SN_InvalidFlags,
+
+    // Parsing geral
+    PacketTooShort,
+    MalformedPacket,
+    UnknownProtocol
 }
 
 /*************************************************************************
@@ -404,7 +421,7 @@ parser MyParser(packet_in packet,
 
     state parse_mqttsn_fixed {
         packet.extract(hdr.mqttsn_fixed);
-        verify(hdr.mqttsn_fixed.lenght >= 2, error.IPv4OptionsNotSupported);
+        verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
         transition select(hdr.mqttsn_fixed.msgType) {
             MQTTSN_ADVERTISE: parse_mqttsn_advertise;
             MQTTSN_SEARCHGW: parse_mqttsn_searchgw;
@@ -433,55 +450,226 @@ parser MyParser(packet_in packet,
             MQTTSN_WILLMSGUPD: parse_mqttsn_willmsgupd;
             MQTTSN_WILLTOPICRESP: parse_mqttsn_willtopicresp;
             MQTTSN_WILLMSGRESP: parse_mqttsn_willmsgresp;
-            default: accept; // TODO: handle unknown message types?
+            default: accept;
         }
     }
     
     state parse_mqttsn_advertise {
         packet.extract(hdr.mqttsn_advertise);
-        verify(hdr.mqttsn_fixed.lenght == 5, error.IPv4OptionsNotSupported);
+        verify(hdr.mqttsn_fixed.length == 5, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
     state parse_mqttsn_searchgw {
         packet.extract(hdr.mqttsn_searchgw);
-        verify(hdr.mqttsn_fixed.lenght == 3, error.IPv4OptionsNotSupported);
+        verify(hdr.mqttsn_fixed.length == 3, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
     state parse_mqttsn_gwinfo {
         packet.extract(hdr.mqttsn_gwinfo);
-        transition select(hdr.mqttsn_fixed.lenght) {
+        verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
+        transition select(hdr.mqttsn_fixed.length) {
             3: accept; // só gwId
             7: parse_mqttsn_gwinfo_with_ip; // gwId + gwAdd
             default: reject;
         }
     }
+
     // Estado para tratar o caso em que gwAdd é incluído,
-    // como foi chamado via transition select, não foi necessário
-    // extrair o header mqttsn_gwinfo novamente com outro nome
+    //   como foi chamado via transition select, não foi necessário
+    //   extrair o header mqttsn_gwinfo novamente com outro nome
     state parse_mqttsn_gwinfo_with_ip {
-        packet.advance(32); // pula os 4 bytes do campo gwAdd
+        // Pula os 4 bytes do campo gwAdd finais
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 3) * 8);
         transition accept;
     }
 
     state parse_mqttsn_connect {
         packet.extract(hdr.mqttsn_connect);
-        verify(hdr.mqttsn_fixed.lenght >= 6, error.IPv4OptionsNotSupported);
-        // pula a quantidade bits relacionados a veriável clientId
-        packet.advance(hdr.mqttsn_fixed.lenght - 6);
+        verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
+        // Pula a quantidade bits relacionados ao campo clientId
+        // Packet advance tem que ser em bits
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 6) * 8);
         transition accept;
     }
 
     state parse_mqttsn_connack {
         packet.extract(hdr.mqttsn_connack);
-        verify(hdr.mqttsn_fixed.lenght == 3, error.IPv4OptionsNotSupported);
+        verify(hdr.mqttsn_fixed.length == 3, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
     state parse_mqttsn_willtopicreq {
-        // Sem campos variáveis nem fixos, apenas o fixed header
-        verify(hdr.mqttsn_fixed.lenght == 2, error.IPv4OptionsNotSupported);
+        packet.extract(hdr.mqttsn_willtopicreq);
+        verify(hdr.mqttsn_fixed.length == 2, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_willtopic {
+        packet.extract(hdr.mqttsn_willtopic);
+        verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
+        transition select(hdr.mqttsn_fixed.length) {
+            3: accept; // Mensagem WILLTOPIC vazia
+            default: parse_mqttsn_willtopic_extended;
+        }
+    }
+
+    state parse_mqttsn_willtopic_extended {
+        // Pula WillTopic (length - Length(1) - MsgType(1) - Flags(1))
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 3) * 8);
+        transition accept;
+    }
+
+    state parse_mqttsn_willmsgreq {
+        packet.extract(hdr.mqttsn_willmsgreq);
+        verify(hdr.mqttsn_fixed.length == 2, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_willmsg {
+        packet.extract(hdr.mqttsn_willmsg);
+        verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 2) * 8);
+        transition accept;
+    }
+
+    state parse_mqttsn_register {
+        packet.extract(hdr.mqttsn_register);
+        verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 6) * 8);
+        transition accept;
+    }
+
+    state parse_mqttsn_regack {
+        packet.extract(hdr.mqttsn_regack);
+        verify(hdr.mqttsn_fixed.length == 7, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_publish {
+        packet.extract(hdr.mqttsn_publish);
+        verify(hdr.mqttsn_fixed.length >= 8, error.MQTT_SN_InvalidLength);
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 7) * 8);
+        transition accept;
+    }
+
+    state parse_mqttsn_puback {
+        packet.extract(hdr.mqttsn_puback);
+        verify(hdr.mqttsn_fixed.length == 7, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_pubrec {
+        packet.extract(hdr.mqttsn_pubrec);
+        verify(hdr.mqttsn_fixed.length == 4, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_pubrel {
+        packet.extract(hdr.mqttsn_pubrel);
+        verify(hdr.mqttsn_fixed.length == 4, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_pubcomp {
+        packet.extract(hdr.mqttsn_pubcomp);
+        verify(hdr.mqttsn_fixed.length == 4, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_subscribe {
+        packet.extract(hdr.mqttsn_subscribe);
+        verify(hdr.mqttsn_fixed.length >= 6, error.MQTT_SN_InvalidLength);
+        transition select(hdr.mqttsn_fixed.length) {
+            7: accept; // Mensagem com topicId
+            default: parse_mqttsn_subscribe_extended;
+        }
+    }
+
+    state parse_mqttsn_subscribe_extended {
+        // Pula o topicName
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 5) * 8);
+        transition accept;
+    }
+
+    state parse_mqttsn_suback {
+        packet.extract(hdr.mqttsn_suback);
+        verify(hdr.mqttsn_fixed.length == 8, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_unsubscribe {
+        packet.extract(hdr.mqttsn_unsubscribe);
+        verify(hdr.mqttsn_fixed.length >= 6, error.MQTT_SN_InvalidLength);
+        transition select(hdr.mqttsn_fixed.length) {
+            7: accept; // Mensagem com topicId
+            default: parse_mqttsn_unsubscribe_extended;
+        }
+    }
+
+    state parse_mqttsn_unsubscribe_extended {
+        // Pula o topicName
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 5) * 8);
+        transition accept;
+    }
+
+    state parse_mqttsn_unsuback {
+        packet.extract(hdr.mqttsn_unsuback);
+        verify(hdr.mqttsn_fixed.length == 4, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_pingreq {
+        packet.extract(hdr.mqttsn_pingreq);
+        verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
+        transition select(hdr.mqttsn_fixed.length) {
+            2: accept;
+            default: parse_mqttsn_pingreq_extended;
+        }
+    }
+
+    state parse_mqttsn_pingreq_extended {
+        // Pula o clientId
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 2) * 8);
+        transition accept;
+    }
+
+    state parse_mqttsn_pingresp {
+        packet.extract(hdr.mqttsn_pingresp);
+        verify(hdr.mqttsn_fixed.length == 2, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_disconnect {
+        packet.extract(hdr.mqttsn_disconnect);
+        verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_willtopicupd {
+        packet.extract(hdr.mqttsn_willtopicupd);
+        verify(hdr.mqttsn_fixed.length >= 4, error.MQTT_SN_InvalidLength);
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 3) * 8);
+        transition accept;
+    }
+
+    state parse_mqttsn_willmsgupd {
+        packet.extract(hdr.mqttsn_willmsgupd);
+        verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
+        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 2) * 8);
+        transition accept;
+    }
+
+    state parse_mqttsn_willtopicresp {
+        packet.extract(hdr.mqttsn_willtopicresp);
+        verify(hdr.mqttsn_fixed.length == 3, error.MQTT_SN_InvalidLength);
+        transition accept;
+    }
+
+    state parse_mqttsn_willmsgresp {
+        packet.extract(hdr.mqttsn_willmsgresp);
+        verify(hdr.mqttsn_fixed.length == 3, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 }
@@ -552,7 +740,7 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.ipv4);
         packet.emit(hdr.udp);
         packet.emit(hdr.mqttsn_fixed);
-        packert.emit(hdr.mqttsn_advertise);
+        packet.emit(hdr.mqttsn_advertise);
         packet.emit(hdr.mqttsn_searchgw);
         packet.emit(hdr.mqttsn_gwinfo);
         packet.emit(hdr.mqttsn_connect);
@@ -597,4 +785,7 @@ V1Switch(
     MyDeparser()
 ) main;
 
+// docker run -dit --name=p4 --rm ramonfontes/bmv2:latest
+// docker exec -it p4 bash
+// docker cp mqtt-sn-p4-architecture/p4src p4:/tmp/
 // p4c --target bmv2 --arch v1model gw_agg_mqtt_sn.p4
