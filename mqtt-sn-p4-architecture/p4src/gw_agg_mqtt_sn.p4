@@ -129,15 +129,15 @@ header MQTTSN_searchgw_h {
 
 /*Message MQTT-SN variable header GWINFO*/
 header MQTTSN_gwinfo_h {
-    bit<8>      gwId;
+    bit<8>   gwId;
     bit<32>  gwAdd; // IPv4 address gw (only present if message is sent by a client)
 }
 
 /*Message MQTT-SN variable header CONNECT*/
 header MQTTSN_connect_h {
-    bit<8>       flags;
-    bit<8>       protocolId;
-    bit<16>      duration;
+    bit<8>    flags;
+    bit<8>    protocolId;
+    bit<16>   duration;
     bit<184>  clientId; // max 23 caracteres * 1 byte (8 bits) = 184 bits
 }
 
@@ -153,8 +153,8 @@ header MQTTSN_willtopicreq_h {
 
 /*Message MQTT-SN variable header WILLTOPIC*/
 header MQTTSN_willtopic_h {
-    bit<8>       flags;
-    bit<256>  willTopic; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<8>    flags;
+    bit<256>  willTopic; // Verificar tamanho!!!
 }
 
 /*Message MQTT-SN variable header WILLMSGREQ*/
@@ -164,14 +164,14 @@ header MQTTSN_willmsgreq_h {
 
 /*Message MQTT-SN variable header WILLMSG*/
 header MQTTSN_willmsg_h {
-    bit<256>  willMsg; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  willMsg; // Verificar tamanho!!!
 }
 
 /*Message MQTT-SN variable header REGISTER*/
 header MQTTSN_register_h {
     bit<16>      topicId;
     bit<16>      msgId;
-    bit<256>  topicName; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  topicName; // Verificar tamanho!!!
 }
 
 /*Message MQTT-SN variable header REGACK*/
@@ -183,10 +183,10 @@ header MQTTSN_regack_h {
 
 /*Message MQTT-SN variable header PUBLISH*/
 header MQTTSN_publish_h {
-    bit<8>       flags;
-    bit<16>      topicId;
-    bit<16>      msgId;
-    bit<256>  data; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<8>    flags;
+    bit<16>   topicId;
+    bit<16>   msgId;
+    bit<256>  data; // Verificar tamanho!!!
 }
 
 /*Message MQTT-SN variable header PUBACK*/
@@ -213,10 +213,10 @@ header MQTTSN_pubcomp_h {
 
 /*Message MQTT-SN variable header SUBSCRIBE*/
 header MQTTSN_subscribe_h {
-    bit<8>       flags;
-    bit<16>      msgId;
-    bit<16>      topicId;
-    bit<256>  topicName; // (opcional) Depende se a mensagem length é de 1 ou 3 bytes
+    bit<8>    flags;
+    bit<16>   msgId;
+    bit<16>   topicId;
+    bit<256>  topicName; // (opcional) Verificar tamanho!!!
 }
 
 /*Message MQTT-SN variable header SUBACK*/
@@ -229,10 +229,10 @@ header MQTTSN_suback_h {
 
 /*Message MQTT-SN variable header UNSUBSCRIBE*/
 header MQTTSN_unsubscribe_h {
-    bit<8>       flags;
-    bit<16>      msgId;
-    bit<16>      topicId;
-    bit<256>  topicName; // (opcional) Depende se a mensagem length é de 1 ou 3 bytes
+    bit<8>    flags;
+    bit<16>   msgId;
+    bit<16>   topicId;
+    bit<256>  topicName; // (opcional) Verificar tamanho!!!
 }
 
 /*Message MQTT-SN variable header UNSUBACK*/
@@ -257,13 +257,13 @@ header MQTTSN_disconnect_h {
 
 /*Message MQTT-SN variable header WILLTOPICUPD*/
 header MQTTSN_willtopicupd_h {
-    bit<8>       flags;
-    bit<256>  willTopic; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<8>    flags;
+    bit<256>  willTopic; // Verificar tamanho!!!
 }
 
 /*Message MQTT-SN variable header WILLMSGUPD*/
 header MQTTSN_willmsgupd_h {
-    bit<256>  willMsg; // Depende se a mensagem length é de 1 ou 3 bytes
+    bit<256>  willMsg; // Verificar tamanho!!!
 }
 
 /*Message MQTT-SN variable header WILLTOPICRESP*/
@@ -276,15 +276,61 @@ header MQTTSN_willmsgresp_h {
     bit<8>  returnCode;
 }
 
-/*Message MQTT-SN global flags*/
-header MQTTSN_flags_h {
+//////////////// MQTT-SN Headers Flags //////////////////
+
+/*Message MQTT-SN flags CONNECT*/
+header MQTTSN_flags_connect_h {
+    bit<1>  will;
+    bit<1>  cleanSession;
+    bit<6>  reserved; // (Estratégia para completar os 8 bits das flags e não dar erro na compilação)BMv2 target only supports headers with fields totaling a multiple of 8 bits.
+}
+
+/*Message MQTT-SN flags WILLTOPIC*/
+header MQTTSN_flags_willtopic_h {
+    bit<2>  qos;
+    bit<1>  retain;
+    bit<5>  reserved;
+}
+
+/*Message MQTT-SN flags PUBLISH*/
+header MQTTSN_flags_publish_h {
     bit<1>  dup;
     bit<2>  qos;
     bit<1>  retain;
-    bit<1>  will;
-    bit<1>  cleanSession;
     bit<2>  topicIdType;
+    bit<2>  reserved;
 }
+
+/*Message MQTT-SN flags SUBSCRIBE*/
+header MQTTSN_flags_subscribe_h {
+    bit<1>  dup;
+    bit<2>  qos;
+    bit<2>  topicIdType;
+    bit<3>  reserved;
+}
+
+/*Message MQTT-SN flags UNSUBSCRIBE*/
+header MQTTSN_flags_unsubscribe_h {
+    bit<1>  dup;
+    bit<2>  qos;
+    bit<2>  topicIdType;
+    bit<3>  reserved;
+}
+
+/*Message MQTT-SN flags SUBACK*/
+header MQTTSN_flags_suback_h {
+    bit<2>  qos;
+    bit<6>  reserved;
+}
+
+/*Message MQTT-SN flags WILLTOPICUPD*/
+header MQTTSN_flags_willtopicupd_h {
+    bit<2>  qos;
+    bit<1>  retain;
+    bit<5>  reserved;
+}
+
+///////////////////// UDP Header ////////////////////
 
 /*Segment UDP*/
 header UDP_h {
@@ -293,6 +339,8 @@ header UDP_h {
     bit<16>    length;
     bit<16>    checksum;
 }
+
+/////////////////// IPV4 Header ///////////////////////
 
 /*Packet IP*/
 header IPv4_h {
@@ -310,6 +358,8 @@ header IPv4_h {
     ipv4Addr     dstAddr;
 }
 
+/////////////////// ETHERNET Header //////////////////////
+
 /*Frame Ethernet*/
 header Ethernet_h {
     macAddr  dstAddr;
@@ -317,10 +367,12 @@ header Ethernet_h {
     bit<16>  ethertype;
 }
 
+//////////////////// HEADERS /////////////////////////
+
 struct headers {
     Ethernet_h ethernet;
-    IPv4_h     ipv4;
-    UDP_h      udp;
+    IPv4_h ipv4;
+    UDP_h  udp;
     MQTTSN_fixed_h mqttsn_fixed;
     MQTTSN_advertise_h mqttsn_advertise;
     MQTTSN_searchgw_h mqttsn_searchgw;
@@ -349,8 +401,13 @@ struct headers {
     MQTTSN_willmsgupd_h mqttsn_willmsgupd;
     MQTTSN_willtopicresp_h mqttsn_willtopicresp;
     MQTTSN_willmsgresp_h mqttsn_willmsgresp;
-    // Se não der certo o uso do header mqttsn_flags_h, pode apagar e usar as consts
-    MQTTSN_flags_h mqttsn_flags;
+    MQTTSN_flags_connect_h mqttsn_flags_connect;
+    MQTTSN_flags_willtopic_h mqttsn_flags_willtopic;
+    MQTTSN_flags_publish_h mqttsn_flags_publish;
+    MQTTSN_flags_subscribe_h mqttsn_flags_subscribe;
+    MQTTSN_flags_unsubscribe_h mqttsn_flags_unsubscribe;
+    MQTTSN_flags_suback_h mqttsn_flags_suback;
+    MQTTSN_flags_willtopicupd_h mqttsn_flags_willtopicupd;
     // Adicionar os headers das mensagens MQTT
     //MQTT_fixed_h mqtt_fixed;
 }
@@ -484,6 +541,11 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
+    state parse_mqttsn_flags_connect {
+        packet.extract(hdr.mqttsn_flags_connect);
+        transition parse_mqttsn_connect;
+    }
+
     state parse_mqttsn_connect {
         packet.extract(hdr.mqttsn_connect);
         verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
@@ -503,6 +565,11 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.mqttsn_willtopicreq);
         verify(hdr.mqttsn_fixed.length == 2, error.MQTT_SN_InvalidLength);
         transition accept;
+    }
+
+    state parse_mqttsn_flags_willtopic {
+        packet.extract(hdr.mqttsn_flags_willtopic);
+        transition parse_mqttsn_willtopic;
     }
 
     state parse_mqttsn_willtopic {
@@ -546,6 +613,11 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
+    state parse_mqttsn_flags_publish {
+        packet.extract(hdr.mqttsn_flags_publish);
+        transition parse_mqttsn_publish;
+    }
+
     state parse_mqttsn_publish {
         packet.extract(hdr.mqttsn_publish);
         verify(hdr.mqttsn_fixed.length >= 8, error.MQTT_SN_InvalidLength);
@@ -577,6 +649,11 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
+    state parse_mqttsn_flags_subscribe {
+        packet.extract(hdr.mqttsn_flags_subscribe);
+        transition parse_mqttsn_subscribe;
+    }
+
     state parse_mqttsn_subscribe {
         packet.extract(hdr.mqttsn_subscribe);
         verify(hdr.mqttsn_fixed.length >= 6, error.MQTT_SN_InvalidLength);
@@ -592,10 +669,20 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
+    state parse_mqttsn_flags_suback {
+        packet.extract(hdr.mqttsn_flags_suback);
+        transition parse_mqttsn_suback;
+    }
+
     state parse_mqttsn_suback {
         packet.extract(hdr.mqttsn_suback);
         verify(hdr.mqttsn_fixed.length == 8, error.MQTT_SN_InvalidLength);
         transition accept;
+    }
+
+    state parse_mqttsn_flags_unsubscribe {
+        packet.extract(hdr.mqttsn_flags_unsubscribe);
+        transition parse_mqttsn_unsubscribe;
     }
 
     state parse_mqttsn_unsubscribe {
@@ -644,6 +731,11 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.mqttsn_disconnect);
         verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
         transition accept;
+    }
+
+    state parse_mqttsn_flags_willtopicupd {
+        packet.extract(hdr.mqttsn_flags_willtopicupd);
+        transition parse_mqttsn_willtopicupd;
     }
 
     state parse_mqttsn_willtopicupd {
@@ -766,7 +858,13 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.mqttsn_willmsgupd);
         packet.emit(hdr.mqttsn_willtopicresp);
         packet.emit(hdr.mqttsn_willmsgresp);
-        packet.emit(hdr.mqttsn_flags);
+        packet.emit(hdr.mqttsn_flags_connect);
+        packet.emit(hdr.mqttsn_flags_willtopic);
+        packet.emit(hdr.mqttsn_flags_publish);
+        packet.emit(hdr.mqttsn_flags_subscribe);
+        packet.emit(hdr.mqttsn_flags_suback);
+        packet.emit(hdr.mqttsn_flags_unsubscribe);
+        packet.emit(hdr.mqttsn_willmsgupd);
     }
 }
 
