@@ -71,6 +71,4 @@ def topology():
 if __name__ == '__main__':
     setLogLevel('info')
     topology()
-
-
-# p4c --target bmv2 --arch v1model mqtt_sn.p4
+    
