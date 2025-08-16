@@ -1,0 +1,8 @@
+table_set_default MyIngress.client_registry NoAction
+# Registrar cliente "CLIENT001" na porta 1
+table_add MyIngress.client_registry register_client 0x434C49454E54303031 => 1
+
+# Registrar cliente "CLIENT002" na porta 2
+table_add MyIngress.client_registry register_client 0x434C49454E54303032 => 2
+
+# Observação: 0x434C49454E54303031 é a representação hexadecimal do ClientId "CLIENT001". Cada caractere é um byte ASCII.

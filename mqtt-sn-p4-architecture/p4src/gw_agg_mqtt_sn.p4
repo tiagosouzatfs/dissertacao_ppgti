@@ -89,6 +89,9 @@ typedef bit<32> ipv4Addr;
 /*Frame Ethernet*/
 typedef bit<48> macAddr;
 
+/*Generic Port*/
+typedef bit<9> egressPort;
+
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
@@ -169,8 +172,8 @@ header MQTTSN_willmsg_h {
 
 /*Message MQTT-SN variable header REGISTER*/
 header MQTTSN_register_h {
-    bit<16>      topicId;
-    bit<16>      msgId;
+    bit<16>   topicId;
+    bit<16>   msgId;
     bit<256>  topicName; // Verificar tamanho!!!
 }
 
@@ -426,6 +429,7 @@ error {
     IPv4HeaderLengthError,
     IPv4ChecksumError,
     IPv4UnsupportedProtocol,
+    IPv4OptionsNotSupported,
 
     // UDP
     UDPIncorrectLength,
@@ -479,33 +483,38 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.mqttsn_fixed);
         verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
         transition select(hdr.mqttsn_fixed.msgType) {
-            MQTTSN_ADVERTISE: parse_mqttsn_advertise;
-            MQTTSN_SEARCHGW: parse_mqttsn_searchgw;
-            MQTTSN_GWINFO: parse_mqttsn_gwinfo;
-            MQTTSN_CONNECT: parse_mqttsn_connect;
-            MQTTSN_CONNACK: parse_mqttsn_connack;
-            MQTTSN_WILLTOPICREQ: parse_mqttsn_willtopicreq;
-            MQTTSN_WILLTOPIC: parse_mqttsn_willtopic;
-            MQTTSN_WILLMSGREQ: parse_mqttsn_willmsgreq;
-            MQTTSN_WILLMSG: parse_mqttsn_willmsg;
-            MQTTSN_REGISTER: parse_mqttsn_register;
-            MQTTSN_REGACK: parse_mqttsn_regack;
-            MQTTSN_PUBLISH: parse_mqttsn_publish;
-            MQTTSN_PUBACK: parse_mqttsn_puback;
-            MQTTSN_PUBREC: parse_mqttsn_pubrec;
-            MQTTSN_PUBREL: parse_mqttsn_pubrel;
-            MQTTSN_PUBCOMP: parse_mqttsn_pubcomp;
-            MQTTSN_SUBSCRIBE: parse_mqttsn_subscribe;
-            MQTTSN_SUBACK: parse_mqttsn_suback;
-            MQTTSN_UNSUBSCRIBE: parse_mqttsn_unsubscribe;
-            MQTTSN_UNSUBACK: parse_mqttsn_unsuback;
-            MQTTSN_PINGREQ: parse_mqttsn_pingreq;
-            MQTTSN_PINGRESP: parse_mqttsn_pingresp;
-            MQTTSN_DISCONNECT: parse_mqttsn_disconnect;
-            MQTTSN_WILLTOPICUPD: parse_mqttsn_willtopicupd;
-            MQTTSN_WILLMSGUPD: parse_mqttsn_willmsgupd;
+            MQTTSN_ADVERTISE:     parse_mqttsn_advertise;
+            MQTTSN_SEARCHGW:      parse_mqttsn_searchgw;
+            /* Verificar se realmente é ncessário
+            esse parser pois o MQTTSN_GWINFO é uma mensagem 
+            enviada pelo gateway em resposta a uma mensagem 
+            MQTTSN_SEARCHGW então nunca vou precisar extrair
+            nenhum campo*/
+            MQTTSN_GWINFO:        parse_mqttsn_gwinfo;
+            MQTTSN_CONNECT:       parse_mqttsn_connect;
+            MQTTSN_CONNACK:       parse_mqttsn_connack;
+            MQTTSN_WILLTOPICREQ:  parse_mqttsn_willtopicreq;
+            MQTTSN_WILLTOPIC:     parse_mqttsn_willtopic;
+            MQTTSN_WILLMSGREQ:    parse_mqttsn_willmsgreq;
+            MQTTSN_WILLMSG:       parse_mqttsn_willmsg;
+            MQTTSN_REGISTER:      parse_mqttsn_register;
+            MQTTSN_REGACK:        parse_mqttsn_regack;
+            MQTTSN_PUBLISH:       parse_mqttsn_publish;
+            MQTTSN_PUBACK:        parse_mqttsn_puback;
+            MQTTSN_PUBREC:        parse_mqttsn_pubrec;
+            MQTTSN_PUBREL:        parse_mqttsn_pubrel;
+            MQTTSN_PUBCOMP:       parse_mqttsn_pubcomp;
+            MQTTSN_SUBSCRIBE:     parse_mqttsn_subscribe;
+            MQTTSN_SUBACK:        parse_mqttsn_suback;
+            MQTTSN_UNSUBSCRIBE:   parse_mqttsn_unsubscribe;
+            MQTTSN_UNSUBACK:      parse_mqttsn_unsuback;
+            MQTTSN_PINGREQ:       parse_mqttsn_pingreq;
+            MQTTSN_PINGRESP:      parse_mqttsn_pingresp;
+            MQTTSN_DISCONNECT:    parse_mqttsn_disconnect;
+            MQTTSN_WILLTOPICUPD:  parse_mqttsn_willtopicupd;
+            MQTTSN_WILLMSGUPD:    parse_mqttsn_willmsgupd;
             MQTTSN_WILLTOPICRESP: parse_mqttsn_willtopicresp;
-            MQTTSN_WILLMSGRESP: parse_mqttsn_willmsgresp;
+            MQTTSN_WILLMSGRESP:   parse_mqttsn_willmsgresp;
             default: accept;
         }
     }
@@ -522,6 +531,11 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
+/* Verificar se realmente é ncessário
+esse parser pois o MQTTSN_GWINFO é uma mensagem 
+enviada pelo gateway em resposta a uma mensagem 
+MQTTSN_SEARCHGW então nunca vou precisar extrair
+nenhum campo*/
     state parse_mqttsn_gwinfo {
         packet.extract(hdr.mqttsn_gwinfo);
         verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
@@ -782,7 +796,74 @@ control MyVerifyChecksum(inout headers hdr,
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
-    apply {  }
+
+    // Broadcast (porta 511 no BMv2)
+    action send_advertise(bit<8> gwId, bit<8> duration) {
+        hdr.mqttsn_advertise.setValid();
+        hdr.mqttsn_advertise.gwId = gwId;
+        hdr.mqttsn_advertise.duration = duration;
+        // Envia a mensagem ADVERTISE para todos os clientes (broadcast)
+        standard_metadata.egress_spec = (egressPort)511;
+    }
+
+    action send_gwinfo_response() {
+        // Prepara o header GWINFO
+        hdr.mqttsn_gwinfo.setValid();
+        hdr.mqttsn_gwinfo.gwId  = 2; // ID do gateway
+        hdr.mqttsn_gwinfo.gwAdd = 0x0A000002; // opcional: IP do gateway (10.0.0.2)
+        // Envia de volta para o cliente (unicast) que enviou o SEARCHGW pela porta de entrada
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    table client_registry {
+        key = {
+            hdr.mqttsn_connect.clientId : exact;
+        }
+        actions = {
+            send_connack_response;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
+    action send_connack_response(bit<8> returnCode) {
+        hdr.mqttsn_connack.setValid();
+        hdr.mqttsn_connack.returnCode = returnCode;
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    apply {
+        if (hdr.mqttsn_fixed.isValid()) {
+            if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE) {
+                send_advertise(1, 60);
+            } else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW) {
+                // A resposta padrão do gateway é um GWINFO
+                if (hdr.mqttsn_searchgw.isValid() && hdr.mqttsn_searchgw.radius == 0x00) {
+                    // Envia a resposta GWINFO para o cliente que enviou o SEARCHGW
+                    send_gwinfo_response();
+                } else {
+                    // Se não houver um header SEARCHGW válido, rejeita a mensagem
+                    // Adicionar lógica condicional futura para lidar com o caso
+                    verify(hdr.mqttsn_searchgw.radius != 0x00, error.MQTT_SN_UnsupportedMessageType);
+                }
+            } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT) {
+                // A resposta padrão do gateway é uma CONNACK
+                if (hdr.mqttsn_connect.isValid()) {
+                    client_registry.apply();
+                }
+                send_connack_response(MQTTSN_RETURNCODE_ACCEPTED);
+                send_connack_response(MQTTSN_RETURNCODE_REJECTED_CONGESTION);
+                send_connack_response(MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID);
+                send_connack_response(MQTTSN_RETURNCODE_REJECTED_NOT_SUPPORTED);
+            } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK) {
+                // Implementar lógica para CONNACK
+            } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
+                // Implementar lógica para PUBLISH
+            }
+        }
+    }
+
 }
 
 /*************************************************************************
