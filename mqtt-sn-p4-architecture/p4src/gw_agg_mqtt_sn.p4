@@ -797,6 +797,7 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
+    ///////////////// ADVERTISE //////////////////////
     // Broadcast (porta 511 no BMv2)
     action send_advertise(bit<8> gwId, bit<8> duration) {
         hdr.mqttsn_advertise.setValid();
@@ -805,7 +806,7 @@ control MyIngress(inout headers hdr,
         // Envia a mensagem ADVERTISE para todos os clientes (broadcast)
         standard_metadata.egress_spec = (egressPort)511;
     }
-
+    ///////////////// SEARCHGW & GWINFO //////////////////////
     action send_gwinfo_response() {
         // Prepara o header GWINFO
         hdr.mqttsn_gwinfo.setValid();
@@ -815,21 +816,45 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
+    ///////////////// CONNECT & CONNACK //////////////////////
     table client_registry {
         key = {
             hdr.mqttsn_connect.clientId : exact;
         }
         actions = {
-            send_connack_response;
-            NoAction;
+            send_connack_response_accept_connection;
+            send_connack_response_reject_congestion;
+            send_connack_response_reject_invalid_id;
+            send_connack_response_reject_not_supported;
         }
+        // Suporta até 1024 entradas (clientes reisgistrados)
         size = 1024;
-        default_action = NoAction();
+        // Ação padrão se não encontrar o clientId registrado na tabela
+        // Útil para clientes desconhecidos
+        default_action = send_connack_response_reject_invalid_id();
     }
 
-    action send_connack_response(bit<8> returnCode) {
+    action send_connack_response_accept_connection() {
         hdr.mqttsn_connack.setValid();
-        hdr.mqttsn_connack.returnCode = returnCode;
+        hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    action send_connack_response_reject_congestion() {
+        hdr.mqttsn_connack.setValid();
+        hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_CONGESTION;
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    action send_connack_response_reject_invalid_id() {
+        hdr.mqttsn_connack.setValid();
+        hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    action send_connack_response_reject_not_supported() {
+        hdr.mqttsn_connack.setValid();
+        hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_NOT_SUPPORTED;
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -839,23 +864,21 @@ control MyIngress(inout headers hdr,
                 send_advertise(1, 60);
             } else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW) {
                 // A resposta padrão do gateway é um GWINFO
-                if (hdr.mqttsn_searchgw.isValid() && hdr.mqttsn_searchgw.radius == 0x00) {
+                if (hdr.mqttsn_searchgw.radius == 0x00) {
                     // Envia a resposta GWINFO para o cliente que enviou o SEARCHGW
-                    send_gwinfo_response();
+                    if (hdr.mqttsn_searchgw.isValid()) {
+                        send_gwinfo_response();
+                    }
                 } else {
                     // Se não houver um header SEARCHGW válido, rejeita a mensagem
                     // Adicionar lógica condicional futura para lidar com o caso
                     verify(hdr.mqttsn_searchgw.radius != 0x00, error.MQTT_SN_UnsupportedMessageType);
                 }
             } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT) {
-                // A resposta padrão do gateway é uma CONNACK
+                // A resposta padrão do gateway é uma CONNACK (baseado na tabela static_clients.txt)
                 if (hdr.mqttsn_connect.isValid()) {
                     client_registry.apply();
                 }
-                send_connack_response(MQTTSN_RETURNCODE_ACCEPTED);
-                send_connack_response(MQTTSN_RETURNCODE_REJECTED_CONGESTION);
-                send_connack_response(MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID);
-                send_connack_response(MQTTSN_RETURNCODE_REJECTED_NOT_SUPPORTED);
             } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK) {
                 // Implementar lógica para CONNACK
             } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
