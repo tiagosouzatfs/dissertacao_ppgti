@@ -41,26 +41,6 @@ const bit<8> MQTTSN_WILLMSGRESP = 0x1D;
 //const bit<8> Encapsulated message = 0xFE;
 //const bit<8> reserved = 0xFF;
 
-/*Vou deixar aqui para testar o uso do header mqttsn_flags_t,
-se der certo, pode apagar essas consts*/
-/*Message MQTT-SN flags*/
-const bit<1> MQTTSN_FLAG_DUP0 = 0;
-const bit<1> MQTTSN_FLAG_DUP1 = 1;
-const bit<2> MQTTSN_FLAG_QOS0 = 0b00;
-const bit<2> MQTTSN_FLAG_QOS1 = 0b01;
-const bit<2> MQTTSN_FLAG_QOS2 = 0b10;
-const bit<2> MQTTSN_FLAG_QOSminus1 = 0b11;
-const bit<1> MQTTSN_FLAG_RETAIN0 = 0; // true
-const bit<1> MQTTSN_FLAG_RETAIN1 = 1; // false
-const bit<1> MQTTSN_FLAG_WILL0 = 0; // true
-const bit<1> MQTTSN_FLAG_WILL1 = 1; // false
-const bit<1> MQTTSN_FLAG_CLEANSESSION0 = 0; // true
-const bit<1> MQTTSN_FLAG_CLEANSESSION1 = 1; // false
-const bit<2> MQTTSN_FLAG_TOPICIDTYPE0 = 0b00; // Normal topicId
-const bit<2> MQTTSN_FLAG_TOPICIDTYPE1 = 0b01; // Pre-defined topicId
-const bit<2> MQTTSN_FLAG_TOPICIDTYPE2 = 0b10; // Short topicName
-//const bit<2> MQTTSN_FLAG_TOPICIDTYPE3 = 0b11; // Reserved
-
 /*Message MQTT-SN return codes*/
 const bit<8> MQTTSN_RETURNCODE_ACCEPTED = 0x00;
 const bit<8> MQTTSN_RETURNCODE_REJECTED_CONGESTION = 0x01;
@@ -531,11 +511,11 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
-/* Verificar se realmente é ncessário
-esse parser pois o MQTTSN_GWINFO é uma mensagem 
-enviada pelo gateway em resposta a uma mensagem 
-MQTTSN_SEARCHGW então nunca vou precisar extrair
-nenhum campo*/
+    /* Verificar se realmente é ncessário
+    esse parser pois o MQTTSN_GWINFO é uma mensagem 
+    enviada pelo gateway em resposta a uma mensagem 
+    MQTTSN_SEARCHGW então nunca vou precisar extrair
+    nenhum campo.*/
     state parse_mqttsn_gwinfo {
         packet.extract(hdr.mqttsn_gwinfo);
         verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
@@ -548,9 +528,9 @@ nenhum campo*/
 
     // Estado para tratar o caso em que gwAdd é incluído,
     //   como foi chamado via transition select, não foi necessário
-    //   extrair o header mqttsn_gwinfo novamente com outro nome
+    //   extrair o header mqttsn_gwinfo novamente com outro nome.
     state parse_mqttsn_gwinfo_with_ip {
-        // Pula os 4 bytes do campo gwAdd finais
+        // Pula os 4 bytes do campo gwAdd finais.
         packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 3) * 8);
         transition accept;
     }
@@ -563,8 +543,8 @@ nenhum campo*/
     state parse_mqttsn_connect {
         packet.extract(hdr.mqttsn_connect);
         verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
-        // Pula a quantidade bits relacionados ao campo clientId
-        // Packet advance tem que ser em bits
+        // Pula a quantidade bits relacionados ao campo clientId.
+        // Packet advance tem que ser em bits.
         packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 6) * 8);
         transition accept;
     }
@@ -803,7 +783,7 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_advertise.setValid();
         hdr.mqttsn_advertise.gwId = gwId;
         hdr.mqttsn_advertise.duration = duration;
-        // Envia a mensagem ADVERTISE para todos os clientes (broadcast)
+        // Envia a mensagem ADVERTISE para todos os clientes (broadcast).
         standard_metadata.egress_spec = (egressPort)511;
     }
     ///////////////// SEARCHGW & GWINFO //////////////////////
@@ -811,8 +791,8 @@ control MyIngress(inout headers hdr,
         // Prepara o header GWINFO
         hdr.mqttsn_gwinfo.setValid();
         hdr.mqttsn_gwinfo.gwId  = 2; // ID do gateway
-        hdr.mqttsn_gwinfo.gwAdd = 0x0A000002; // opcional: IP do gateway (10.0.0.2)
-        // Envia de volta para o cliente (unicast) que enviou o SEARCHGW pela porta de entrada
+        hdr.mqttsn_gwinfo.gwAdd = 0x0A000002; // opcional: IP do gateway (10.0.0.2).
+        // Envia de volta para o cliente (unicast) que enviou o SEARCHGW pela porta de entrada.
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -823,14 +803,12 @@ control MyIngress(inout headers hdr,
         }
         actions = {
             send_connack_response_accept_connection;
-            send_connack_response_reject_congestion;
             send_connack_response_reject_invalid_id;
-            send_connack_response_reject_not_supported;
         }
-        // Suporta até 1024 entradas (clientes reisgistrados)
+        // Suporta até 1024 entradas (clientes registrados).
         size = 1024;
-        // Ação padrão se não encontrar o clientId registrado na tabela
-        // Útil para clientes desconhecidos
+        // Ação padrão se não encontrar o clientId registrado na tabela.
+        // Útil para clientes desconhecidos.
         default_action = send_connack_response_reject_invalid_id();
     }
 
@@ -840,6 +818,10 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
+    /* Essa ação é usada quando o gateway está congestionado
+     e não pode aceitar novas conexões. Como não é possível contar
+     o número de conexões ativas, ou seja, registros na tabela via 
+     data plane então essa ação fica para ações futuras.*/
     action send_connack_response_reject_congestion() {
         hdr.mqttsn_connack.setValid();
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_CONGESTION;
@@ -863,26 +845,27 @@ control MyIngress(inout headers hdr,
             if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE) {
                 send_advertise(1, 60);
             } else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW) {
-                // A resposta padrão do gateway é um GWINFO
-                if (hdr.mqttsn_searchgw.radius == 0x00) {
-                    // Envia a resposta GWINFO para o cliente que enviou o SEARCHGW
-                    if (hdr.mqttsn_searchgw.isValid()) {
+                // A resposta padrão do gateway é um GWINFO.
+                if (hdr.mqttsn_searchgw.isValid()) {
+                    // Envia a resposta GWINFO para o cliente que enviou o SEARCHGW.
+                    if (hdr.mqttsn_searchgw.radius == 0x00) {
                         send_gwinfo_response();
                     }
                 } else {
-                    // Se não houver um header SEARCHGW válido, rejeita a mensagem
+                    // Se não houver um header SEARCHGW válido, rejeita a mensagem.
                     // Adicionar lógica condicional futura para lidar com o caso
-                    verify(hdr.mqttsn_searchgw.radius != 0x00, error.MQTT_SN_UnsupportedMessageType);
+                    // de rejeição de mensagens inválidas.
+                    mark_to_drop();
                 }
             } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT) {
                 // A resposta padrão do gateway é uma CONNACK (baseado na tabela static_clients.txt)
                 if (hdr.mqttsn_connect.isValid()) {
-                    client_registry.apply();
+                    if ((hdr.mqttsn_connect_flags.cleanSession == 0) || (hdr.mqttsn_connect_flags.will == 1) || (hdr.mqttsn_connect.protocolId != 0x01)) {
+                        send_connack_response_reject_not_supported();
+                    } else {
+                        client_registry.apply();
+                    }
                 }
-            } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK) {
-                // Implementar lógica para CONNACK
-            } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
-                // Implementar lógica para PUBLISH
             }
         }
     }
@@ -968,7 +951,7 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.mqttsn_flags_subscribe);
         packet.emit(hdr.mqttsn_flags_suback);
         packet.emit(hdr.mqttsn_flags_unsubscribe);
-        packet.emit(hdr.mqttsn_willmsgupd);
+        packet.emit(hdr.mqttsn_flags_willmsgupd);
     }
 }
 
