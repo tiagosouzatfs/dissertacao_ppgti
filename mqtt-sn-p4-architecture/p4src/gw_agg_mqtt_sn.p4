@@ -773,23 +773,29 @@ control MyVerifyChecksum(inout headers hdr,
 **************  I N G R E S S   P R O C E S S I N G   *******************
 *************************************************************************/
 
+//////////////////// LIMITAÇÕES DO GATEWAY P4 ////////////////////////
+/* 1 - Este gateway não trabalha com mensagens do tipo will!!!*/
+
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
     ///////////////// ADVERTISE //////////////////////
-    // Broadcast (porta 511 no BMv2)
-    action send_advertise(bit<8> gwId, bit<8> duration) {
+    action send_advertise(bit<8> gwId, bit<16> duration) {
         hdr.mqttsn_advertise.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_ADVERTISE;
+        hdr.mqttsn_fixed.length = 5;
         hdr.mqttsn_advertise.gwId = gwId;
         hdr.mqttsn_advertise.duration = duration;
-        // Envia a mensagem ADVERTISE para todos os clientes (broadcast).
+        // Envia a mensagem ADVERTISE para todos os clientes. Broadcast (porta 511 no BMv2).
         standard_metadata.egress_spec = (egressPort)511;
     }
     ///////////////// SEARCHGW & GWINFO //////////////////////
     action send_gwinfo_response() {
         // Prepara o header GWINFO
         hdr.mqttsn_gwinfo.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_GWINFO;
+        hdr.mqttsn_fixed.length = 7;
         hdr.mqttsn_gwinfo.gwId  = 2; // ID do gateway
         hdr.mqttsn_gwinfo.gwAdd = 0x0A000002; // opcional: IP do gateway (10.0.0.2).
         // Envia de volta para o cliente (unicast) que enviou o SEARCHGW pela porta de entrada.
@@ -807,13 +813,25 @@ control MyIngress(inout headers hdr,
         }
         // Suporta até 1024 entradas (clientes registrados).
         size = 1024;
-        // Ação padrão se não encontrar o clientId registrado na tabela.
-        // Útil para clientes desconhecidos.
+        /* Ação padrão se não encontrar o clientId registrado na tabela.
+        Aqui estou usando o MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID (0x02) 
+        para clientes não registrados. Tecnicamente o código 0x02 significa 
+        Invalid Topic Id, não invalid clientId. Não existe returnCode 
+        específico para clientId inválido, então usar 0x02 como fallback 
+        é aceitável. Será que não vale a pena essa sugestão de melhoria
+        para o protocolo MQTT-SN, criando essa mensagem de resposta?*/
         default_action = send_connack_response_reject_invalid_id();
     }
 
     action send_connack_response_accept_connection() {
+        /* Antes de setar o novo header, para evitar pacotes 
+        “com dois headers MQTT-SN válidos” ao mesmo tempo,
+        usei o invalid.*/
+        hdr.mqttsn_flags_connect.setInvalid();
+        hdr.mqttsn_connect.setInvalid();
         hdr.mqttsn_connack.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_CONNACK;
+        hdr.mqttsn_fixed.length = 3;
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
@@ -821,30 +839,81 @@ control MyIngress(inout headers hdr,
     /* Essa ação é usada quando o gateway está congestionado
      e não pode aceitar novas conexões. Como não é possível contar
      o número de conexões ativas, ou seja, registros na tabela via 
-     data plane então essa ação fica para ações futuras.*/
+     data plane, então essa ação fica para projetos futuros.*/
     action send_connack_response_reject_congestion() {
+        hdr.mqttsn_flags_connect.setInvalid();
+        hdr.mqttsn_connect.setInvalid();
         hdr.mqttsn_connack.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_CONNACK;
+        hdr.mqttsn_fixed.length = 3;
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_CONGESTION;
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     action send_connack_response_reject_invalid_id() {
+        hdr.mqttsn_flags_connect.setInvalid();
+        hdr.mqttsn_connect.setInvalid();
         hdr.mqttsn_connack.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_CONNACK;
+        hdr.mqttsn_fixed.length = 3;
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     action send_connack_response_reject_not_supported() {
+        hdr.mqttsn_flags_connect.setInvalid();
+        hdr.mqttsn_connect.setInvalid();
         hdr.mqttsn_connack.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_CONNACK;
+        hdr.mqttsn_fixed.length = 3;
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_NOT_SUPPORTED;
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
+
+    ///////////////// REGISTER & REGACK //////////////////////
+
+    table topic_registry {
+        key = {
+            hdr.mqttsn_register.topicName : exact;
+        }
+        actions = {
+            send_regack_response_accept;
+            send_regack_response_reject_invalid;
+        }
+        size = 1024;
+        default_action = send_regack_response_reject_invalid();
+    }
+
+    action send_regack_response_accept(bit<16> topicId) {
+        hdr.mqttsn_register.setInvalid();
+        hdr.mqttsn_regack.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_REGACK;
+        hdr.mqttsn_fixed.length = 7;
+        hdr.mqttsn_regack.topicId = topicId; // atribuído pelo gateway
+        hdr.mqttsn_regack.msgId = hdr.mqttsn_register.msgId;
+        hdr.mqttsn_regack.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    action send_regack_response_reject_invalid() {
+        hdr.mqttsn_register.setInvalid();
+        hdr.mqttsn_regack.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_REGACK;
+        hdr.mqttsn_fixed.length = 7;
+        hdr.mqttsn_regack.topicId = 0x0000;
+        hdr.mqttsn_regack.msgId = hdr.mqttsn_register.msgId;
+        hdr.mqttsn_regack.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    ///////////////// APPLY ACTIONS //////////////////////
 
     apply {
         if (hdr.mqttsn_fixed.isValid()) {
             if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE) {
                 send_advertise(1, 60);
-            } else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW) {
+            }
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW) {
                 // A resposta padrão do gateway é um GWINFO.
                 if (hdr.mqttsn_searchgw.isValid()) {
                     // Envia a resposta GWINFO para o cliente que enviou o SEARCHGW.
@@ -857,19 +926,34 @@ control MyIngress(inout headers hdr,
                     // de rejeição de mensagens inválidas.
                     mark_to_drop();
                 }
-            } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT) {
-                // A resposta padrão do gateway é uma CONNACK (baseado na tabela static_clients.txt)
+            }
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT) {
+                /* Veja a seção 6.2 da versão 1.2 da documentação do MQTT-SN.
+                Inicialmente será criada apenas a condição de:
+                CleanSession=true, Will=false: The GW will delete all subscriptions 
+                and Will data related to the client, and returns CONNACK 
+                (no prompting for Will topic and Will message).
+                Então essa ação fica para projetos futuros.*/
                 if (hdr.mqttsn_connect.isValid()) {
-                    if ((hdr.mqttsn_connect_flags.cleanSession == 0) || (hdr.mqttsn_connect_flags.will == 1) || (hdr.mqttsn_connect.protocolId != 0x01)) {
-                        send_connack_response_reject_not_supported();
+                    if (hdr.mqttsn_connect.protocolId == 0x01) {
+                        if ((hdr.mqttsn_flags_connect.cleanSession == 1) && (hdr.mqttsn_flags_connect.will == 0)) {
+                            client_registry.apply();
+                        } else {
+                            send_connack_response_reject_not_supported();
+                        }
                     } else {
-                        client_registry.apply();
+                        send_connack_response_reject_not_supported();
                     }
+                }
+            }
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER) {
+                if (hdr.mqttsn_register.isValid()) {
+                    // Aplica a tabela de registro de tópicos
+                    topic_registry.apply();
                 }
             }
         }
     }
-
 }
 
 /*************************************************************************
