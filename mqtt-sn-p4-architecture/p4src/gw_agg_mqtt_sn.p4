@@ -785,7 +785,35 @@ e não pode aceitar novas conexões. Como não é possível contar o número de 
 data plane, então essa ação fica para projetos futuros.
 4 - QoS = 2 não foi implementado.
 5 - Este gateway não suporta as mensagens PUBREC, PUBREL, PUBCOMP, pois são somente para QoS = 2.
-6 - Este gateway não suporta TopicName, apenas TopicId.*/
+6 - Este gateway não suporta TopicName, apenas TopicId.
+7 - Procedimento de publicação por parte do gateway, conforme documentação do protocolo mqttsn na seção
+"6.10 Gateway’s Publish Procedure", em que isso acontece quando um cliente desconecta sem habilitar 
+CleanSession=true ou foi desinscrito de topicos nomeados com caracteres wildcard.
+8 - Este gateway não suporta "6.14 Support of sleeping clients", é um mecanismo de economia de bateria para IoT, mas que 
+adiciona complexidade ao gateway (fila de mensagens, timers, estado por cliente).
+9 - Este gateway não verifica se um client caiu inesperadamente, ou seja, saiu sem avisar ao gateway
+com a mensagem disconnect.
+10 - Este gateway não suporta:
+    * WILLTOPICUPD:
+        Quem envia: Cliente.
+        Função: Atualizar o tópico do Will armazenado no gateway.
+        Caso especial: Se enviada sem Flags e sem WillTopic (só 2 bytes) → significa remover o Will do gateway.
+    * WILLMSGUPD:
+        Quem envia: Cliente.
+        Função: Atualizar o conteúdo da mensagem Will armazenada no gateway.
+        Exemplo de uso: Cliente pode atualizar a mensagem para refletir uma nova condição
+    * WILLTOPICRESP
+        Quem envia: Gateway.
+        Função: Responder a um WILLTOPICUPD.
+        Campo ReturnCode: indica se o update foi aceito ou rejeitado.
+    * WILLMSGRESP
+        Quem envia: Gateway.
+        Função: Responder a um WILLMSGUPD.
+        Campo ReturnCode: igual, aceito ou rejeitado.
+
+Essas mensagens não são obrigatórias em toda sessão. Só aparecem se 1 - o cliente quiser alterar 
+dinamicamente seu Will, ou 2 - se quiser removê-lo.
+*/
 
 control MyIngress(inout headers hdr,
                   inout metadata meta,
@@ -939,10 +967,17 @@ control MyIngress(inout headers hdr,
         default_action = send_puback_response(MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID);
     }
 
-    /*Regras de QoS no MQTT-SN:
-    QoS = -1 → fire and forget → não tem nem msgId. É usado em broadcasts sem garantia.
-    QoS = 0 → at most once → entrega sem ACK, só repassa para quem estiver inscrito.
-    QoS = 1 → at least once → exige PUBACK. O switch precisa gerar e enviar PUBACK ao cliente.*/
+    /*
+    Regras de QoS no MQTT-SN:
+    * QoS = -1 → fire and forget → não tem nem msgId. É usado em broadcasts sem garantia.
+    O QoS -1 é específico do MQTT-SN (não existe no MQTT clássico).
+        1 - Ele permite que clientes enviem PUBLISH mensagens “fire and forget”:
+        2 - Não há ACK.
+        3 - Não precisa nem de conexão ativa (CONNECT).
+        4 - Ideal para sensores muito limitados (energia/memória).
+    * QoS = 0 → at most once → entrega sem ACK, só repassa para quem estiver inscrito.
+    * QoS = 1 → at least once → exige PUBACK. O switch precisa gerar e enviar PUBACK ao cliente.
+    */
 
     action publish_qos_minus1() {
         standard_metadata.egress_spec = (egressPort)511;
@@ -1004,6 +1039,115 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
+    ///////////////// UNSUBSCRIBE & UNSUBACK //////////////////////
+
+    table topic_registry_unsubscribe {
+        key = { 
+            hdr.mqttsn_unsubscribe.topicId : exact; 
+        }
+        actions = {
+            send_unsuback_accept;
+            send_unsuback_reject;
+        }
+        size = 1024;
+        default_action = send_unsuback_reject(0x0000);
+    }
+
+    action send_unsuback_accept() {
+        hdr.mqttsn_unsubscribe.setInvalid();
+
+        hdr.mqttsn_unsuback.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_UNSUBACK;
+        hdr.mqttsn_fixed.length  = 4;
+        hdr.mqttsn_unsuback.msgId = hdr.mqttsn_unsubscribe.msgId;
+
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    action send_unsuback_reject(bit<16> msgId) {
+        hdr.mqttsn_unsubscribe.setInvalid();
+
+        hdr.mqttsn_unsuback.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_UNSUBACK;
+        hdr.mqttsn_fixed.length  = 4;
+        hdr.mqttsn_unsuback.msgId = msgId;
+
+        // não há ReturnCode no UNSUBACK, apenas confirma a remoção
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    ///////////////// PINGREQ & PINGRESP //////////////////////
+
+    table ping_handler {
+        key = {
+            hdr.mqttsn_fixed.msgType : exact;
+        }
+        actions = {
+            send_pingresp;
+            send_pingreq;
+            NoAction;
+        }
+        size = 4;
+        default_action = NoAction();
+    }
+
+
+    action send_pingresp() {
+        hdr.mqttsn_pingreq.setInvalid();
+        hdr.mqttsn_pingresp.setValid();
+
+        hdr.mqttsn_fixed.msgType = MQTTSN_PINGRESP;
+        hdr.mqttsn_fixed.length  = 2;
+
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    action send_pingreq(bit<16> clientId) {
+        hdr.mqttsn_pingresp.setInvalid();
+        hdr.mqttsn_pingreq.setValid();
+
+        hdr.mqttsn_fixed.msgType = MQTTSN_PINGREQ;
+        hdr.mqttsn_fixed.length  = 4; // 2 fixos + 2 de clientId
+        hdr.mqttsn_pingreq.clientId = clientId;
+
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    ///////////////// DISCONNECT //////////////////////
+
+    table disconnect_handler {
+        key = {
+            hdr.mqttsn_fixed.msgType : exact;
+        }
+        actions = {
+            send_disconnect_ack;
+            send_disconnect_with_duration;
+            NoAction;
+        }
+        size = 4;
+        default_action = NoAction();
+    }
+
+    // Ação: enviar DISCONNECT simples (ack)
+    action send_disconnect_ack() {
+        hdr.mqttsn_disconnect.setInvalid(); // não incluímos Duration na resposta
+        hdr.mqttsn_fixed.msgType = MQTTSN_DISCONNECT;
+        hdr.mqttsn_fixed.length  = 2;
+
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    // (Opcional) enviar DISCONNECT com Duration (GW forçando sleep)
+    action send_disconnect_with_duration(bit<16> dur) {
+        hdr.mqttsn_disconnect.setValid();
+        hdr.mqttsn_disconnect.duration = dur;
+
+        hdr.mqttsn_fixed.msgType = MQTTSN_DISCONNECT;
+        hdr.mqttsn_fixed.length  = 4;
+
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
     ///////////////// APPLY ACTIONS //////////////////////
 
     apply {
@@ -1058,21 +1202,69 @@ control MyIngress(inout headers hdr,
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE) {
                 if (hdr.mqttsn_subscribe.isValid()) {
-                    switch(hdr.mqttsn_flags_subscribe.topicIdType) {
-                        0b00:  // Topic Name
-                            topic_registry.apply(); // lookup pelo nome
-                            break;
-                        0b01:  // Pre-defined TopicId
-                            send_suback_accept(hdr.mqttsn_subscribe.topicId, hdr.mqttsn_subscribe.msgId);
-                            break;
-                        0b10:  // Short Topic Name
-                            // lookup na tabela de short names, se existir
-                            topic_registry.apply();
-                            break;
-                        0b11:  // Reserved
-                            send_suback_reject(hdr.mqttsn_subscribe.msgId);
-                            break;
+                    if (hdr.mqttsn_flags_subscribe.topicIdType == 0b00) {
+                        // Topic Name
+                        topic_registry.apply(); // lookup pelo nome
+                    } 
+                    else if (hdr.mqttsn_flags_subscribe.topicIdType == 0b01) {
+                        // Pre-defined TopicId
+                        send_suback_accept(hdr.mqttsn_subscribe.topicId, hdr.mqttsn_subscribe.msgId);
+                    } 
+                    else if (hdr.mqttsn_flags_subscribe.topicIdType == 0b10) {
+                        // Short Topic Name
+                        // lookup na tabela de short names, se existir
+                        topic_registry.apply();
+                    } else {
+                        // 0b11: Reserved
+                        send_suback_reject(hdr.mqttsn_subscribe.msgId);
                     }
+                } else {
+                    // Se não houver um header válido.
+                    mark_to_drop();
+                }
+            }
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBACK) {
+                if (hdr.mqttsn_subscribe.isValid()) {
+                    if (hdr.mqttsn_flags_unsubscribe.topicIdType == 0b00) {
+                        // Topic Name
+                        topic_registry.apply(); // lookup pelo nome
+                    } 
+                    else if (hdr.mqttsn_flags_unsubscribe.topicIdType == 0b01) {
+                        // Pre-defined TopicId
+                        send_suback_accept(hdr.mqttsn_subscribe.topicId, hdr.mqttsn_subscribe.msgId);
+                    } 
+                    else if (hdr.mqttsn_flags_unsubscribe.topicIdType == 0b10) {
+                        // Short Topic Name
+                        // lookup na tabela de short names, se existir
+                        topic_registry.apply();
+                    } else {
+                        // 0b11: Reserved
+                        send_suback_reject(hdr.mqttsn_subscribe.msgId);
+                    }
+                } else {
+                    // Se não houver um header válido.
+                    mark_to_drop();
+                }
+            }
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ) {
+                if (hdr.mqttsn_pingreq.isValid()) {
+                    ping_handler.apply();
+                } else {
+                    // Se não houver um header válido.
+                    mark_to_drop();
+                }
+            }
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP) {
+                if (hdr.mqttsn_pingresp.isValid()) {
+                    // Se o gateway um ping resp, não precisa fazer nada.
+                } else {
+                    // Se não houver um header válido.
+                    mark_to_drop();
+                }
+            }
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT) {
+                if (hdr.mqttsn_disconnect.isValid()) {
+                    disconnect_handler.apply();
                 } else {
                     // Se não houver um header válido.
                     mark_to_drop();
