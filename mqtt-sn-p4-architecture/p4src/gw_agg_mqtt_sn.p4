@@ -48,6 +48,12 @@ const bit<8> MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID = 0x02;
 const bit<8> MQTTSN_RETURNCODE_REJECTED_NOT_SUPPORTED = 0x03;
 //const bit<8> MQTTSN_RETURNCODE_???? = 0x04-0xFF; // Reserved
 
+/*Topic ID Types*/
+const bit<8> TOPICIDTYPE_TOPICNAME = 0b00;
+const bit<8>TOPICIDTYPE_PREDEFINEDTOPIC = 0b01;
+const bit<8>TOPICIDTYPE_SHORTTOPICNAME = 0b10;
+const bit<8>TOPICIDTYPE_RESERVED = 0b11;
+
 /*Segment UDP*/
 const bit<8> TYPE_UDP = 0x11;
 const bit<16> UDP_PORT = 1884;
@@ -118,7 +124,7 @@ header MQTTSN_gwinfo_h {
 
 /*Message MQTT-SN variable header CONNECT*/
 header MQTTSN_connect_h {
-    bit<8>    flags;
+    //bit<8>    flags;
     bit<8>    protocolId;
     bit<16>   duration;
     bit<184>  clientId; // max 23 caracteres * 1 byte (8 bits) = 184 bits
@@ -136,7 +142,7 @@ header MQTTSN_willtopicreq_h {
 
 /*Message MQTT-SN variable header WILLTOPIC*/
 header MQTTSN_willtopic_h {
-    bit<8>    flags;
+    //bit<8>    flags;
     bit<256>  willTopic; // Verificar tamanho!!!
 }
 
@@ -166,7 +172,7 @@ header MQTTSN_regack_h {
 
 /*Message MQTT-SN variable header PUBLISH*/
 header MQTTSN_publish_h {
-    bit<8>    flags;
+    //bit<8>    flags;
     bit<16>   topicId;
     bit<16>   msgId;
     bit<256>  data; // Verificar tamanho!!!
@@ -196,7 +202,7 @@ header MQTTSN_pubcomp_h {
 
 /*Message MQTT-SN variable header SUBSCRIBE*/
 header MQTTSN_subscribe_h {
-    bit<8>    flags;
+    //bit<8>    flags;
     bit<16>   msgId;
     bit<16>   topicId;
     bit<256>  topicName; // (opcional) Verificar tamanho!!!
@@ -204,7 +210,7 @@ header MQTTSN_subscribe_h {
 
 /*Message MQTT-SN variable header SUBACK*/
 header MQTTSN_suback_h {
-    bit<8>   flags;
+    //bit<8>   flags;
     bit<16>  topicId;
     bit<16>  msgId;
     bit<8>   returnCode;
@@ -212,7 +218,7 @@ header MQTTSN_suback_h {
 
 /*Message MQTT-SN variable header UNSUBSCRIBE*/
 header MQTTSN_unsubscribe_h {
-    bit<8>    flags;
+    //bit<8>    flags;
     bit<16>   msgId;
     bit<16>   topicId;
     bit<256>  topicName; // (opcional) Verificar tamanho!!!
@@ -240,7 +246,7 @@ header MQTTSN_disconnect_h {
 
 /*Message MQTT-SN variable header WILLTOPICUPD*/
 header MQTTSN_willtopicupd_h {
-    bit<8>    flags;
+    //bit<8>    flags;
     bit<256>  willTopic; // Verificar tamanho!!!
 }
 
@@ -810,7 +816,6 @@ com a mensagem disconnect.
         Quem envia: Gateway.
         Função: Responder a um WILLMSGUPD.
         Campo ReturnCode: igual, aceito ou rejeitado.
-
 Essas mensagens não são obrigatórias em toda sessão. Só aparecem se 1 - o cliente quiser alterar 
 dinamicamente seu Will, ou 2 - se quiser removê-lo.
 */
@@ -818,6 +823,29 @@ dinamicamente seu Will, ou 2 - se quiser removê-lo.
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
+
+    ///////////////// SET NEW ADDRESS //////////////////////
+
+    action prepare_response_unicast() {
+        // swap eth
+        macAddr eth_tmp = hdr.ethernet.srcAddr;
+        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
+        hdr.ethernet.dstAddr = eth_tmp;
+
+        // swap ipv4
+        ipv4Addr ip_tmp = hdr.ipv4.srcAddr;
+        hdr.ipv4.srcAddr = hdr.ipv4.dstAddr;
+        hdr.ipv4.dstAddr = ip_tmp;
+
+        // swap udp ports
+        bit<16> p_tmp = hdr.udp.srcPort;
+        hdr.udp.srcPort = hdr.udp.dstPort;
+        hdr.udp.dstPort = p_tmp;
+
+        // reset checksums
+        hdr.ipv4.hdrChecksum = 0;
+        hdr.udp.checksum = 0;
+    }
 
     ///////////////// ADVERTISE //////////////////////
 
@@ -840,6 +868,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_fixed.length = 7;
         hdr.mqttsn_gwinfo.gwId  = 2; // ID do gateway
         hdr.mqttsn_gwinfo.gwAdd = 0x0A000002; // opcional: IP do gateway (10.0.0.2).
+
+        prepare_response_unicast();
 
         // Envia de volta para o cliente (unicast) que enviou o SEARCHGW pela porta de entrada.
         standard_metadata.egress_spec = standard_metadata.ingress_port;
@@ -879,6 +909,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_fixed.length = 3;
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
 
+        prepare_response_unicast();
+
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -895,6 +927,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_fixed.length = 3;
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
 
+        prepare_response_unicast();
+
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -906,6 +940,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_fixed.msgType = MQTTSN_CONNACK;
         hdr.mqttsn_fixed.length = 3;
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_NOT_SUPPORTED;
+
+        prepare_response_unicast();
 
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
@@ -934,6 +970,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_regack.msgId = hdr.mqttsn_register.msgId;
         hdr.mqttsn_regack.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
 
+        prepare_response_unicast();
+
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -947,6 +985,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_regack.msgId = hdr.mqttsn_register.msgId;
         hdr.mqttsn_regack.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
         
+        prepare_response_unicast();
+
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -980,10 +1020,16 @@ control MyIngress(inout headers hdr,
     */
 
     action publish_qos_minus1() {
+
+        prepare_response_unicast();
+
         standard_metadata.egress_spec = (egressPort)511;
     }
 
     action publish_qos0() {
+
+        prepare_response_unicast();
+
         standard_metadata.egress_spec = (egressPort)511;
     }
 
@@ -997,6 +1043,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_puback.topicId = hdr.mqttsn_publish.topicId;
         hdr.mqttsn_puback.msgId   = hdr.mqttsn_publish.msgId;
         hdr.mqttsn_puback.returnCode = returnCode;
+
+        prepare_response_unicast();
 
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
@@ -1024,6 +1072,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_suback.msgId   = hdr.mqttsn_subscribe.msgId;
         hdr.mqttsn_suback.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
 
+        prepare_response_unicast();
+
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -1035,6 +1085,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_suback.topicId = 0x0000;
         hdr.mqttsn_suback.msgId   = hdr.mqttsn_subscribe.msgId;
         hdr.mqttsn_suback.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
+
+        prepare_response_unicast();
 
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
@@ -1061,6 +1113,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_fixed.length  = 4;
         hdr.mqttsn_unsuback.msgId = hdr.mqttsn_unsubscribe.msgId;
 
+        prepare_response_unicast();
+
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -1071,6 +1125,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_fixed.msgType = MQTTSN_UNSUBACK;
         hdr.mqttsn_fixed.length  = 4;
         hdr.mqttsn_unsuback.msgId = msgId;
+
+        prepare_response_unicast();
 
         // não há ReturnCode no UNSUBACK, apenas confirma a remoção
         standard_metadata.egress_spec = standard_metadata.ingress_port;
@@ -1099,6 +1155,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_fixed.msgType = MQTTSN_PINGRESP;
         hdr.mqttsn_fixed.length  = 2;
 
+        prepare_response_unicast();
+
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -1109,6 +1167,8 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_fixed.msgType = MQTTSN_PINGREQ;
         hdr.mqttsn_fixed.length  = 4; // 2 fixos + 2 de clientId
         hdr.mqttsn_pingreq.clientId = clientId;
+
+        prepare_response_unicast();
 
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
@@ -1121,7 +1181,6 @@ control MyIngress(inout headers hdr,
         }
         actions = {
             send_disconnect_ack;
-            send_disconnect_with_duration;
             NoAction;
         }
         size = 4;
@@ -1134,16 +1193,7 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_fixed.msgType = MQTTSN_DISCONNECT;
         hdr.mqttsn_fixed.length  = 2;
 
-        standard_metadata.egress_spec = standard_metadata.ingress_port;
-    }
-
-    // (Opcional) enviar DISCONNECT com Duration (GW forçando sleep)
-    action send_disconnect_with_duration(bit<16> dur) {
-        hdr.mqttsn_disconnect.setValid();
-        hdr.mqttsn_disconnect.duration = dur;
-
-        hdr.mqttsn_fixed.msgType = MQTTSN_DISCONNECT;
-        hdr.mqttsn_fixed.length  = 4;
+        prepare_response_unicast();
 
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
@@ -1202,20 +1252,20 @@ control MyIngress(inout headers hdr,
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE) {
                 if (hdr.mqttsn_subscribe.isValid()) {
-                    if (hdr.mqttsn_flags_subscribe.topicIdType == 0b00) {
+                    if (hdr.mqttsn_flags_subscribe.topicIdType == TOPICIDTYPE_TOPICNAME) {
                         // Topic Name
                         topic_registry.apply(); // lookup pelo nome
                     } 
-                    else if (hdr.mqttsn_flags_subscribe.topicIdType == 0b01) {
+                    else if (hdr.mqttsn_flags_subscribe.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC) {
                         // Pre-defined TopicId
                         send_suback_accept(hdr.mqttsn_subscribe.topicId, hdr.mqttsn_subscribe.msgId);
                     } 
-                    else if (hdr.mqttsn_flags_subscribe.topicIdType == 0b10) {
+                    else if (hdr.mqttsn_flags_subscribe.topicIdType == TOPICIDTYPE_SHORTTOPICNAME) {
                         // Short Topic Name
                         // lookup na tabela de short names, se existir
                         topic_registry.apply();
                     } else {
-                        // 0b11: Reserved
+                        // TOPICIDTYPE_RESERVED: Reserved
                         send_suback_reject(hdr.mqttsn_subscribe.msgId);
                     }
                 } else {
@@ -1223,23 +1273,23 @@ control MyIngress(inout headers hdr,
                     mark_to_drop();
                 }
             }
-            else if (hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBACK) {
-                if (hdr.mqttsn_subscribe.isValid()) {
-                    if (hdr.mqttsn_flags_unsubscribe.topicIdType == 0b00) {
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE) {
+                if (hdr.mqttsn_unsubscribe.isValid()) {
+                    if (hdr.mqttsn_flags_unsubscribe.topicIdType == TOPICIDTYPE_TOPICNAME) {
                         // Topic Name
                         topic_registry.apply(); // lookup pelo nome
                     } 
-                    else if (hdr.mqttsn_flags_unsubscribe.topicIdType == 0b01) {
+                    else if (hdr.mqttsn_flags_unsubscribe.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC) {
                         // Pre-defined TopicId
-                        send_suback_accept(hdr.mqttsn_subscribe.topicId, hdr.mqttsn_subscribe.msgId);
+                        send_unsuback_accept(hdr.mqttsn_unsubscribe.topicId, hdr.mqttsn_unsubscribe.msgId);
                     } 
-                    else if (hdr.mqttsn_flags_unsubscribe.topicIdType == 0b10) {
+                    else if (hdr.mqttsn_flags_unsubscribe.topicIdType == TOPICIDTYPE_SHORTTOPICNAME) {
                         // Short Topic Name
                         // lookup na tabela de short names, se existir
                         topic_registry.apply();
                     } else {
-                        // 0b11: Reserved
-                        send_suback_reject(hdr.mqttsn_subscribe.msgId);
+                        // TOPICIDTYPE_RESERVED: Reserved
+                        send_unsuback_reject(hdr.mqttsn_unsubscribe.msgId);
                     }
                 } else {
                     // Se não houver um header válido.
@@ -1256,7 +1306,7 @@ control MyIngress(inout headers hdr,
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP) {
                 if (hdr.mqttsn_pingresp.isValid()) {
-                    // Se o gateway um ping resp, não precisa fazer nada.
+                    // Se o gateway receber um ping resp, não precisa fazer nada.
                 } else {
                     // Se não houver um header válido.
                     mark_to_drop();
