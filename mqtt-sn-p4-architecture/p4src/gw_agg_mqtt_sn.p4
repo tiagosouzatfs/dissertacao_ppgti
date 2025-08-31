@@ -6,7 +6,10 @@
 *********************** C O N S T S **************************************
 *************************************************************************/
 
-/*Message MQTT-SN*/
+// 0x: correponde a hexadecimal com bit<8>
+// 0b: correponde a binário com bit<2>
+
+/*Message MQTT-SN*/ 
 const bit<8> MQTTSN_ADVERTISE = 0x00;
 const bit<8> MQTTSN_SEARCHGW = 0x01;
 const bit<8> MQTTSN_GWINFO = 0x02;
@@ -49,18 +52,18 @@ const bit<8> MQTTSN_RETURNCODE_REJECTED_NOT_SUPPORTED = 0x03;
 //const bit<8> MQTTSN_RETURNCODE_???? = 0x04-0xFF; // Reserved
 
 /*Topic ID Types*/
-const bit<8> TOPICIDTYPE_TOPICNAME = 0b00;
-const bit<8>TOPICIDTYPE_PREDEFINEDTOPIC = 0b01;
-const bit<8>TOPICIDTYPE_SHORTTOPICNAME = 0b10;
-const bit<8>TOPICIDTYPE_RESERVED = 0b11;
+const bit<2> TOPICIDTYPE_TOPICNAME = 0b00;
+const bit<2> TOPICIDTYPE_PREDEFINEDTOPIC = 0b01;
+const bit<2> TOPICIDTYPE_SHORTTOPICNAME = 0b10;
+const bit<2> TOPICIDTYPE_RESERVED = 0b11;
 
 /*Segment UDP*/
 const bit<8> TYPE_UDP = 0x11;
 const bit<16> UDP_PORT = 1884;
 
 /*Segment TCP*/
-const bit<8> TYPE_TCP = 0x06;
-const bit<16> TCP_PORT = 1883;
+// const bit<8> TYPE_TCP = 0x06;
+// const bit<16> TCP_PORT = 1883;
 
 /*Packet IP*/
 const bit<16> TYPE_IPV4 = 0x800;
@@ -82,278 +85,265 @@ typedef bit<9> egressPort;
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-//////////////////// MQTT Headers ////////////////////
-
-/*Message MQTT fixed header*/
-header MQTT_fixed_h {
-    bit<4> controlPacketType;
-    bit<4> flagsPacketType;
-    bit<8> remainingLength;
-}
-
-// Adicionar os headers das mensagens MQTT
-header MQTT_ {
-    /* empty */
-}
-
 //////////////////// MQTT-SN Headers ////////////////////
 
 /*Message MQTT-SN fixed header*/
 header MQTTSN_fixed_h {
-    bit<8>  length;
-    //varbit<24>      length;
-    bit<8>  msgType;
+    bit<8> length;
+    bit<8> msgType;
 }
 
 /*Message MQTT-SN variable header ADVERTISE*/
 header MQTTSN_advertise_h {
-    bit<8>   gwId;
-    bit<16>  duration;
+    bit<8>  gwId;
+    bit<16> duration;
 }
 
 /*Message MQTT-SN variable header SEARCHGW*/
 header MQTTSN_searchgw_h {
-    bit<8>  radius;
+    bit<8> radius;
 }
 
 /*Message MQTT-SN variable header GWINFO*/
-header MQTTSN_gwinfo_h {
-    bit<8>   gwId;
-    bit<32>  gwAdd; // IPv4 address gw (only present if message is sent by a client)
+/* GWINFO short (only gwId) */
+header MQTTSN_gwinfo_short_h {
+    bit<8> gwId;
+}
+
+/*Message MQTT-SN variable header GWINFO*/
+/* GWINFO full (gwId + gwAdd) */
+header MQTTSN_gwinfo_full_h {
+    bit<8> gwId;
+    bit<32> gwAdd; // IPv4 address gw (only present if message is sent by a client)
 }
 
 /*Message MQTT-SN variable header CONNECT*/
 header MQTTSN_connect_h {
-    //bit<8>    flags;
-    bit<8>    protocolId;
-    bit<16>   duration;
-    bit<184>  clientId; // max 23 caracteres * 1 byte (8 bits) = 184 bits
+    bit<8>   protocolId;
+    bit<16>  duration;
+    bit<184> clientId; // max 23 caracteres * 1 byte (8 bits) = 184 bits
 }
 
 /*Message MQTT-SN variable header CONNACK*/
 header MQTTSN_connack_h {
-    bit<8>  returnCode;
+    bit<8> returnCode;
 }
 
 /*Message MQTT-SN variable header WILLTOPICREQ*/
 header MQTTSN_willtopicreq_h {
-    /* empty */
+    bit<8> reserved; // Não há outros campos além do header fixo
 }
 
 /*Message MQTT-SN variable header WILLTOPIC*/
 header MQTTSN_willtopic_h {
-    //bit<8>    flags;
-    bit<256>  willTopic; // Verificar tamanho!!!
+    bit<32> willTopic; 
 }
 
 /*Message MQTT-SN variable header WILLMSGREQ*/
 header MQTTSN_willmsgreq_h {
-    /* empty */
+    bit<8> reserved; // Não há outros campos além do header fixo
 }
 
 /*Message MQTT-SN variable header WILLMSG*/
 header MQTTSN_willmsg_h {
-    bit<256>  willMsg; // Verificar tamanho!!!
+    bit<32> willMsg; 
 }
 
 /*Message MQTT-SN variable header REGISTER*/
 header MQTTSN_register_h {
-    bit<16>   topicId;
-    bit<16>   msgId;
-    bit<256>  topicName; // Verificar tamanho!!!
+    bit<16> topicId;
+    bit<16> msgId;
+    bit<32> topicName; 
 }
 
 /*Message MQTT-SN variable header REGACK*/
 header MQTTSN_regack_h {
-    bit<16>  topicId;
-    bit<16>  msgId;
-    bit<8>   returnCode;
+    bit<16> topicId;
+    bit<16> msgId;
+    bit<8>  returnCode;
 }
 
 /*Message MQTT-SN variable header PUBLISH*/
 header MQTTSN_publish_h {
-    //bit<8>    flags;
-    bit<16>   topicId;
-    bit<16>   msgId;
-    bit<256>  data; // Verificar tamanho!!!
+    bit<16> topicId;
+    bit<16> msgId;
+    bit<32> data; 
 }
 
 /*Message MQTT-SN variable header PUBACK*/
 header MQTTSN_puback_h {
-    bit<16>  topicId;
-    bit<16>  msgId;
-    bit<8>   returnCode;
+    bit<16> topicId;
+    bit<16> msgId;
+    bit<8>  returnCode;
 }
 
 /*Message MQTT-SN variable header PUBREC*/
 header MQTTSN_pubrec_h {
-    bit<16>  msgId;
+    bit<16> msgId;
 }
 
 /*Message MQTT-SN variable header PUBREL*/
 header MQTTSN_pubrel_h {
-    bit<16>  msgId;
+    bit<16> msgId;
 }
 
 /*Message MQTT-SN variable header PUBCOMP*/
 header MQTTSN_pubcomp_h {
-    bit<16>  msgId;
+    bit<16> msgId;
 }
 
 /*Message MQTT-SN variable header SUBSCRIBE*/
 header MQTTSN_subscribe_h {
-    //bit<8>    flags;
-    bit<16>   msgId;
-    bit<16>   topicId;
-    bit<256>  topicName; // (opcional) Verificar tamanho!!!
+    bit<16> msgId;
+    bit<16> topicId;
+    bit<32> topicName; // (opcional)
 }
 
 /*Message MQTT-SN variable header SUBACK*/
 header MQTTSN_suback_h {
-    //bit<8>   flags;
-    bit<16>  topicId;
-    bit<16>  msgId;
-    bit<8>   returnCode;
+    bit<16> topicId;
+    bit<16> msgId;
+    bit<8>  returnCode;
 }
 
 /*Message MQTT-SN variable header UNSUBSCRIBE*/
 header MQTTSN_unsubscribe_h {
-    //bit<8>    flags;
-    bit<16>   msgId;
-    bit<16>   topicId;
-    bit<256>  topicName; // (opcional) Verificar tamanho!!!
+    bit<16> msgId;
+    bit<16> topicId;
+    bit<32> topicName; // (opcional)
 }
 
 /*Message MQTT-SN variable header UNSUBACK*/
 header MQTTSN_unsuback_h {
-    bit<16>  msgId;
+    bit<16> msgId;
 }
 
 /*Message MQTT-SN variable header PINGREQ*/
 header MQTTSN_pingreq_h {
-    bit<184>  clientId; // (opcional) max 23 caracteres * 1 byte (8 bits) = 184 bits
+    bit<184> clientId; // (opcional) max 23 caracteres * 1 byte (8 bits) = 184 bits
 }
 
 /*Message MQTT-SN variable header PINGRESP*/
 header MQTTSN_pingresp_h {  
-    /* empty */
+    bit<8> reserved; // Não há outros campos além do header fixo
 }
 
 /*Message MQTT-SN variable header DISCONNECT*/
 header MQTTSN_disconnect_h {
-    bit<16>  duration; // (opcional)
+    bit<16> duration; // (opcional)
 }
 
 /*Message MQTT-SN variable header WILLTOPICUPD*/
 header MQTTSN_willtopicupd_h {
-    //bit<8>    flags;
-    bit<256>  willTopic; // Verificar tamanho!!!
+    bit<32> willTopic; 
 }
 
 /*Message MQTT-SN variable header WILLMSGUPD*/
 header MQTTSN_willmsgupd_h {
-    bit<256>  willMsg; // Verificar tamanho!!!
+    bit<32> willMsg; 
 }
 
 /*Message MQTT-SN variable header WILLTOPICRESP*/
 header MQTTSN_willtopicresp_h {
-    bit<8>  returnCode;
+    bit<8> returnCode;
 }
 
 /*Message MQTT-SN variable header WILLMSGRESP*/
 header MQTTSN_willmsgresp_h {
-    bit<8>  returnCode;
+    bit<8> returnCode;
 }
 
 //////////////// MQTT-SN Headers Flags //////////////////
 
 /*Message MQTT-SN flags CONNECT*/
 header MQTTSN_flags_connect_h {
-    bit<1>  will;
-    bit<1>  cleanSession;
-    bit<6>  reserved; // (Estratégia para completar os 8 bits das flags e não dar erro na compilação)BMv2 target only supports headers with fields totaling a multiple of 8 bits.
+    bit<1> will;
+    bit<1> cleanSession;
+    bit<6> reserved; // (Estratégia para completar os 8 bits das flags e não dar erro 
+                      //    na compilação): BMv2 target only supports headers with fields 
+                      //    totaling a multiple of 8 bits.
 }
 
 /*Message MQTT-SN flags WILLTOPIC*/
 header MQTTSN_flags_willtopic_h {
-    bit<2>  qos;
-    bit<1>  retain;
-    bit<5>  reserved;
+    bit<2> qos;
+    bit<1> retain;
+    bit<5> reserved;
 }
 
 /*Message MQTT-SN flags PUBLISH*/
 header MQTTSN_flags_publish_h {
-    bit<1>  dup;
-    bit<2>  qos;
-    bit<1>  retain;
-    bit<2>  topicIdType;
-    bit<2>  reserved;
+    bit<1> dup;
+    bit<2> qos;
+    bit<1> retain;
+    bit<2> topicIdType;
+    bit<2> reserved;
 }
 
 /*Message MQTT-SN flags SUBSCRIBE*/
 header MQTTSN_flags_subscribe_h {
-    bit<1>  dup;
-    bit<2>  qos;
-    bit<2>  topicIdType;
-    bit<3>  reserved;
+    bit<1> dup;
+    bit<2> qos;
+    bit<2> topicIdType;
+    bit<3> reserved;
 }
 
 /*Message MQTT-SN flags UNSUBSCRIBE*/
 header MQTTSN_flags_unsubscribe_h {
-    bit<1>  dup;
-    bit<2>  qos;
-    bit<2>  topicIdType;
-    bit<3>  reserved;
+    bit<1> dup;
+    bit<2> qos;
+    bit<2> topicIdType;
+    bit<3> reserved;
 }
 
 /*Message MQTT-SN flags SUBACK*/
 header MQTTSN_flags_suback_h {
-    bit<2>  qos;
-    bit<6>  reserved;
+    bit<2> qos;
+    bit<6> reserved;
 }
 
 /*Message MQTT-SN flags WILLTOPICUPD*/
 header MQTTSN_flags_willtopicupd_h {
-    bit<2>  qos;
-    bit<1>  retain;
-    bit<5>  reserved;
+    bit<2> qos;
+    bit<1> retain;
+    bit<5> reserved;
 }
 
 ///////////////////// UDP Header ////////////////////
 
 /*Segment UDP*/
 header UDP_h {
-    bit<16>    srcPort;
-    bit<16>    dstPort;
-    bit<16>    length;
-    bit<16>    checksum;
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<16> length;
+    bit<16> checksum;
 }
 
 /////////////////// IPV4 Header ///////////////////////
 
 /*Packet IP*/
 header IPv4_h {
-    bit<4>       version;
-    bit<4>       ihl;
-    bit<8>       diffServ;
-    bit<16>      totalLen;
-    bit<16>      identification;
-    bit<3>       flags;
-    bit<13>      fragOffset;
-    bit<8>       ttl;
-    bit<8>       protocol;
-    bit<16>      hdrChecksum;
-    ipv4Addr     srcAddr;
-    ipv4Addr     dstAddr;
+    bit<4>   version;
+    bit<4>   ihl;
+    bit<8>   diffServ;
+    bit<16>  totalLen;
+    bit<16>  identification;
+    bit<3>   flags;
+    bit<13>  fragOffset;
+    bit<8>   ttl;
+    bit<8>   protocol;
+    bit<16>  hdrChecksum;
+    ipv4Addr srcAddr;
+    ipv4Addr dstAddr;
 }
 
 /////////////////// ETHERNET Header //////////////////////
 
 /*Frame Ethernet*/
 header Ethernet_h {
-    macAddr  dstAddr;
-    macAddr  srcAddr;
-    bit<16>  ethertype;
+    macAddr dstAddr;
+    macAddr srcAddr;
+    bit<16> ethertype;
 }
 
 //////////////////// HEADERS /////////////////////////
@@ -361,51 +351,50 @@ header Ethernet_h {
 struct headers {
     Ethernet_h ethernet;
     IPv4_h ipv4;
-    UDP_h  udp;
+    UDP_h udp;
     MQTTSN_fixed_h mqttsn_fixed;
     MQTTSN_advertise_h mqttsn_advertise;
     MQTTSN_searchgw_h mqttsn_searchgw;
-    MQTTSN_gwinfo_h mqttsn_gwinfo;
+    MQTTSN_gwinfo_short_h mqttsn_gwinfo_short;
+    MQTTSN_gwinfo_full_h mqttsn_gwinfo_full;
+    MQTTSN_flags_connect_h mqttsn_flags_connect;
     MQTTSN_connect_h mqttsn_connect;
     MQTTSN_connack_h mqttsn_connack;
     MQTTSN_willtopicreq_h mqttsn_willtopicreq;
+    MQTTSN_flags_willtopic_h mqttsn_flags_willtopic;
     MQTTSN_willtopic_h mqttsn_willtopic;
     MQTTSN_willmsgreq_h mqttsn_willmsgreq;
     MQTTSN_willmsg_h mqttsn_willmsg;
     MQTTSN_register_h mqttsn_register;
     MQTTSN_regack_h mqttsn_regack;
+    MQTTSN_flags_publish_h mqttsn_flags_publish;
     MQTTSN_publish_h mqttsn_publish;
     MQTTSN_puback_h mqttsn_puback;
     MQTTSN_pubrec_h mqttsn_pubrec;
     MQTTSN_pubrel_h mqttsn_pubrel;
     MQTTSN_pubcomp_h mqttsn_pubcomp;
+    MQTTSN_flags_subscribe_h mqttsn_flags_subscribe;
     MQTTSN_subscribe_h mqttsn_subscribe;
+    MQTTSN_flags_suback_h mqttsn_flags_suback;
     MQTTSN_suback_h mqttsn_suback;
+    MQTTSN_flags_unsubscribe_h mqttsn_flags_unsubscribe;
     MQTTSN_unsubscribe_h mqttsn_unsubscribe;
     MQTTSN_unsuback_h mqttsn_unsuback;
     MQTTSN_pingreq_h mqttsn_pingreq;
     MQTTSN_pingresp_h mqttsn_pingresp;
     MQTTSN_disconnect_h mqttsn_disconnect;
+    MQTTSN_flags_willtopicupd_h mqttsn_flags_willtopicupd;
     MQTTSN_willtopicupd_h mqttsn_willtopicupd;
     MQTTSN_willmsgupd_h mqttsn_willmsgupd;
     MQTTSN_willtopicresp_h mqttsn_willtopicresp;
     MQTTSN_willmsgresp_h mqttsn_willmsgresp;
-    MQTTSN_flags_connect_h mqttsn_flags_connect;
-    MQTTSN_flags_willtopic_h mqttsn_flags_willtopic;
-    MQTTSN_flags_publish_h mqttsn_flags_publish;
-    MQTTSN_flags_subscribe_h mqttsn_flags_subscribe;
-    MQTTSN_flags_unsubscribe_h mqttsn_flags_unsubscribe;
-    MQTTSN_flags_suback_h mqttsn_flags_suback;
-    MQTTSN_flags_willtopicupd_h mqttsn_flags_willtopicupd;
     // Adicionar os headers das mensagens MQTT
-    //MQTT_fixed_h mqtt_fixed;
 }
 
-struct metadata {
-    /* empty */
-}
+// Metadados
+struct metadata { }
 
-// Erros customizados para validação de headers
+// Erros customizados para validação dos headers
 error {
     // Ethernet
     UnsupportedEtherType,
@@ -426,7 +415,6 @@ error {
     MQTT_SN_InvalidFlags,
 
     // Parsing geral
-    //PacketTooShort,
     MalformedPacket,
     UnknownProtocol
 }
@@ -442,7 +430,7 @@ parser MyParser(packet_in packet,
     
     state start {
         packet.extract(hdr.ethernet);
-        transition select(hdr.ethernet.ethertype){
+        transition select(hdr.ethernet.ethertype) {
             TYPE_IPV4: parse_ipv4;
             default: accept;
         }
@@ -471,11 +459,6 @@ parser MyParser(packet_in packet,
         transition select(hdr.mqttsn_fixed.msgType) {
             MQTTSN_ADVERTISE:     parse_mqttsn_advertise;
             MQTTSN_SEARCHGW:      parse_mqttsn_searchgw;
-            /* Verificar se realmente é ncessário
-            esse parser pois o MQTTSN_GWINFO é uma mensagem 
-            enviada pelo gateway em resposta a uma mensagem 
-            MQTTSN_SEARCHGW então nunca vou precisar extrair
-            nenhum campo*/
             MQTTSN_GWINFO:        parse_mqttsn_gwinfo;
             MQTTSN_CONNECT:       parse_mqttsn_connect;
             MQTTSN_CONNACK:       parse_mqttsn_connack;
@@ -517,27 +500,22 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
-    /* Verificar se realmente é ncessário
-    esse parser pois o MQTTSN_GWINFO é uma mensagem 
-    enviada pelo gateway em resposta a uma mensagem 
-    MQTTSN_SEARCHGW então nunca vou precisar extrair
-    nenhum campo.*/
     state parse_mqttsn_gwinfo {
-        packet.extract(hdr.mqttsn_gwinfo);
         verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
         transition select(hdr.mqttsn_fixed.length) {
-            3: accept; // só gwId
-            7: parse_mqttsn_gwinfo_with_ip; // gwId + gwAdd
+            3: parse_mqttsn_gwinfo_short;
+            7: parse_mqttsn_gwinfo_full;
             default: accept;
         }
     }
 
-    // Estado para tratar o caso em que gwAdd é incluído,
-    //   como foi chamado via transition select, não foi necessário
-    //   extrair o header mqttsn_gwinfo novamente com outro nome.
-    state parse_mqttsn_gwinfo_with_ip {
-        // Pula os 4 bytes do campo gwAdd finais.
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 3) * 8);
+    state parse_mqttsn_gwinfo_short {
+        packet.extract(hdr.mqttsn_gwinfo_short);
+        transition accept;
+    }
+
+    state parse_mqttsn_gwinfo_full {
+        packet.extract(hdr.mqttsn_gwinfo_full);
         transition accept;
     }
 
@@ -548,10 +526,7 @@ parser MyParser(packet_in packet,
 
     state parse_mqttsn_connect {
         packet.extract(hdr.mqttsn_connect);
-        verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
-        // Pula a quantidade bits relacionados ao campo clientId.
-        // Packet advance tem que ser em bits.
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 6) * 8);
+        verify(hdr.mqttsn_fixed.length >= 25, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
@@ -582,8 +557,6 @@ parser MyParser(packet_in packet,
     }
 
     state parse_mqttsn_willtopic_extended {
-        // Pula WillTopic (length - Length(1) - MsgType(1) - Flags(1))
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 3) * 8);
         transition accept;
     }
 
@@ -596,14 +569,12 @@ parser MyParser(packet_in packet,
     state parse_mqttsn_willmsg {
         packet.extract(hdr.mqttsn_willmsg);
         verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 2) * 8);
         transition accept;
     }
 
     state parse_mqttsn_register {
         packet.extract(hdr.mqttsn_register);
         verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 6) * 8);
         transition accept;
     }
 
@@ -621,7 +592,6 @@ parser MyParser(packet_in packet,
     state parse_mqttsn_publish {
         packet.extract(hdr.mqttsn_publish);
         verify(hdr.mqttsn_fixed.length >= 8, error.MQTT_SN_InvalidLength);
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 7) * 8);
         transition accept;
     }
 
@@ -664,8 +634,6 @@ parser MyParser(packet_in packet,
     }
 
     state parse_mqttsn_subscribe_extended {
-        // Pula o topicName
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 5) * 8);
         transition accept;
     }
 
@@ -695,8 +663,6 @@ parser MyParser(packet_in packet,
     }
 
     state parse_mqttsn_unsubscribe_extended {
-        // Pula o topicName
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 5) * 8);
         transition accept;
     }
 
@@ -709,15 +675,6 @@ parser MyParser(packet_in packet,
     state parse_mqttsn_pingreq {
         packet.extract(hdr.mqttsn_pingreq);
         verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
-        transition select(hdr.mqttsn_fixed.length) {
-            2: accept;
-            default: parse_mqttsn_pingreq_extended;
-        }
-    }
-
-    state parse_mqttsn_pingreq_extended {
-        // Pula o clientId
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 2) * 8);
         transition accept;
     }
 
@@ -741,14 +698,12 @@ parser MyParser(packet_in packet,
     state parse_mqttsn_willtopicupd {
         packet.extract(hdr.mqttsn_willtopicupd);
         verify(hdr.mqttsn_fixed.length >= 4, error.MQTT_SN_InvalidLength);
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 3) * 8);
         transition accept;
     }
 
     state parse_mqttsn_willmsgupd {
         packet.extract(hdr.mqttsn_willmsgupd);
         verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
-        packet.advance((bit<32>)(hdr.mqttsn_fixed.length - 2) * 8);
         transition accept;
     }
 
@@ -818,6 +773,8 @@ com a mensagem disconnect.
         Campo ReturnCode: igual, aceito ou rejeitado.
 Essas mensagens não são obrigatórias em toda sessão. Só aparecem se 1 - o cliente quiser alterar 
 dinamicamente seu Will, ou 2 - se quiser removê-lo.
+11 - Todas as mensatgens em que há algum campo variável, foi definido tamanho máximo de 32 bits para remover o packet.advanced().
+12 - A mensagem MQTTSN_gwinfo já vem com gwId e gwAdd
 */
 
 control MyIngress(inout headers hdr,
@@ -825,6 +782,17 @@ control MyIngress(inout headers hdr,
                   inout standard_metadata_t standard_metadata) {
 
     ///////////////// SET NEW ADDRESS //////////////////////
+
+    /* helper: set IPv4/UDP lengths and zero checksums before compute stage */
+    action set_l3_l4_lengths(bit<16> mqttsn_len) {
+        hdr.udp.length = (bit<16>)(mqttsn_len + 8); // UDP header (8) + payload
+        hdr.ipv4.ihl = 5;
+        hdr.ipv4.totalLen = (bit<16>)( (bit<16>)hdr.ipv4.ihl * 4 + hdr.udp.length );
+        hdr.ipv4.ttl = 64;
+        hdr.ipv4.protocol = TYPE_UDP;
+        hdr.ipv4.hdrChecksum = 0;
+        hdr.udp.checksum = 0;
+    }
 
     action prepare_response_unicast() {
         // swap eth
@@ -856,22 +824,21 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_advertise.gwId = gwId;
         hdr.mqttsn_advertise.duration = duration;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         // Envia a mensagem ADVERTISE para todos os clientes. Broadcast (porta 511 no BMv2).
         standard_metadata.egress_spec = (egressPort)511;
     }
     ///////////////// SEARCHGW & GWINFO //////////////////////
 
-    action send_gwinfo_response() {
-        // Prepara o header GWINFO
-        hdr.mqttsn_gwinfo.setValid();
+    action send_gwinfo_response(bit<8> gwId, bit<32> gwAdd) {
+        hdr.mqttsn_gwinfo_full.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_GWINFO;
         hdr.mqttsn_fixed.length = 7;
-        hdr.mqttsn_gwinfo.gwId  = 2; // ID do gateway
-        hdr.mqttsn_gwinfo.gwAdd = 0x0A000002; // opcional: IP do gateway (10.0.0.2).
+        hdr.mqttsn_gwinfo_full.gwId = gwId;
+        hdr.mqttsn_gwinfo_full.gwAdd = gwAdd;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
-        // Envia de volta para o cliente (unicast) que enviou o SEARCHGW pela porta de entrada.
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -879,7 +846,8 @@ control MyIngress(inout headers hdr,
 
     table client_registry {
         key = {
-            hdr.mqttsn_connect.clientId : exact;
+            hdr.ipv4.srcAddr : exact;
+            hdr.udp.srcPort  : exact;
         }
         actions = {
             send_connack_response_accept_connection;
@@ -903,46 +871,44 @@ control MyIngress(inout headers hdr,
         usei o invalid.*/
         hdr.mqttsn_flags_connect.setInvalid();
         hdr.mqttsn_connect.setInvalid();
-
         hdr.mqttsn_connack.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_CONNACK;
         hdr.mqttsn_fixed.length = 3;
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    action send_connack_response_reject_congestion() {
-        // Não utilizada!!!
-    }
+    // Não utilizada!!!
+    /*
+    action send_connack_response_reject_congestion() {}
+    */
 
     action send_connack_response_reject_invalid_id() {
         hdr.mqttsn_flags_connect.setInvalid();
-
         hdr.mqttsn_connect.setInvalid();
         hdr.mqttsn_connack.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_CONNACK;
         hdr.mqttsn_fixed.length = 3;
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     action send_connack_response_reject_not_supported() {
         hdr.mqttsn_flags_connect.setInvalid();
-
         hdr.mqttsn_connect.setInvalid();
         hdr.mqttsn_connack.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_CONNACK;
         hdr.mqttsn_fixed.length = 3;
         hdr.mqttsn_connack.returnCode = MQTTSN_RETURNCODE_REJECTED_NOT_SUPPORTED;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -962,7 +928,6 @@ control MyIngress(inout headers hdr,
 
     action send_regack_response_accept(bit<16> topicId) {
         hdr.mqttsn_register.setInvalid();
-
         hdr.mqttsn_regack.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_REGACK;
         hdr.mqttsn_fixed.length = 7;
@@ -970,23 +935,22 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_regack.msgId = hdr.mqttsn_register.msgId;
         hdr.mqttsn_regack.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     action send_regack_response_reject_invalid() {
         hdr.mqttsn_register.setInvalid();
-
         hdr.mqttsn_regack.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_REGACK;
         hdr.mqttsn_fixed.length = 7;
         hdr.mqttsn_regack.topicId = 0x0000;
         hdr.mqttsn_regack.msgId = hdr.mqttsn_register.msgId;
         hdr.mqttsn_regack.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
-        
-        prepare_response_unicast();
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
+        prepare_response_unicast();
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -1020,23 +984,20 @@ control MyIngress(inout headers hdr,
     */
 
     action publish_qos_minus1() {
-
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length); 
         prepare_response_unicast();
-
         standard_metadata.egress_spec = (egressPort)511;
     }
 
     action publish_qos0() {
-
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length); 
         prepare_response_unicast();
-
         standard_metadata.egress_spec = (egressPort)511;
     }
 
     // Para qos = 1
     action send_puback_response(bit<8> returnCode) {
         hdr.mqttsn_publish.setInvalid();
-
         hdr.mqttsn_puback.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_PUBACK;
         hdr.mqttsn_fixed.length  = 7;
@@ -1044,14 +1005,14 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_puback.msgId   = hdr.mqttsn_publish.msgId;
         hdr.mqttsn_puback.returnCode = returnCode;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length); 
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     ///////////////// REGISTER & REGACK //////////////////////
 
-    table topic_registry {
+    table topic_registry_subscribe {
         key = {
             hdr.mqttsn_subscribe.topicId : exact;
         }
@@ -1060,34 +1021,32 @@ control MyIngress(inout headers hdr,
             send_suback_reject;
         }
         size = 1024;
-        default_action = send_suback_reject();
+        default_action = send_suback_reject(0);
     }
 
-    action send_suback_accept() {
+    action send_suback_accept(bit<16> topicId, bit<16> msgId) {
         hdr.mqttsn_suback.setValid();
-
         hdr.mqttsn_fixed.msgType = MQTTSN_SUBACK;
         hdr.mqttsn_fixed.length = 8;
-        hdr.mqttsn_suback.topicId = hdr.mqttsn_subscribe.topicId;
-        hdr.mqttsn_suback.msgId   = hdr.mqttsn_subscribe.msgId;
+        hdr.mqttsn_suback.topicId = topicId;
+        hdr.mqttsn_suback.msgId = msgId;
         hdr.mqttsn_suback.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    action send_suback_reject() {
+    action send_suback_reject(bit<16> msgId) {
         hdr.mqttsn_suback.setValid();
-
         hdr.mqttsn_fixed.msgType = MQTTSN_SUBACK;
         hdr.mqttsn_fixed.length = 8;
         hdr.mqttsn_suback.topicId = 0x0000;
-        hdr.mqttsn_suback.msgId   = hdr.mqttsn_subscribe.msgId;
+        hdr.mqttsn_suback.msgId = msgId;
         hdr.mqttsn_suback.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -1105,29 +1064,27 @@ control MyIngress(inout headers hdr,
         default_action = send_unsuback_reject(0x0000);
     }
 
-    action send_unsuback_accept() {
+    action send_unsuback_accept(bit<16> msgId) {
         hdr.mqttsn_unsubscribe.setInvalid();
-
         hdr.mqttsn_unsuback.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_UNSUBACK;
-        hdr.mqttsn_fixed.length  = 4;
-        hdr.mqttsn_unsuback.msgId = hdr.mqttsn_unsubscribe.msgId;
+        hdr.mqttsn_fixed.length = 4;
+        hdr.mqttsn_unsuback.msgId = msgId;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     action send_unsuback_reject(bit<16> msgId) {
         hdr.mqttsn_unsubscribe.setInvalid();
-
         hdr.mqttsn_unsuback.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_UNSUBACK;
-        hdr.mqttsn_fixed.length  = 4;
+        hdr.mqttsn_fixed.length = 4;
         hdr.mqttsn_unsuback.msgId = msgId;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         // não há ReturnCode no UNSUBACK, apenas confirma a remoção
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
@@ -1151,25 +1108,23 @@ control MyIngress(inout headers hdr,
     action send_pingresp() {
         hdr.mqttsn_pingreq.setInvalid();
         hdr.mqttsn_pingresp.setValid();
-
         hdr.mqttsn_fixed.msgType = MQTTSN_PINGRESP;
-        hdr.mqttsn_fixed.length  = 2;
+        hdr.mqttsn_fixed.length = 2;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     action send_pingreq(bit<16> clientId) {
         hdr.mqttsn_pingresp.setInvalid();
         hdr.mqttsn_pingreq.setValid();
-
         hdr.mqttsn_fixed.msgType = MQTTSN_PINGREQ;
         hdr.mqttsn_fixed.length  = 4; // 2 fixos + 2 de clientId
         hdr.mqttsn_pingreq.clientId = clientId;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -1189,12 +1144,12 @@ control MyIngress(inout headers hdr,
 
     // Ação: enviar DISCONNECT simples (ack)
     action send_disconnect_ack() {
-        hdr.mqttsn_disconnect.setInvalid(); // não incluímos Duration na resposta
+        hdr.mqttsn_disconnect.setInvalid();
         hdr.mqttsn_fixed.msgType = MQTTSN_DISCONNECT;
-        hdr.mqttsn_fixed.length  = 2;
+        hdr.mqttsn_fixed.length = 2;
 
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
-
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
@@ -1210,7 +1165,7 @@ control MyIngress(inout headers hdr,
                 if (hdr.mqttsn_searchgw.isValid()) {
                     // Envia a resposta GWINFO para o cliente que enviou o SEARCHGW.
                     if (hdr.mqttsn_searchgw.radius == 0x00) {
-                        send_gwinfo_response();
+                        send_gwinfo_response(2, 0x0A000002);
                     }
                 } else {
                     // Se não houver um header válido.
@@ -1281,7 +1236,7 @@ control MyIngress(inout headers hdr,
                     } 
                     else if (hdr.mqttsn_flags_unsubscribe.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC) {
                         // Pre-defined TopicId
-                        send_unsuback_accept(hdr.mqttsn_unsubscribe.topicId, hdr.mqttsn_unsubscribe.msgId);
+                        send_unsuback_accept(hdr.mqttsn_unsubscribe.msgId);
                     } 
                     else if (hdr.mqttsn_flags_unsubscribe.topicIdType == TOPICIDTYPE_SHORTTOPICNAME) {
                         // Short Topic Name
@@ -1372,7 +1327,8 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.mqttsn_fixed);
         packet.emit(hdr.mqttsn_advertise);
         packet.emit(hdr.mqttsn_searchgw);
-        packet.emit(hdr.mqttsn_gwinfo);
+        packet.emit(hdr.mqttsn_gwinfo_short);
+        packet.emit(hdr.mqttsn_gwinfo_full);
         packet.emit(hdr.mqttsn_connect);
         packet.emit(hdr.mqttsn_connack);
         packet.emit(hdr.mqttsn_willtopicreq);
