@@ -121,7 +121,7 @@ header MQTTSN_gwinfo_full_h {
 header MQTTSN_connect_h {
     bit<8>   protocolId;
     bit<16>  duration;
-    bit<184> clientId; // max 23 caracteres * 1 byte (8 bits) = 184 bits
+    // bit<184> clientId; // Removido clientId fixo. Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header CONNACK*/
@@ -136,7 +136,7 @@ header MQTTSN_willtopicreq_h {
 
 /*Message MQTT-SN variable header WILLTOPIC*/
 header MQTTSN_willtopic_h {
-    bit<32> willTopic; 
+   // bit<32> willTopic; // Removido willTopic fixo. Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header WILLMSGREQ*/
@@ -153,7 +153,7 @@ header MQTTSN_willmsg_h {
 header MQTTSN_register_h {
     bit<16> topicId;
     bit<16> msgId;
-    bit<32> topicName; 
+    // bit<32> topicName; // Removido topicName fixo. Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header REGACK*/
@@ -167,7 +167,7 @@ header MQTTSN_regack_h {
 header MQTTSN_publish_h {
     bit<16> topicId;
     bit<16> msgId;
-    bit<32> data; 
+    // bit<32> data; // Removido data fixo. Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header PUBACK*/
@@ -196,7 +196,7 @@ header MQTTSN_pubcomp_h {
 header MQTTSN_subscribe_h {
     bit<16> msgId;
     bit<16> topicId;
-    bit<32> topicName; // (opcional)
+    // bit<32> topicName; // Removido topicName fixo. Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header SUBACK*/
@@ -210,7 +210,7 @@ header MQTTSN_suback_h {
 header MQTTSN_unsubscribe_h {
     bit<16> msgId;
     bit<16> topicId;
-    bit<32> topicName; // (opcional)
+    // bit<32> topicName; // Removido topicName fixo. Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header UNSUBACK*/
@@ -220,7 +220,8 @@ header MQTTSN_unsuback_h {
 
 /*Message MQTT-SN variable header PINGREQ*/
 header MQTTSN_pingreq_h {
-    bit<184> clientId; // (opcional) max 23 caracteres * 1 byte (8 bits) = 184 bits
+    // bit<184> clientId; // Removido clientId fixo. Será extraído dinamicamente.
+    bit<8> reserved; // Não há outros campos além do header fixo
 }
 
 /*Message MQTT-SN variable header PINGRESP*/
@@ -235,12 +236,12 @@ header MQTTSN_disconnect_h {
 
 /*Message MQTT-SN variable header WILLTOPICUPD*/
 header MQTTSN_willtopicupd_h {
-    bit<32> willTopic; 
+    // bit<32> willTopic; // Removido willTopic fixo. Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header WILLMSGUPD*/
 header MQTTSN_willmsgupd_h {
-    bit<32> willMsg; 
+    // bit<32> willMsg; // Removido willMsg fixo. Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header WILLTOPICRESP*/
@@ -253,15 +254,24 @@ header MQTTSN_willmsgresp_h {
     bit<8> returnCode;
 }
 
+/*Default header to fields variables*/
+// Max payload size for Ethernet/IPv4/UDP (1500 - 20 - 8 = 1472 bytes = 11776 bits)
+//    Usando um valor um pouco maior para flexibilidade, mas com cuidado.
+//    O tamanho real será determinado pelo length do MQTTSN_fixed_h
+header MQTTSN_variable_field_h {
+    varbit<1504> data;
+}
+
 //////////////// MQTT-SN Headers Flags //////////////////
 
 /*Message MQTT-SN flags CONNECT*/
+// bit<6> reserved; (Estratégia para completar os 8 bits das flags
+//    e não dar erro na compilação): BMv2 target only supports 
+//    headers with fields totaling a multiple of 8 bits.
 header MQTTSN_flags_connect_h {
     bit<1> will;
     bit<1> cleanSession;
-    bit<6> reserved; // (Estratégia para completar os 8 bits das flags e não dar erro 
-                      //    na compilação): BMv2 target only supports headers with fields 
-                      //    totaling a multiple of 8 bits.
+    bit<6> reserved; 
 }
 
 /*Message MQTT-SN flags WILLTOPIC*/
@@ -388,6 +398,7 @@ struct headers {
     MQTTSN_willmsgupd_h mqttsn_willmsgupd;
     MQTTSN_willtopicresp_h mqttsn_willtopicresp;
     MQTTSN_willmsgresp_h mqttsn_willmsgresp;
+    MQTTSN_variable_field_h mqttsn_variable_field; // Para campos variáveis
     // Adicionar os headers das mensagens MQTT
 }
 
@@ -519,14 +530,16 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
-    state parse_mqttsn_flags_connect {
-        packet.extract(hdr.mqttsn_flags_connect);
-        transition parse_mqttsn_connect;
-    }
-
     state parse_mqttsn_connect {
+        packet.extract(hdr.mqttsn_flags_connect);
         packet.extract(hdr.mqttsn_connect);
-        verify(hdr.mqttsn_fixed.length >= 25, error.MQTT_SN_InvalidLength);
+        // O clientId é um campo variável. Extrair o restante do pacote como um campo variável.
+        // O comprimento do clientId é o comprimento total da mensagem - (fixed_h + flags_connect_h + connect_h)
+        // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_connect_h (1 byte) + MQTTSN_connect_h (3 bytes) = 6 bytes
+        // Comprimento do clientId = hdr.mqttsn_fixed.length - 6
+        // O comprimento mínimo para CONNECT é 6 bytes (2 fixos + 1 flags + 3 connect) + 1 byte de clientId = 7 bytes
+        verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
+        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 6) * 8));
         transition accept;
     }
 
@@ -542,21 +555,13 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
-    state parse_mqttsn_flags_willtopic {
-        packet.extract(hdr.mqttsn_flags_willtopic);
-        transition parse_mqttsn_willtopic;
-    }
-
     state parse_mqttsn_willtopic {
-        packet.extract(hdr.mqttsn_willtopic);
-        verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
-        transition select(hdr.mqttsn_fixed.length) {
-            3: accept; // Mensagem WILLTOPIC vazia
-            default: parse_mqttsn_willtopic_extended;
-        }
-    }
-
-    state parse_mqttsn_willtopic_extended {
+        packet.extract(hdr.mqttsn_flags_willtopic);
+        // O willTopic é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_willtopic_h)
+        // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_willtopic_h (1 byte) = 3 bytes
+        // O comprimento mínimo para WILLTOPIC é 3 bytes (2 fixos + 1 flags) + 1 byte de willTopic = 4 bytes
+        verify(hdr.mqttsn_fixed.length >= 4, error.MQTT_SN_InvalidLength);
+        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 3) * 8));
         transition accept;
     }
 
@@ -567,14 +572,21 @@ parser MyParser(packet_in packet,
     }
 
     state parse_mqttsn_willmsg {
-        packet.extract(hdr.mqttsn_willmsg);
+        // O willMsg é um campo variável. Comprimento = hdr.mqttsn_fixed.length - fixed_h
+        // MQTTSN_fixed_h (2 bytes)
+        // O comprimento mínimo para WILLMSG é 2 bytes (fixos) + 1 byte de willMsg = 3 bytes
         verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
+        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 2) * 8));
         transition accept;
     }
 
     state parse_mqttsn_register {
         packet.extract(hdr.mqttsn_register);
+        // O topicName é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + register_h)
+        // MQTTSN_fixed_h (2 bytes) + MQTTSN_register_h (4 bytes) = 6 bytes
+        // O comprimento mínimo para REGISTER é 6 bytes (fixos) + 1 byte de topicName = 7 bytes
         verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
+        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 6) * 8));
         transition accept;
     }
 
@@ -584,14 +596,13 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
-    state parse_mqttsn_flags_publish {
-        packet.extract(hdr.mqttsn_flags_publish);
-        transition parse_mqttsn_publish;
-    }
-
     state parse_mqttsn_publish {
+        packet.extract(hdr.mqttsn_flags_publish);
         packet.extract(hdr.mqttsn_publish);
-        verify(hdr.mqttsn_fixed.length >= 8, error.MQTT_SN_InvalidLength);
+        // O data é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_publish_h + publish_h)
+        // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_publish_h (1 byte) + MQTTSN_publish_h (4 bytes) = 7 bytes
+        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 7) * 8));
+        verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
@@ -619,50 +630,30 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
-    state parse_mqttsn_flags_subscribe {
-        packet.extract(hdr.mqttsn_flags_subscribe);
-        transition parse_mqttsn_subscribe;
-    }
-
     state parse_mqttsn_subscribe {
+        packet.extract(hdr.mqttsn_flags_subscribe);
         packet.extract(hdr.mqttsn_subscribe);
-        verify(hdr.mqttsn_fixed.length >= 6, error.MQTT_SN_InvalidLength);
-        transition select(hdr.mqttsn_fixed.length) {
-            7: accept; // Mensagem com topicId
-            default: parse_mqttsn_subscribe_extended;
-        }
-    }
-
-    state parse_mqttsn_subscribe_extended {
+        // O topicName é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_subscribe_h + subscribe_h)
+        // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_subscribe_h (1 byte) + MQTTSN_subscribe_h (4 bytes) = 7 bytes
+        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 7) * 8));
+        verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
-    state parse_mqttsn_flags_suback {
-        packet.extract(hdr.mqttsn_flags_suback);
-        transition parse_mqttsn_suback;
-    }
-
     state parse_mqttsn_suback {
+        packet.extract(hdr.mqttsn_flags_suback);
         packet.extract(hdr.mqttsn_suback);
         verify(hdr.mqttsn_fixed.length == 8, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
-    state parse_mqttsn_flags_unsubscribe {
-        packet.extract(hdr.mqttsn_flags_unsubscribe);
-        transition parse_mqttsn_unsubscribe;
-    }
-
     state parse_mqttsn_unsubscribe {
+        packet.extract(hdr.mqttsn_flags_unsubscribe);
         packet.extract(hdr.mqttsn_unsubscribe);
-        verify(hdr.mqttsn_fixed.length >= 6, error.MQTT_SN_InvalidLength);
-        transition select(hdr.mqttsn_fixed.length) {
-            7: accept; // Mensagem com topicId
-            default: parse_mqttsn_unsubscribe_extended;
-        }
-    }
-
-    state parse_mqttsn_unsubscribe_extended {
+        // O topicName é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_unsubscribe_h + unsubscribe_h)
+        // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_unsubscribe_h (1 byte) + MQTTSN_unsubscribe_h (4 bytes) = 7 bytes
+        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 7) * 8));
+        verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
@@ -673,7 +664,10 @@ parser MyParser(packet_in packet,
     }
 
     state parse_mqttsn_pingreq {
+        // O clientId é um campo variável. Comprimento = hdr.mqttsn_fixed.length - fixed_h
+        // MQTTSN_fixed_h (2 bytes)
         packet.extract(hdr.mqttsn_pingreq);
+        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 2) * 8));
         verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
         transition accept;
     }
@@ -690,20 +684,20 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
-    state parse_mqttsn_flags_willtopicupd {
-        packet.extract(hdr.mqttsn_flags_willtopicupd);
-        transition parse_mqttsn_willtopicupd;
-    }
-
     state parse_mqttsn_willtopicupd {
-        packet.extract(hdr.mqttsn_willtopicupd);
-        verify(hdr.mqttsn_fixed.length >= 4, error.MQTT_SN_InvalidLength);
+        packet.extract(hdr.mqttsn_flags_willtopicupd);
+        // O willTopic é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_willtopicupd_h)
+        // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_willtopicupd_h (1 byte) = 3 bytes
+        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 3) * 8));
+        verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
     state parse_mqttsn_willmsgupd {
-        packet.extract(hdr.mqttsn_willmsgupd);
-        verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
+        // O willMsg é um campo variável. Comprimento = hdr.mqttsn_fixed.length - fixed_h
+        // MQTTSN_fixed_h (2 bytes)
+        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 2) * 8));
+        verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
@@ -916,7 +910,7 @@ control MyIngress(inout headers hdr,
 
     table topic_registry {
         key = {
-            hdr.mqttsn_register.topicName : exact;
+            hdr.mqttsn_variable_field.data : exact; // Agora usa o campo variável
         }
         actions = {
             send_regack_response_accept;
@@ -928,6 +922,7 @@ control MyIngress(inout headers hdr,
 
     action send_regack_response_accept(bit<16> topicId) {
         hdr.mqttsn_register.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
         hdr.mqttsn_regack.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_REGACK;
         hdr.mqttsn_fixed.length = 7;
@@ -942,6 +937,7 @@ control MyIngress(inout headers hdr,
 
     action send_regack_response_reject_invalid() {
         hdr.mqttsn_register.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
         hdr.mqttsn_regack.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_REGACK;
         hdr.mqttsn_fixed.length = 7;
@@ -959,7 +955,6 @@ control MyIngress(inout headers hdr,
     table publish_qos{
         key = {
             hdr.mqttsn_flags_publish.qos : exact;
-            hdr.mqttsn_publish.topicId   : exact;
         }
         actions = {
             publish_qos_minus1;
@@ -997,7 +992,9 @@ control MyIngress(inout headers hdr,
 
     // Para qos = 1
     action send_puback_response(bit<8> returnCode) {
+        hdr.mqttsn_flags_publish.setInvalid();
         hdr.mqttsn_publish.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
         hdr.mqttsn_puback.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_PUBACK;
         hdr.mqttsn_fixed.length  = 7;
@@ -1006,6 +1003,52 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_puback.returnCode = returnCode;
 
         set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length); 
+        prepare_response_unicast();
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    ///////////////// SUBSCRIBE & SUBACK //////////////////////
+
+    table topic_registry_subscribe {
+        key = {
+            hdr.mqttsn_subscribe.topicId : exact;
+        }
+        actions = {
+            send_suback_accept;
+            send_suback_reject;
+        }
+        size = 1024;
+        default_action = send_suback_reject(0);
+    }
+
+    action send_suback_accept(bit<16> topicId, bit<16> msgId) {
+        hdr.mqttsn_flags_subscribe.setInvalid();
+        hdr.mqttsn_subscribe.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
+        hdr.mqttsn_suback.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_SUBACK;
+        hdr.mqttsn_fixed.length = 8;
+        hdr.mqttsn_suback.topicId = topicId;
+        hdr.mqttsn_suback.msgId = msgId;
+        hdr.mqttsn_suback.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
+
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
+        prepare_response_unicast();
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
+
+    action send_suback_reject(bit<16> msgId) {
+        hdr.mqttsn_flags_subscribe.setInvalid();
+        hdr.mqttsn_subscribe.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
+        hdr.mqttsn_suback.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_SUBACK;
+        hdr.mqttsn_fixed.length = 8;
+        hdr.mqttsn_suback.topicId = 0x0000;
+        hdr.mqttsn_suback.msgId = msgId;
+        hdr.mqttsn_suback.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
+
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
@@ -1065,7 +1108,9 @@ control MyIngress(inout headers hdr,
     }
 
     action send_unsuback_accept(bit<16> msgId) {
+        hdr.mqttsn_flags_unsubscribe.setInvalid();
         hdr.mqttsn_unsubscribe.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
         hdr.mqttsn_unsuback.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_UNSUBACK;
         hdr.mqttsn_fixed.length = 4;
@@ -1077,7 +1122,9 @@ control MyIngress(inout headers hdr,
     }
 
     action send_unsuback_reject(bit<16> msgId) {
+        hdr.mqttsn_flags_unsubscribe.setInvalid();
         hdr.mqttsn_unsubscribe.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
         hdr.mqttsn_unsuback.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_UNSUBACK;
         hdr.mqttsn_fixed.length = 4;
@@ -1088,7 +1135,6 @@ control MyIngress(inout headers hdr,
         // não há ReturnCode no UNSUBACK, apenas confirma a remoção
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
-
     ///////////////// PINGREQ & PINGRESP //////////////////////
 
     table ping_handler {
@@ -1107,6 +1153,7 @@ control MyIngress(inout headers hdr,
 
     action send_pingresp() {
         hdr.mqttsn_pingreq.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
         hdr.mqttsn_pingresp.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_PINGRESP;
         hdr.mqttsn_fixed.length = 2;
@@ -1116,17 +1163,18 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    action send_pingreq(bit<16> clientId) {
+    action send_pingreq() {
         hdr.mqttsn_pingresp.setInvalid();
         hdr.mqttsn_pingreq.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_PINGREQ;
-        hdr.mqttsn_fixed.length  = 4; // 2 fixos + 2 de clientId
-        hdr.mqttsn_pingreq.clientId = clientId;
+        hdr.mqttsn_fixed.length  = 2; // PINGREQ sem clientId tem length 2
+        // Se for para enviar clientId, precisaria de um mecanismo para obtê-lo e emitir o campo variável.
 
         set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
+
 
     ///////////////// DISCONNECT //////////////////////
 
