@@ -1052,46 +1052,6 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    ///////////////// REGISTER & REGACK //////////////////////
-
-    table topic_registry_subscribe {
-        key = {
-            hdr.mqttsn_subscribe.topicId : exact;
-        }
-        actions = {
-            send_suback_accept;
-            send_suback_reject;
-        }
-        size = 1024;
-        default_action = send_suback_reject(0);
-    }
-
-    action send_suback_accept(bit<16> topicId, bit<16> msgId) {
-        hdr.mqttsn_suback.setValid();
-        hdr.mqttsn_fixed.msgType = MQTTSN_SUBACK;
-        hdr.mqttsn_fixed.length = 8;
-        hdr.mqttsn_suback.topicId = topicId;
-        hdr.mqttsn_suback.msgId = msgId;
-        hdr.mqttsn_suback.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
-
-        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
-        prepare_response_unicast();
-        standard_metadata.egress_spec = standard_metadata.ingress_port;
-    }
-
-    action send_suback_reject(bit<16> msgId) {
-        hdr.mqttsn_suback.setValid();
-        hdr.mqttsn_fixed.msgType = MQTTSN_SUBACK;
-        hdr.mqttsn_fixed.length = 8;
-        hdr.mqttsn_suback.topicId = 0x0000;
-        hdr.mqttsn_suback.msgId = msgId;
-        hdr.mqttsn_suback.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
-
-        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
-        prepare_response_unicast();
-        standard_metadata.egress_spec = standard_metadata.ingress_port;
-    }
-
     ///////////////// UNSUBSCRIBE & UNSUBACK //////////////////////
 
     table topic_registry_unsubscribe {
@@ -1174,7 +1134,6 @@ control MyIngress(inout headers hdr,
         prepare_response_unicast();
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
-
 
     ///////////////// DISCONNECT //////////////////////
 
