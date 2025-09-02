@@ -1,0 +1,9 @@
+table_set_default MyIngress.topic_registry_unsubscribe send_unsuback_reject 0x0000
+
+# Comandos table_add para MyIngress.topic_registry_unsubscribe
+# Formato: table_add <table_name> <action_name> <topic_id> [action_parameters]
+
+# Exemplo 1: Tópico ID 0x0001 aceito com msgId 0x0001
+table_add MyIngress.topic_registry_unsubscribe send_unsuback_accept 0x0001 0x0001
+# Exemplo 2: Tópico ID 0x0002 aceito com msgId 0x0002
+table_add MyIngress.topic_registry_unsubscribe send_unsuback_accept 0x0002 0x0002

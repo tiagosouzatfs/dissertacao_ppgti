@@ -131,7 +131,7 @@ header MQTTSN_connack_h {
 
 /*Message MQTT-SN variable header WILLTOPICREQ*/
 header MQTTSN_willtopicreq_h {
-    bit<8> reserved; // Não há outros campos além do header fixo
+    // Não há outros campos além do header fixo
 }
 
 /*Message MQTT-SN variable header WILLTOPIC*/
@@ -141,12 +141,12 @@ header MQTTSN_willtopic_h {
 
 /*Message MQTT-SN variable header WILLMSGREQ*/
 header MQTTSN_willmsgreq_h {
-    bit<8> reserved; // Não há outros campos além do header fixo
+    // Não há outros campos além do header fixo
 }
 
 /*Message MQTT-SN variable header WILLMSG*/
 header MQTTSN_willmsg_h {
-    bit<32> willMsg; 
+    // bit<32> willMsg; // Removido willMsg fixo. Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header REGISTER*/
@@ -221,12 +221,11 @@ header MQTTSN_unsuback_h {
 /*Message MQTT-SN variable header PINGREQ*/
 header MQTTSN_pingreq_h {
     // bit<184> clientId; // Removido clientId fixo. Será extraído dinamicamente.
-    bit<8> reserved; // Não há outros campos além do header fixo
 }
 
 /*Message MQTT-SN variable header PINGRESP*/
 header MQTTSN_pingresp_h {  
-    bit<8> reserved; // Não há outros campos além do header fixo
+    // Não há outros campos além do header fixo
 }
 
 /*Message MQTT-SN variable header DISCONNECT*/
@@ -740,7 +739,7 @@ e não pode aceitar novas conexões. Como não é possível contar o número de 
 data plane, então essa ação fica para projetos futuros.
 4 - QoS = 2 não foi implementado.
 5 - Este gateway não suporta as mensagens PUBREC, PUBREL, PUBCOMP, pois são somente para QoS = 2.
-6 - Este gateway não suporta TopicName, apenas TopicId.
+6 - 
 7 - Procedimento de publicação por parte do gateway, conforme documentação do protocolo mqttsn na seção
 "6.10 Gateway’s Publish Procedure", em que isso acontece quando um cliente desconecta sem habilitar 
 CleanSession=true ou foi desinscrito de topicos nomeados com caracteres wildcard.
@@ -767,8 +766,8 @@ com a mensagem disconnect.
         Campo ReturnCode: igual, aceito ou rejeitado.
 Essas mensagens não são obrigatórias em toda sessão. Só aparecem se 1 - o cliente quiser alterar 
 dinamicamente seu Will, ou 2 - se quiser removê-lo.
-11 - Todas as mensatgens em que há algum campo variável, foi definido tamanho máximo de 32 bits para remover o packet.advanced().
-12 - A mensagem MQTTSN_gwinfo já vem com gwId e gwAdd
+11 -
+12 - 
 */
 
 control MyIngress(inout headers hdr,
@@ -1135,6 +1134,7 @@ control MyIngress(inout headers hdr,
         // não há ReturnCode no UNSUBACK, apenas confirma a remoção
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
+
     ///////////////// PINGREQ & PINGRESP //////////////////////
 
     table ping_handler {
@@ -1221,9 +1221,12 @@ control MyIngress(inout headers hdr,
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT) {
-                if (hdr.mqttsn_connect.isValid()) {
+                if (hdr.mqttsn_connect.isValid() && hdr.mqttsn_flags_connect.isValid() && hdr.mqttsn_variable_field.isValid()) {
                     if (hdr.mqttsn_connect.protocolId == 0x01) {
                         if ((hdr.mqttsn_flags_connect.cleanSession == 1) && (hdr.mqttsn_flags_connect.will == 0)) {
+                            // O clientId está em hdr.mqttsn_variable_field.data
+                            // A tabela client_registry usa srcAddr e srcPort como chave, não o clientId.
+                            // Portanto, a chamada a client_registry.apply() permanece a mesma.
                             client_registry.apply();
                         } else {
                             send_connack_response_reject_not_supported();
@@ -1232,31 +1235,35 @@ control MyIngress(inout headers hdr,
                         send_connack_response_reject_not_supported();
                     }
                 } else {
-                    // Se não houver um header válido.
+                    // Se não houver um header válido ou campo variável.
                     mark_to_drop();
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER) {
-                if (hdr.mqttsn_register.isValid()) {
+                if (hdr.mqttsn_register.isValid() && hdr.mqttsn_variable_field.isValid()) {
                     // Aplica a tabela de registro de tópicos
+                    // A tabela topic_registry agora usa hdr.mqttsn_variable_field.data como chave,
+                    // ela já está pronta para receber o topicName extraído.
                     topic_registry.apply();
                 } else {
-                    // Se não houver um header válido.
+                    // Se não houver um header válido ou campo variável.
                     mark_to_drop();
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
-                if (hdr.mqttsn_publish.isValid()) {
+                if (hdr.mqttsn_publish.isValid() && hdr.mqttsn_flags_publish.isValid() && hdr.mqttsn_variable_field.isValid()) {
                     publish_qos.apply();
                 } else {
-                    // Se não houver um header válido.
+                    // Se não houver um header válido ou campo variável.
                     mark_to_drop();
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE) {
-                if (hdr.mqttsn_subscribe.isValid()) {
+                if (hdr.mqttsn_subscribe.isValid() && hdr.mqttsn_flags_subscribe.isValid() && hdr.mqttsn_variable_field.isValid()) {
                     if (hdr.mqttsn_flags_subscribe.topicIdType == TOPICIDTYPE_TOPICNAME) {
                         // Topic Name
+                        // A tabela topic_registry agora usa hdr.mqttsn_variable_field.data como chave,
+                        // ela já está pronta para receber o topicName extraído.
                         topic_registry.apply(); // lookup pelo nome
                     } 
                     else if (hdr.mqttsn_flags_subscribe.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC) {
@@ -1265,21 +1272,24 @@ control MyIngress(inout headers hdr,
                     } 
                     else if (hdr.mqttsn_flags_subscribe.topicIdType == TOPICIDTYPE_SHORTTOPICNAME) {
                         // Short Topic Name
-                        // lookup na tabela de short names, se existir
+                        // A tabela topic_registry agora usa hdr.mqttsn_variable_field.data como chave,
+                        // ela já está pronta para receber o short topic name extraído.
                         topic_registry.apply();
                     } else {
                         // TOPICIDTYPE_RESERVED: Reserved
                         send_suback_reject(hdr.mqttsn_subscribe.msgId);
                     }
                 } else {
-                    // Se não houver um header válido.
+                    // Se não houver um header válido ou campo variável.
                     mark_to_drop();
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE) {
-                if (hdr.mqttsn_unsubscribe.isValid()) {
+                if (hdr.mqttsn_unsubscribe.isValid() && hdr.mqttsn_flags_unsubscribe.isValid() && hdr.mqttsn_variable_field.isValid()) {
                     if (hdr.mqttsn_flags_unsubscribe.topicIdType == TOPICIDTYPE_TOPICNAME) {
                         // Topic Name
+                        // A tabela topic_registry agora usa hdr.mqttsn_variable_field.data como chave,
+                        // ela já está pronta para receber o topicName extraído.
                         topic_registry.apply(); // lookup pelo nome
                     } 
                     else if (hdr.mqttsn_flags_unsubscribe.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC) {
@@ -1288,22 +1298,27 @@ control MyIngress(inout headers hdr,
                     } 
                     else if (hdr.mqttsn_flags_unsubscribe.topicIdType == TOPICIDTYPE_SHORTTOPICNAME) {
                         // Short Topic Name
-                        // lookup na tabela de short names, se existir
+                        // A tabela topic_registry agora usa hdr.mqttsn_variable_field.data como chave,
+                        // ela já está pronta para receber o short topic name extraído.
                         topic_registry.apply();
                     } else {
                         // TOPICIDTYPE_RESERVED: Reserved
                         send_unsuback_reject(hdr.mqttsn_unsubscribe.msgId);
                     }
                 } else {
-                    // Se não houver um header válido.
+                    // Se não houver um header válido ou campo variável.
                     mark_to_drop();
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ) {
-                if (hdr.mqttsn_pingreq.isValid()) {
+                if (hdr.mqttsn_pingreq.isValid() && hdr.mqttsn_variable_field.isValid()) {
+                    // O clientId é opcional no PINGREQ. Se presente, está em hdr.mqttsn_variable_field.data.
+                    ping_handler.apply();
+                } else if (hdr.mqttsn_pingreq.isValid() && !hdr.mqttsn_variable_field.isValid() && hdr.mqttsn_fixed.length == 2) {
+                    // PINGREQ sem clientId (length 2)
                     ping_handler.apply();
                 } else {
-                    // Se não houver um header válido.
+                    // Se não houver um header válido ou campo variável inválido para o comprimento.
                     mark_to_drop();
                 }
             }
@@ -1359,6 +1374,15 @@ control MyComputeChecksum(inout headers hdr,
                   hdr.ipv4.dstAddr },
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16);
+
+        // Adicionado cálculo do checksum UDP
+        update_checksum(
+            hdr.udp.isValid(),
+                { hdr.udp.srcPort,
+                  hdr.udp.dstPort,
+                  hdr.udp.length },
+            hdr.udp.checksum,
+            HashAlgorithm.csum16);
     }
 }
 
@@ -1373,41 +1397,135 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.ipv4);
         packet.emit(hdr.udp);
         packet.emit(hdr.mqttsn_fixed);
-        packet.emit(hdr.mqttsn_advertise);
-        packet.emit(hdr.mqttsn_searchgw);
-        packet.emit(hdr.mqttsn_gwinfo_short);
-        packet.emit(hdr.mqttsn_gwinfo_full);
-        packet.emit(hdr.mqttsn_connect);
-        packet.emit(hdr.mqttsn_connack);
-        packet.emit(hdr.mqttsn_willtopicreq);
-        packet.emit(hdr.mqttsn_willtopic);
-        packet.emit(hdr.mqttsn_willmsgreq);
-        packet.emit(hdr.mqttsn_willmsg);
-        packet.emit(hdr.mqttsn_register);
-        packet.emit(hdr.mqttsn_regack);
-        packet.emit(hdr.mqttsn_publish);
-        packet.emit(hdr.mqttsn_puback);
-        packet.emit(hdr.mqttsn_pubrec);
-        packet.emit(hdr.mqttsn_pubrel);
-        packet.emit(hdr.mqttsn_pubcomp);
-        packet.emit(hdr.mqttsn_subscribe);
-        packet.emit(hdr.mqttsn_suback);
-        packet.emit(hdr.mqttsn_unsubscribe);
-        packet.emit(hdr.mqttsn_unsuback);
-        packet.emit(hdr.mqttsn_pingreq);
-        packet.emit(hdr.mqttsn_pingresp);
-        packet.emit(hdr.mqttsn_disconnect);
-        packet.emit(hdr.mqttsn_willtopicupd);
-        packet.emit(hdr.mqttsn_willmsgupd);
-        packet.emit(hdr.mqttsn_willtopicresp);
-        packet.emit(hdr.mqttsn_willmsgresp);
-        packet.emit(hdr.mqttsn_flags_connect);
-        packet.emit(hdr.mqttsn_flags_willtopic);
-        packet.emit(hdr.mqttsn_flags_publish);
-        packet.emit(hdr.mqttsn_flags_subscribe);
-        packet.emit(hdr.mqttsn_flags_suback);
-        packet.emit(hdr.mqttsn_flags_unsubscribe);
-        packet.emit(hdr.mqttsn_flags_willmsgupd);
+
+        // Emitir cabeçalhos MQTT-SN variáveis com base no tipo de mensagem
+        if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE && hdr.mqttsn_advertise.isValid()) {
+            packet.emit(hdr.mqttsn_advertise);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW && hdr.mqttsn_searchgw.isValid()) {
+            packet.emit(hdr.mqttsn_searchgw);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_GWINFO) {
+            if (hdr.mqttsn_gwinfo_short.isValid()) {
+                packet.emit(hdr.mqttsn_gwinfo_short);
+            } else if (hdr.mqttsn_gwinfo_full.isValid()) {
+                packet.emit(hdr.mqttsn_gwinfo_full);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT) {
+            if (hdr.mqttsn_flags_connect.isValid()) {
+                packet.emit(hdr.mqttsn_flags_connect);
+            }
+            if (hdr.mqttsn_connect.isValid()) {
+                packet.emit(hdr.mqttsn_connect);
+            }
+            if (hdr.mqttsn_variable_field.isValid()) {
+                packet.emit(hdr.mqttsn_variable_field);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK && hdr.mqttsn_connack.isValid()) {
+            packet.emit(hdr.mqttsn_connack);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICREQ && hdr.mqttsn_willtopicreq.isValid()) {
+            packet.emit(hdr.mqttsn_willtopicreq);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPIC) {
+            if (hdr.mqttsn_flags_willtopic.isValid()) {
+                packet.emit(hdr.mqttsn_flags_willtopic);
+            }
+            if (hdr.mqttsn_willtopic.isValid()) {
+                packet.emit(hdr.mqttsn_willtopic);
+            }
+            if (hdr.mqttsn_variable_field.isValid()) {
+                packet.emit(hdr.mqttsn_variable_field);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGREQ && hdr.mqttsn_willmsgreq.isValid()) {
+            packet.emit(hdr.mqttsn_willmsgreq);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSG) {
+            if (hdr.mqttsn_willmsg.isValid()) {
+                packet.emit(hdr.mqttsn_willmsg);
+            }
+            if (hdr.mqttsn_variable_field.isValid()) {
+                packet.emit(hdr.mqttsn_variable_field);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER) {
+            if (hdr.mqttsn_register.isValid()) {
+                packet.emit(hdr.mqttsn_register);
+            }
+            if (hdr.mqttsn_variable_field.isValid()) {
+                packet.emit(hdr.mqttsn_variable_field);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGACK && hdr.mqttsn_regack.isValid()) {
+            packet.emit(hdr.mqttsn_regack);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
+            if (hdr.mqttsn_flags_publish.isValid()) {
+                packet.emit(hdr.mqttsn_flags_publish);
+            }
+            if (hdr.mqttsn_publish.isValid()) {
+                packet.emit(hdr.mqttsn_publish);
+            }
+            if (hdr.mqttsn_variable_field.isValid()) {
+                packet.emit(hdr.mqttsn_variable_field);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && hdr.mqttsn_puback.isValid()) {
+            packet.emit(hdr.mqttsn_puback);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && hdr.mqttsn_pubrec.isValid()) {
+            packet.emit(hdr.mqttsn_pubrec);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && hdr.mqttsn_pubrel.isValid()) {
+            packet.emit(hdr.mqttsn_pubrel);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && hdr.mqttsn_pubcomp.isValid()) {
+            packet.emit(hdr.mqttsn_pubcomp);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE) {
+            if (hdr.mqttsn_flags_subscribe.isValid()) {
+                packet.emit(hdr.mqttsn_flags_subscribe);
+            }
+            if (hdr.mqttsn_subscribe.isValid()) {
+                packet.emit(hdr.mqttsn_subscribe);
+            }
+            if (hdr.mqttsn_variable_field.isValid()) {
+                packet.emit(hdr.mqttsn_variable_field);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBACK && hdr.mqttsn_suback.isValid()) {
+            packet.emit(hdr.mqttsn_suback);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE) {
+            if (hdr.mqttsn_flags_unsubscribe.isValid()) {
+                packet.emit(hdr.mqttsn_flags_unsubscribe);
+            }
+            if (hdr.mqttsn_unsubscribe.isValid()) {
+                packet.emit(hdr.mqttsn_unsubscribe);
+            }
+            if (hdr.mqttsn_variable_field.isValid()) {
+                packet.emit(hdr.mqttsn_variable_field);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBACK && hdr.mqttsn_unsuback.isValid()) {
+            packet.emit(hdr.mqttsn_unsuback);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ) {
+            if (hdr.mqttsn_pingreq.isValid()) {
+                packet.emit(hdr.mqttsn_pingreq);
+            }
+            if (hdr.mqttsn_variable_field.isValid()) {
+                packet.emit(hdr.mqttsn_variable_field);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP && hdr.mqttsn_pingresp.isValid()) {
+            packet.emit(hdr.mqttsn_pingresp);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT && hdr.mqttsn_disconnect.isValid()) {
+            packet.emit(hdr.mqttsn_disconnect);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICUPD) {
+            if (hdr.mqttsn_flags_willtopicupd.isValid()) {
+                packet.emit(hdr.mqttsn_flags_willtopicupd);
+            }
+            if (hdr.mqttsn_willtopicupd.isValid()) {
+                packet.emit(hdr.mqttsn_willtopicupd);
+            }
+            if (hdr.mqttsn_variable_field.isValid()) {
+                packet.emit(hdr.mqttsn_variable_field);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGUPD) {
+            if (hdr.mqttsn_willmsgupd.isValid()) {
+                packet.emit(hdr.mqttsn_willmsgupd);
+            }
+            if (hdr.mqttsn_variable_field.isValid()) {
+                packet.emit(hdr.mqttsn_variable_field);
+            }
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICRESP && hdr.mqttsn_willtopicresp.isValid()) {
+            packet.emit(hdr.mqttsn_willtopicresp);
+        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGRESP && hdr.mqttsn_willmsgresp.isValid()) {
+            packet.emit(hdr.mqttsn_willmsgresp);
+        }
     }
 }
 

@@ -1,8 +1,0 @@
-# QoS = 0 (bits qos = 0, tópico 0x5678)
-table_add publish_qos publish_qos0 0 0x5678 =>
-
-# QoS = -1 (bits qos = 3, tópico 0x1234)
-table_add publish_qos publish_qos_minus1 3 0x1234 =>
-
-# QoS 1 - aceita publicações no topicId 0x1234
-table_add publish_handler send_puback_response 1 0x1234 => 0x00
