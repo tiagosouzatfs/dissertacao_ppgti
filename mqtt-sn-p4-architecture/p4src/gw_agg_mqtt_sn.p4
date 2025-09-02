@@ -837,27 +837,6 @@ control MyIngress(inout headers hdr,
 
     ///////////////// CONNECT & CONNACK //////////////////////
 
-    table client_registry {
-        key = {
-            hdr.ipv4.srcAddr : exact;
-            hdr.udp.srcPort  : exact;
-        }
-        actions = {
-            send_connack_response_accept_connection;
-            send_connack_response_reject_invalid_id;
-        }
-        // Suporta até 1024 entradas (clientes registrados).
-        size = 1024;
-        /* Ação padrão se não encontrar o clientId registrado na tabela.
-        Aqui estou usando o MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID (0x02) 
-        para clientes não registrados. Tecnicamente o código 0x02 significa 
-        Invalid Topic Id, não invalid clientId. Não existe returnCode 
-        específico para clientId inválido, então usar 0x02 como fallback 
-        é aceitável. Será que não vale a pena essa sugestão de melhoria
-        para o protocolo MQTT-SN, criando essa mensagem de resposta?*/
-        default_action = send_connack_response_reject_invalid_id();
-    }
-
     action send_connack_response_accept_connection() {
         /* Antes de setar o novo header, para evitar pacotes 
         “com dois headers MQTT-SN válidos” ao mesmo tempo,
@@ -905,19 +884,28 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    ///////////////// REGISTER & REGACK //////////////////////
-
-    table topic_registry {
+    table client_registry {
         key = {
-            hdr.mqttsn_variable_field.data : exact; // Agora usa o campo variável
+            hdr.ipv4.srcAddr : exact;
+            hdr.udp.srcPort  : exact;
         }
         actions = {
-            send_regack_response_accept;
-            send_regack_response_reject_invalid;
+            send_connack_response_accept_connection;
+            send_connack_response_reject_invalid_id;
         }
+        // Suporta até 1024 entradas (clientes registrados).
         size = 1024;
-        default_action = send_regack_response_reject_invalid();
+        /* Ação padrão se não encontrar o clientId registrado na tabela.
+        Aqui estou usando o MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID (0x02) 
+        para clientes não registrados. Tecnicamente o código 0x02 significa 
+        Invalid Topic Id, não invalid clientId. Não existe returnCode 
+        específico para clientId inválido, então usar 0x02 como fallback 
+        é aceitável. Será que não vale a pena essa sugestão de melhoria
+        para o protocolo MQTT-SN, criando essa mensagem de resposta?*/
+        default_action = send_connack_response_reject_invalid_id();
     }
+
+    ///////////////// REGISTER & REGACK //////////////////////
 
     action send_regack_response_accept(bit<16> topicId) {
         hdr.mqttsn_register.setInvalid();
@@ -949,21 +937,19 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    ///////////////// PUBLISH & PUBACK //////////////////////
-
-    table publish_qos{
+    table topic_registry {
         key = {
-            hdr.mqttsn_flags_publish.qos : exact;
+            hdr.mqttsn_variable_field.data : exact; // Agora usa o campo variável
         }
         actions = {
-            publish_qos_minus1;
-            publish_qos0;
-            send_puback_response;
+            send_regack_response_accept;
+            send_regack_response_reject_invalid;
         }
         size = 1024;
-        // Se não souber tratar o tópico, manda rejeição
-        default_action = send_puback_response(MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID);
+        default_action = send_regack_response_reject_invalid();
     }
+
+    ///////////////// PUBLISH & PUBACK //////////////////////
 
     /*
     Regras de QoS no MQTT-SN:
@@ -1006,19 +992,21 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    ///////////////// SUBSCRIBE & SUBACK //////////////////////
-
-    table topic_registry_subscribe {
+    table publish_qos{
         key = {
-            hdr.mqttsn_subscribe.topicId : exact;
+            hdr.mqttsn_flags_publish.qos : exact;
         }
         actions = {
-            send_suback_accept;
-            send_suback_reject;
+            publish_qos_minus1;
+            publish_qos0;
+            send_puback_response;
         }
         size = 1024;
-        default_action = send_suback_reject(0);
+        // Se não souber tratar o tópico, manda rejeição
+        default_action = send_puback_response(MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID);
     }
+
+    ///////////////// SUBSCRIBE & SUBACK //////////////////////
 
     action send_suback_accept(bit<16> topicId, bit<16> msgId) {
         hdr.mqttsn_flags_subscribe.setInvalid();
@@ -1052,19 +1040,19 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    ///////////////// UNSUBSCRIBE & UNSUBACK //////////////////////
-
-    table topic_registry_unsubscribe {
-        key = { 
-            hdr.mqttsn_unsubscribe.topicId : exact; 
+    table topic_registry_subscribe {
+        key = {
+            hdr.mqttsn_subscribe.topicId : exact;
         }
         actions = {
-            send_unsuback_accept;
-            send_unsuback_reject;
+            send_suback_accept;
+            send_suback_reject;
         }
         size = 1024;
-        default_action = send_unsuback_reject(0x0000);
+        default_action = send_suback_reject(0);
     }
+
+    ///////////////// UNSUBSCRIBE & UNSUBACK //////////////////////
 
     action send_unsuback_accept(bit<16> msgId) {
         hdr.mqttsn_flags_unsubscribe.setInvalid();
@@ -1095,21 +1083,19 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    ///////////////// PINGREQ & PINGRESP //////////////////////
-
-    table ping_handler {
-        key = {
-            hdr.mqttsn_fixed.msgType : exact;
+    table topic_registry_unsubscribe {
+        key = { 
+            hdr.mqttsn_unsubscribe.topicId : exact; 
         }
         actions = {
-            send_pingresp;
-            send_pingreq;
-            NoAction;
+            send_unsuback_accept;
+            send_unsuback_reject;
         }
-        size = 4;
-        default_action = NoAction();
+        size = 1024;
+        default_action = send_unsuback_reject(0x0000);
     }
 
+    ///////////////// PINGREQ & PINGRESP //////////////////////
 
     action send_pingresp() {
         hdr.mqttsn_pingreq.setInvalid();
@@ -1135,7 +1121,31 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
+    table ping_handler {
+        key = {
+            hdr.mqttsn_fixed.msgType : exact;
+        }
+        actions = {
+            send_pingresp;
+            send_pingreq;
+            NoAction;
+        }
+        size = 4;
+        default_action = NoAction();
+    }
+
     ///////////////// DISCONNECT //////////////////////
+
+    // Ação: enviar DISCONNECT simples (ack)
+    action send_disconnect_ack() {
+        hdr.mqttsn_disconnect.setInvalid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_DISCONNECT;
+        hdr.mqttsn_fixed.length = 2;
+
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
+        prepare_response_unicast();
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+    }
 
     table disconnect_handler {
         key = {
@@ -1147,17 +1157,6 @@ control MyIngress(inout headers hdr,
         }
         size = 4;
         default_action = NoAction();
-    }
-
-    // Ação: enviar DISCONNECT simples (ack)
-    action send_disconnect_ack() {
-        hdr.mqttsn_disconnect.setInvalid();
-        hdr.mqttsn_fixed.msgType = MQTTSN_DISCONNECT;
-        hdr.mqttsn_fixed.length = 2;
-
-        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
-        prepare_response_unicast();
-        standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     ///////////////// APPLY ACTIONS //////////////////////
@@ -1507,3 +1506,4 @@ V1Switch(
 // docker exec -it p4 bash
 // cd /tmp/p4src
 // p4c --target bmv2 --arch v1model gw_agg_mqtt_sn.p4
+// docker stop p4
