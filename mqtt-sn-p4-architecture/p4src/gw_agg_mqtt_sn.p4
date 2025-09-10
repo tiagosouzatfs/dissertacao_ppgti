@@ -61,10 +61,6 @@ const bit<2> TOPICIDTYPE_RESERVED = 0b11;
 const bit<8> TYPE_UDP = 0x11;
 const bit<16> UDP_PORT = 1884;
 
-/*Segment TCP*/
-// const bit<8> TYPE_TCP = 0x06;
-// const bit<16> TCP_PORT = 1883;
-
 /*Packet IP*/
 const bit<16> TYPE_IPV4 = 0x800;
 
@@ -398,7 +394,6 @@ struct headers {
     MQTTSN_willtopicresp_h mqttsn_willtopicresp;
     MQTTSN_willmsgresp_h mqttsn_willmsgresp;
     MQTTSN_variable_field_h mqttsn_variable_field; // Para campos variáveis
-    // Adicionar os headers das mensagens MQTT
 }
 
 // Metadados
@@ -538,7 +533,10 @@ parser MyParser(packet_in packet,
         // Comprimento do clientId = hdr.mqttsn_fixed.length - 6
         // O comprimento mínimo para CONNECT é 6 bytes (2 fixos + 1 flags + 3 connect) + 1 byte de clientId = 7 bytes
         verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
-        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 6) * 8));
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)6) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
@@ -560,7 +558,10 @@ parser MyParser(packet_in packet,
         // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_willtopic_h (1 byte) = 3 bytes
         // O comprimento mínimo para WILLTOPIC é 3 bytes (2 fixos + 1 flags) + 1 byte de willTopic = 4 bytes
         verify(hdr.mqttsn_fixed.length >= 4, error.MQTT_SN_InvalidLength);
-        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 3) * 8));
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)3) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
@@ -575,7 +576,10 @@ parser MyParser(packet_in packet,
         // MQTTSN_fixed_h (2 bytes)
         // O comprimento mínimo para WILLMSG é 2 bytes (fixos) + 1 byte de willMsg = 3 bytes
         verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
-        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 2) * 8));
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)2) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
@@ -585,7 +589,10 @@ parser MyParser(packet_in packet,
         // MQTTSN_fixed_h (2 bytes) + MQTTSN_register_h (4 bytes) = 6 bytes
         // O comprimento mínimo para REGISTER é 6 bytes (fixos) + 1 byte de topicName = 7 bytes
         verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
-        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 6) * 8));
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)6) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
@@ -600,8 +607,11 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.mqttsn_publish);
         // O data é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_publish_h + publish_h)
         // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_publish_h (1 byte) + MQTTSN_publish_h (4 bytes) = 7 bytes
-        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 7) * 8));
         verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)7) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
@@ -634,8 +644,11 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.mqttsn_subscribe);
         // O topicName é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_subscribe_h + subscribe_h)
         // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_subscribe_h (1 byte) + MQTTSN_subscribe_h (4 bytes) = 7 bytes
-        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 7) * 8));
         verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)7) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
@@ -651,8 +664,11 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.mqttsn_unsubscribe);
         // O topicName é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_unsubscribe_h + unsubscribe_h)
         // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_unsubscribe_h (1 byte) + MQTTSN_unsubscribe_h (4 bytes) = 7 bytes
-        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 7) * 8));
         verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)7) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
@@ -666,8 +682,11 @@ parser MyParser(packet_in packet,
         // O clientId é um campo variável. Comprimento = hdr.mqttsn_fixed.length - fixed_h
         // MQTTSN_fixed_h (2 bytes)
         packet.extract(hdr.mqttsn_pingreq);
-        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 2) * 8));
         verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)2) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
@@ -687,16 +706,22 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.mqttsn_flags_willtopicupd);
         // O willTopic é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_willtopicupd_h)
         // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_willtopicupd_h (1 byte) = 3 bytes
-        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 3) * 8));
         verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)3) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
     state parse_mqttsn_willmsgupd {
         // O willMsg é um campo variável. Comprimento = hdr.mqttsn_fixed.length - fixed_h
         // MQTTSN_fixed_h (2 bytes)
-        packet.extract(hdr.mqttsn_variable_field, (bit<16>)((hdr.mqttsn_fixed.length - 2) * 8));
         verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)2) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
@@ -908,30 +933,55 @@ control MyIngress(inout headers hdr,
     ///////////////// REGISTER & REGACK //////////////////////
 
     action send_regack_response_accept(bit<16> topicId) {
-        hdr.mqttsn_register.setInvalid();
-        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
+        // Preparar REGACK
         hdr.mqttsn_regack.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_REGACK;
         hdr.mqttsn_fixed.length = 7;
-        hdr.mqttsn_regack.topicId = topicId; // atribuído pelo gateway (vai vir da tabela)
-        hdr.mqttsn_regack.msgId = hdr.mqttsn_register.msgId;
+
+        // topicId atribuído pelo gateway (via tabela)
+        hdr.mqttsn_regack.topicId = topicId;
+
+        // Correção: só acessar msgId se o header REGISTER for válido
+        if (hdr.mqttsn_register.isValid()) {
+            hdr.mqttsn_regack.msgId = hdr.mqttsn_register.msgId;
+        } else {
+            hdr.mqttsn_regack.msgId = 0; // fallback
+        }
+
         hdr.mqttsn_regack.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
 
+        // Agora sim, invalidar headers que não farão parte da resposta
+        hdr.mqttsn_register.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid();
+
+        // Preparar cabeçalhos de rede
         set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     action send_regack_response_reject_invalid() {
-        hdr.mqttsn_register.setInvalid();
-        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
+        // Preparar REGACK
         hdr.mqttsn_regack.setValid();
         hdr.mqttsn_fixed.msgType = MQTTSN_REGACK;
         hdr.mqttsn_fixed.length = 7;
+
         hdr.mqttsn_regack.topicId = 0x0000;
-        hdr.mqttsn_regack.msgId = hdr.mqttsn_register.msgId;
+
+        // Correção: só acessar msgId se o header REGISTER for válido
+        if (hdr.mqttsn_register.isValid()) {
+            hdr.mqttsn_regack.msgId = hdr.mqttsn_register.msgId;
+        } else {
+            hdr.mqttsn_regack.msgId = 0; // fallback
+        }
+
         hdr.mqttsn_regack.returnCode = MQTTSN_RETURNCODE_REJECTED_INVALID_TOPIC_ID;
 
+        // Agora sim, invalidar headers que não farão parte da resposta
+        hdr.mqttsn_register.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid();
+
+        // Preparar cabeçalhos de rede
         set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
         standard_metadata.egress_spec = standard_metadata.ingress_port;
@@ -939,7 +989,7 @@ control MyIngress(inout headers hdr,
 
     table topic_registry {
         key = {
-            hdr.mqttsn_variable_field.data : exact; // Agora usa o campo variável
+            hdr.mqttsn_subscribe.topicId: exact;
         }
         actions = {
             send_regack_response_accept;
@@ -977,22 +1027,30 @@ control MyIngress(inout headers hdr,
 
     // Para qos = 1
     action send_puback_response(bit<8> returnCode) {
-        hdr.mqttsn_flags_publish.setInvalid();
-        hdr.mqttsn_publish.setInvalid();
-        hdr.mqttsn_variable_field.setInvalid(); // Invalidar o campo variável após uso
         hdr.mqttsn_puback.setValid();
-        hdr.mqttsn_fixed.msgType = MQTTSN_PUBACK;
-        hdr.mqttsn_fixed.length  = 7;
-        hdr.mqttsn_puback.topicId = hdr.mqttsn_publish.topicId;
-        hdr.mqttsn_puback.msgId   = hdr.mqttsn_publish.msgId;
-        hdr.mqttsn_puback.returnCode = returnCode;
 
-        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length); 
+        // Copiar valores do PUBLISH recebido (se válido)
+        if (hdr.mqttsn_publish.isValid()) {
+            hdr.mqttsn_puback.topicId = hdr.mqttsn_publish.topicId;
+            hdr.mqttsn_puback.msgId   = hdr.mqttsn_publish.msgId;
+        } else {
+            hdr.mqttsn_puback.topicId = 0;
+            hdr.mqttsn_puback.msgId   = 0;
+        }
+
+        hdr.mqttsn_puback.returnCode = returnCode; // ou rejeição, conforme sua lógica
+
+        // Agora sim, pode invalidar o publish original
+        hdr.mqttsn_publish.setInvalid();
+        hdr.mqttsn_variable_field.setInvalid();
+
+        // preparar rede...
+        set_l3_l4_lengths((bit<16>)hdr.mqttsn_fixed.length);
         prepare_response_unicast();
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    table publish_qos{
+    table publish_qos {
         key = {
             hdr.mqttsn_flags_publish.qos : exact;
         }
@@ -1162,8 +1220,8 @@ control MyIngress(inout headers hdr,
     ///////////////// APPLY ACTIONS //////////////////////
 
     apply {
-        if (hdr.mqttsn_fixed.isValid()) {
-            if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE) {
+        if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE) {
+            if (hdr.mqttsn_advertise.isValid()) {
                 send_advertise(1, 60);
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW) {
@@ -1175,7 +1233,7 @@ control MyIngress(inout headers hdr,
                     }
                 } else {
                     // Se não houver um header válido.
-                    mark_to_drop();
+                    mark_to_drop(standard_metadata);
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT) {
@@ -1194,7 +1252,7 @@ control MyIngress(inout headers hdr,
                     }
                 } else {
                     // Se não houver um header válido ou campo variável.
-                    mark_to_drop();
+                    mark_to_drop(standard_metadata);
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER) {
@@ -1205,7 +1263,7 @@ control MyIngress(inout headers hdr,
                     topic_registry.apply();
                 } else {
                     // Se não houver um header válido ou campo variável.
-                    mark_to_drop();
+                    mark_to_drop(standard_metadata);
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
@@ -1213,7 +1271,7 @@ control MyIngress(inout headers hdr,
                     publish_qos.apply();
                 } else {
                     // Se não houver um header válido ou campo variável.
-                    mark_to_drop();
+                    mark_to_drop(standard_metadata);
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE) {
@@ -1222,7 +1280,7 @@ control MyIngress(inout headers hdr,
                         // Topic Name
                         // A tabela topic_registry agora usa hdr.mqttsn_variable_field.data como chave,
                         // ela já está pronta para receber o topicName extraído.
-                        topic_registry.apply(); // lookup pelo nome
+                        topic_registry_subscribe.apply(); // lookup pelo nome
                     } 
                     else if (hdr.mqttsn_flags_subscribe.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC) {
                         // Pre-defined TopicId
@@ -1239,7 +1297,7 @@ control MyIngress(inout headers hdr,
                     }
                 } else {
                     // Se não houver um header válido ou campo variável.
-                    mark_to_drop();
+                    mark_to_drop(standard_metadata);
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE) {
@@ -1248,7 +1306,7 @@ control MyIngress(inout headers hdr,
                         // Topic Name
                         // A tabela topic_registry agora usa hdr.mqttsn_variable_field.data como chave,
                         // ela já está pronta para receber o topicName extraído.
-                        topic_registry.apply(); // lookup pelo nome
+                        topic_registry_unsubscribe.apply(); // lookup pelo nome
                     } 
                     else if (hdr.mqttsn_flags_unsubscribe.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC) {
                         // Pre-defined TopicId
@@ -1265,7 +1323,7 @@ control MyIngress(inout headers hdr,
                     }
                 } else {
                     // Se não houver um header válido ou campo variável.
-                    mark_to_drop();
+                    mark_to_drop(standard_metadata);
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ) {
@@ -1277,7 +1335,7 @@ control MyIngress(inout headers hdr,
                     ping_handler.apply();
                 } else {
                     // Se não houver um header válido ou campo variável inválido para o comprimento.
-                    mark_to_drop();
+                    mark_to_drop(standard_metadata);
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP) {
@@ -1285,7 +1343,7 @@ control MyIngress(inout headers hdr,
                     // Se o gateway receber um ping resp, não precisa fazer nada.
                 } else {
                     // Se não houver um header válido.
-                    mark_to_drop();
+                    mark_to_drop(standard_metadata);
                 }
             }
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT) {
@@ -1293,7 +1351,7 @@ control MyIngress(inout headers hdr,
                     disconnect_handler.apply();
                 } else {
                     // Se não houver um header válido.
-                    mark_to_drop();
+                    mark_to_drop(standard_metadata);
                 }
             }
         }
@@ -1355,135 +1413,42 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.ipv4);
         packet.emit(hdr.udp);
         packet.emit(hdr.mqttsn_fixed);
-
+        packet.emit(hdr.mqttsn_variable_field);
         // Emitir cabeçalhos MQTT-SN variáveis com base no tipo de mensagem
-        if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE && hdr.mqttsn_advertise.isValid()) {
-            packet.emit(hdr.mqttsn_advertise);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW && hdr.mqttsn_searchgw.isValid()) {
-            packet.emit(hdr.mqttsn_searchgw);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_GWINFO) {
-            if (hdr.mqttsn_gwinfo_short.isValid()) {
-                packet.emit(hdr.mqttsn_gwinfo_short);
-            } else if (hdr.mqttsn_gwinfo_full.isValid()) {
-                packet.emit(hdr.mqttsn_gwinfo_full);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT) {
-            if (hdr.mqttsn_flags_connect.isValid()) {
-                packet.emit(hdr.mqttsn_flags_connect);
-            }
-            if (hdr.mqttsn_connect.isValid()) {
-                packet.emit(hdr.mqttsn_connect);
-            }
-            if (hdr.mqttsn_variable_field.isValid()) {
-                packet.emit(hdr.mqttsn_variable_field);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK && hdr.mqttsn_connack.isValid()) {
-            packet.emit(hdr.mqttsn_connack);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICREQ && hdr.mqttsn_willtopicreq.isValid()) {
-            packet.emit(hdr.mqttsn_willtopicreq);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPIC) {
-            if (hdr.mqttsn_flags_willtopic.isValid()) {
-                packet.emit(hdr.mqttsn_flags_willtopic);
-            }
-            if (hdr.mqttsn_willtopic.isValid()) {
-                packet.emit(hdr.mqttsn_willtopic);
-            }
-            if (hdr.mqttsn_variable_field.isValid()) {
-                packet.emit(hdr.mqttsn_variable_field);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGREQ && hdr.mqttsn_willmsgreq.isValid()) {
-            packet.emit(hdr.mqttsn_willmsgreq);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSG) {
-            if (hdr.mqttsn_willmsg.isValid()) {
-                packet.emit(hdr.mqttsn_willmsg);
-            }
-            if (hdr.mqttsn_variable_field.isValid()) {
-                packet.emit(hdr.mqttsn_variable_field);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER) {
-            if (hdr.mqttsn_register.isValid()) {
-                packet.emit(hdr.mqttsn_register);
-            }
-            if (hdr.mqttsn_variable_field.isValid()) {
-                packet.emit(hdr.mqttsn_variable_field);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGACK && hdr.mqttsn_regack.isValid()) {
-            packet.emit(hdr.mqttsn_regack);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
-            if (hdr.mqttsn_flags_publish.isValid()) {
-                packet.emit(hdr.mqttsn_flags_publish);
-            }
-            if (hdr.mqttsn_publish.isValid()) {
-                packet.emit(hdr.mqttsn_publish);
-            }
-            if (hdr.mqttsn_variable_field.isValid()) {
-                packet.emit(hdr.mqttsn_variable_field);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && hdr.mqttsn_puback.isValid()) {
-            packet.emit(hdr.mqttsn_puback);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && hdr.mqttsn_pubrec.isValid()) {
-            packet.emit(hdr.mqttsn_pubrec);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && hdr.mqttsn_pubrel.isValid()) {
-            packet.emit(hdr.mqttsn_pubrel);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && hdr.mqttsn_pubcomp.isValid()) {
-            packet.emit(hdr.mqttsn_pubcomp);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE) {
-            if (hdr.mqttsn_flags_subscribe.isValid()) {
-                packet.emit(hdr.mqttsn_flags_subscribe);
-            }
-            if (hdr.mqttsn_subscribe.isValid()) {
-                packet.emit(hdr.mqttsn_subscribe);
-            }
-            if (hdr.mqttsn_variable_field.isValid()) {
-                packet.emit(hdr.mqttsn_variable_field);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBACK && hdr.mqttsn_suback.isValid()) {
-            packet.emit(hdr.mqttsn_suback);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE) {
-            if (hdr.mqttsn_flags_unsubscribe.isValid()) {
-                packet.emit(hdr.mqttsn_flags_unsubscribe);
-            }
-            if (hdr.mqttsn_unsubscribe.isValid()) {
-                packet.emit(hdr.mqttsn_unsubscribe);
-            }
-            if (hdr.mqttsn_variable_field.isValid()) {
-                packet.emit(hdr.mqttsn_variable_field);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBACK && hdr.mqttsn_unsuback.isValid()) {
-            packet.emit(hdr.mqttsn_unsuback);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ) {
-            if (hdr.mqttsn_pingreq.isValid()) {
-                packet.emit(hdr.mqttsn_pingreq);
-            }
-            if (hdr.mqttsn_variable_field.isValid()) {
-                packet.emit(hdr.mqttsn_variable_field);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP && hdr.mqttsn_pingresp.isValid()) {
-            packet.emit(hdr.mqttsn_pingresp);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT && hdr.mqttsn_disconnect.isValid()) {
-            packet.emit(hdr.mqttsn_disconnect);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICUPD) {
-            if (hdr.mqttsn_flags_willtopicupd.isValid()) {
-                packet.emit(hdr.mqttsn_flags_willtopicupd);
-            }
-            if (hdr.mqttsn_willtopicupd.isValid()) {
-                packet.emit(hdr.mqttsn_willtopicupd);
-            }
-            if (hdr.mqttsn_variable_field.isValid()) {
-                packet.emit(hdr.mqttsn_variable_field);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGUPD) {
-            if (hdr.mqttsn_willmsgupd.isValid()) {
-                packet.emit(hdr.mqttsn_willmsgupd);
-            }
-            if (hdr.mqttsn_variable_field.isValid()) {
-                packet.emit(hdr.mqttsn_variable_field);
-            }
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICRESP && hdr.mqttsn_willtopicresp.isValid()) {
-            packet.emit(hdr.mqttsn_willtopicresp);
-        } else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGRESP && hdr.mqttsn_willmsgresp.isValid()) {
-            packet.emit(hdr.mqttsn_willmsgresp);
-        }
+        packet.emit(hdr.mqttsn_advertise);
+        packet.emit(hdr.mqttsn_searchgw);
+        packet.emit(hdr.mqttsn_gwinfo_short);
+        packet.emit(hdr.mqttsn_gwinfo_full);
+        packet.emit(hdr.mqttsn_flags_connect);
+        packet.emit(hdr.mqttsn_connect);
+        packet.emit(hdr.mqttsn_connack);
+        packet.emit(hdr.mqttsn_willtopicreq);
+        packet.emit(hdr.mqttsn_flags_willtopic);
+        packet.emit(hdr.mqttsn_willtopic);
+        packet.emit(hdr.mqttsn_willmsgreq);
+        packet.emit(hdr.mqttsn_willmsg);
+        packet.emit(hdr.mqttsn_register);
+        packet.emit(hdr.mqttsn_regack);
+        packet.emit(hdr.mqttsn_flags_publish);
+        packet.emit(hdr.mqttsn_publish);
+        packet.emit(hdr.mqttsn_puback);
+        packet.emit(hdr.mqttsn_pubrec);
+        packet.emit(hdr.mqttsn_pubrel);
+        packet.emit(hdr.mqttsn_pubcomp);
+        packet.emit(hdr.mqttsn_flags_subscribe);
+        packet.emit(hdr.mqttsn_subscribe);
+        packet.emit(hdr.mqttsn_suback);
+        packet.emit(hdr.mqttsn_flags_unsubscribe);
+        packet.emit(hdr.mqttsn_unsubscribe);
+        packet.emit(hdr.mqttsn_unsuback);
+        packet.emit(hdr.mqttsn_pingreq);
+        packet.emit(hdr.mqttsn_pingresp);
+        packet.emit(hdr.mqttsn_disconnect);
+        packet.emit(hdr.mqttsn_flags_willtopicupd);
+        packet.emit(hdr.mqttsn_willtopicupd);
+        packet.emit(hdr.mqttsn_willmsgupd);
+        packet.emit(hdr.mqttsn_willtopicresp);
+        packet.emit(hdr.mqttsn_willmsgresp);
     }
 }
 
