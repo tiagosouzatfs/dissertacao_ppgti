@@ -1,0 +1,9 @@
+table_set_default MyIngress.ping_handler NoAction
+
+# Comandos table_add para MyIngress.ping_handler
+# Formato: table_add <table_name> <action_name> <msg_type_hex>
+
+# Exemplo 1: Mapeia PINGREQ para send_pingresp
+table_add MyIngress.ping_handler send_pingresp 0x16
+# Exemplo 2: Mapeia PINGRESP para NoAction (não faz nada)
+table_add MyIngress.ping_handler NoAction 0x17

@@ -1,0 +1,13 @@
+table_set_default MyIngress.publish_qos send_puback_response_reject
+
+# Comandos table_add para MyIngress.publish_qos
+# Formato: table_add <table_name> <action_name> <qos_value>
+
+# Exemplo 1: QoS -1 aceito (sem PUBACK)
+table_add MyIngress.publish_qos publish_qos_minus1 -1
+# Exemplo 1: QoS 0 aceito (sem PUBACK)
+table_add MyIngress.publish_qos send_puback_response_qos0 0
+# Exemplo 2: QoS 1 aceito (com PUBACK)
+table_add MyIngress.publish_qos send_puback_response_qos1 1
+# Exemplo 3: QoS 2 rejeitado (não suportado)
+table_add MyIngress.publish_qos send_puback_response_reject 2
