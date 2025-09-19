@@ -1,0 +1,2669 @@
+{
+  "header_types" : [
+    {
+      "name" : "scalars_0",
+      "id" : 0,
+      "fields" : [
+        ["tmp", 1, false],
+        ["tmp_0", 1, false],
+        ["tmp_1", 1, false],
+        ["tmp_2", 32, false],
+        ["srcMac_0", 48, false],
+        ["srcIP_0", 32, false],
+        ["srcPort_0", 16, false],
+        ["srcMac_1", 48, false],
+        ["srcIP_1", 32, false],
+        ["srcPort_1", 16, false],
+        ["_padding_0", 5, false]
+      ]
+    },
+    {
+      "name" : "standard_metadata",
+      "id" : 1,
+      "fields" : [
+        ["ingress_port", 9, false],
+        ["egress_spec", 9, false],
+        ["egress_port", 9, false],
+        ["instance_type", 32, false],
+        ["packet_length", 32, false],
+        ["enq_timestamp", 32, false],
+        ["enq_qdepth", 19, false],
+        ["deq_timedelta", 32, false],
+        ["deq_qdepth", 19, false],
+        ["ingress_global_timestamp", 48, false],
+        ["egress_global_timestamp", 48, false],
+        ["mcast_grp", 16, false],
+        ["egress_rid", 16, false],
+        ["checksum_error", 1, false],
+        ["parser_error", 32, false],
+        ["priority", 3, false],
+        ["_padding", 3, false]
+      ]
+    },
+    {
+      "name" : "Ethernet_h",
+      "id" : 2,
+      "fields" : [
+        ["dstAddr", 48, false],
+        ["srcAddr", 48, false],
+        ["ethertype", 16, false]
+      ]
+    },
+    {
+      "name" : "IPv4_h",
+      "id" : 3,
+      "fields" : [
+        ["version", 4, false],
+        ["ihl", 4, false],
+        ["diffServ", 8, false],
+        ["totalLen", 16, false],
+        ["identification", 16, false],
+        ["flags", 3, false],
+        ["fragOffset", 13, false],
+        ["ttl", 8, false],
+        ["protocol", 8, false],
+        ["hdrChecksum", 16, false],
+        ["srcAddr", 32, false],
+        ["dstAddr", 32, false]
+      ]
+    },
+    {
+      "name" : "UDP_h",
+      "id" : 4,
+      "fields" : [
+        ["srcPort", 16, false],
+        ["dstPort", 16, false],
+        ["length", 16, false],
+        ["checksum", 16, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_fixed_h",
+      "id" : 5,
+      "fields" : [
+        ["length", 8, false],
+        ["msgType", 8, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_flags_connect_h",
+      "id" : 6,
+      "fields" : [
+        ["will", 1, false],
+        ["cleanSession", 1, false],
+        ["reserved", 6, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_connect_h",
+      "id" : 7,
+      "fields" : [
+        ["protocolId", 8, false],
+        ["duration", 16, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_connack_h",
+      "id" : 8,
+      "fields" : [
+        ["returnCode", 8, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_variable_field_h",
+      "id" : 9,
+      "fields" : [
+        ["data", "*"]
+      ],
+      "max_length" : 188
+    }
+  ],
+  "headers" : [
+    {
+      "name" : "scalars",
+      "id" : 0,
+      "header_type" : "scalars_0",
+      "metadata" : true,
+      "pi_omit" : true
+    },
+    {
+      "name" : "standard_metadata",
+      "id" : 1,
+      "header_type" : "standard_metadata",
+      "metadata" : true,
+      "pi_omit" : true
+    },
+    {
+      "name" : "ethernet",
+      "id" : 2,
+      "header_type" : "Ethernet_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "ipv4",
+      "id" : 3,
+      "header_type" : "IPv4_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "udp",
+      "id" : 4,
+      "header_type" : "UDP_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_fixed",
+      "id" : 5,
+      "header_type" : "MQTTSN_fixed_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_flags_connect",
+      "id" : 6,
+      "header_type" : "MQTTSN_flags_connect_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_connect",
+      "id" : 7,
+      "header_type" : "MQTTSN_connect_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_connack",
+      "id" : 8,
+      "header_type" : "MQTTSN_connack_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_variable_field",
+      "id" : 9,
+      "header_type" : "MQTTSN_variable_field_h",
+      "metadata" : false,
+      "pi_omit" : true
+    }
+  ],
+  "header_stacks" : [],
+  "header_union_types" : [],
+  "header_unions" : [],
+  "header_union_stacks" : [],
+  "field_lists" : [],
+  "errors" : [
+    ["NoError", 0],
+    ["PacketTooShort", 1],
+    ["NoMatch", 2],
+    ["StackOutOfBounds", 3],
+    ["HeaderTooShort", 4],
+    ["ParserTimeout", 5],
+    ["ParserInvalidArgument", 6],
+    ["UnsupportedEtherType", 7],
+    ["IPv4IncorrectVersion", 8],
+    ["IPv4HeaderLengthError", 9],
+    ["IPv4ChecksumError", 10],
+    ["IPv4UnsupportedProtocol", 11],
+    ["IPv4OptionsNotSupported", 12],
+    ["MQTT_SN_InvalidLength", 13],
+    ["MQTT_SN_UnsupportedMessageType", 14],
+    ["MQTT_SN_InvalidFlags", 15]
+  ],
+  "enums" : [],
+  "parsers" : [
+    {
+      "name" : "parser",
+      "id" : 0,
+      "init_state" : "start",
+      "parse_states" : [
+        {
+          "name" : "start",
+          "id" : 0,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "ethernet"
+                }
+              ],
+              "op" : "extract"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "hexstr",
+              "value" : "0x0800",
+              "mask" : null,
+              "next_state" : "parse_ipv4"
+            },
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "ethertype"]
+            }
+          ]
+        },
+        {
+          "name" : "parse_ipv4",
+          "id" : 1,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "ipv4"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "b2d",
+                      "left" : null,
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "==",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["ipv4", "version"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x04"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "op" : "d2b",
+                    "left" : null,
+                    "right" : {
+                      "type" : "field",
+                      "value" : ["scalars", "tmp"]
+                    }
+                  }
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0x8"
+                }
+              ],
+              "op" : "verify"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "hexstr",
+              "value" : "0x11",
+              "mask" : null,
+              "next_state" : "parse_udp"
+            },
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "protocol"]
+            }
+          ]
+        },
+        {
+          "name" : "parse_udp",
+          "id" : 2,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "udp"
+                }
+              ],
+              "op" : "extract"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "hexstr",
+              "value" : "0x075c",
+              "mask" : null,
+              "next_state" : "parse_mqttsn_fixed"
+            },
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "dstPort"]
+            }
+          ]
+        },
+        {
+          "name" : "parse_mqttsn_fixed",
+          "id" : 3,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_fixed"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_0"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "b2d",
+                      "left" : null,
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : ">=",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "length"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x02"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "op" : "d2b",
+                    "left" : null,
+                    "right" : {
+                      "type" : "field",
+                      "value" : ["scalars", "tmp_0"]
+                    }
+                  }
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0xd"
+                }
+              ],
+              "op" : "verify"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "hexstr",
+              "value" : "0x04",
+              "mask" : null,
+              "next_state" : "parse_mqttsn_connect"
+            },
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_fixed", "msgType"]
+            }
+          ]
+        },
+        {
+          "name" : "parse_mqttsn_connect",
+          "id" : 4,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_flags_connect"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_connect"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_1"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "b2d",
+                      "left" : null,
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : ">=",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "length"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x07"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "op" : "d2b",
+                    "left" : null,
+                    "right" : {
+                      "type" : "field",
+                      "value" : ["scalars", "tmp_1"]
+                    }
+                  }
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0xd"
+                }
+              ],
+              "op" : "verify"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_2"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "<<",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "+",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "field",
+                                        "value" : ["mqttsn_fixed", "length"]
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffffffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xfffffffa"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffffffff"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x3"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffffffff"
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_variable_field"
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "field",
+                    "value" : ["scalars", "tmp_2"]
+                  }
+                }
+              ],
+              "op" : "extract_VL"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : []
+        }
+      ]
+    }
+  ],
+  "parse_vsets" : [],
+  "deparsers" : [
+    {
+      "name" : "deparser",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "gw_agg_mqtt_sn.p4",
+        "line" : 488,
+        "column" : 8,
+        "source_fragment" : "MyDeparser"
+      },
+      "order" : ["ethernet", "ipv4", "udp", "mqttsn_fixed", "mqttsn_connack"],
+      "primitives" : []
+    }
+  ],
+  "meter_arrays" : [],
+  "counter_arrays" : [],
+  "register_arrays" : [],
+  "calculations" : [
+    {
+      "name" : "calc",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "gw_agg_mqtt_sn.p4",
+        "line" : 466,
+        "column" : 8,
+        "source_fragment" : "update_checksum( ..."
+      },
+      "algo" : "csum16",
+      "input" : [
+        {
+          "type" : "field",
+          "value" : ["ipv4", "version"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "ihl"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "diffServ"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "totalLen"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "identification"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "flags"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "fragOffset"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "ttl"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "protocol"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "srcAddr"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "dstAddr"]
+        }
+      ]
+    }
+  ],
+  "learn_lists" : [],
+  "actions" : [
+    {
+      "name" : "MyIngress.drop",
+      "id" : 0,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "mark_to_drop",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "standard_metadata"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 286,
+            "column" : 8,
+            "source_fragment" : "mark_to_drop(standard_metadata)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.send_connack_response_accept_connection",
+      "id" : 1,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcMac_0"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ethernet", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 327,
+            "column" : 8,
+            "source_fragment" : "macAddr_t srcMac = hdr.ethernet.srcAddr;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "srcAddr"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x000000000002"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 328,
+            "column" : 33,
+            "source_fragment" : "0x000000000002; // Tem como pegar esse mac na tabela de encaminhamento? ..."
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "dstAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcMac_0"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 330,
+            "column" : 8,
+            "source_fragment" : "hdr.ethernet.dstAddr = srcMac"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcIP_0"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 333,
+            "column" : 8,
+            "source_fragment" : "ipv4Addr_t srcIP = hdr.ipv4.srcAddr;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 334,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.srcAddr = hdr.ipv4.dstAddr"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcIP_0"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 335,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.dstAddr = srcIP"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "ttl"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x40"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 337,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.ttl = 64"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "version"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x04"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 338,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.version = 4"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "ihl"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x05"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 339,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.ihl = 5"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "identification"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 340,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.identification = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "fragOffset"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 341,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.fragOffset = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "flags"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 342,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.flags = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcPort_0"]
+            },
+            {
+              "type" : "field",
+              "value" : ["udp", "srcPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 345,
+            "column" : 8,
+            "source_fragment" : "bit<16> srcPort = hdr.udp.srcPort;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "srcPort"]
+            },
+            {
+              "type" : "field",
+              "value" : ["udp", "dstPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 346,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.srcPort = hdr.udp.dstPort"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "dstPort"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcPort_0"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 347,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.dstPort = srcPort"
+          }
+        },
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_fixed"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 350,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_fixed.setValid()"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_fixed", "length"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x03"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 351,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_fixed.length = 3"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_fixed", "msgType"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x05"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 18,
+            "column" : 30,
+            "source_fragment" : "0x05; ..."
+          }
+        },
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_connack"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 354,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_connack.setValid()"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_connack", "returnCode"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 48,
+            "column" : 42,
+            "source_fragment" : "0x00; ..."
+          }
+        },
+        {
+          "op" : "remove_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_flags_connect"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 358,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_flags_connect.setInvalid()"
+          }
+        },
+        {
+          "op" : "remove_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_connect"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 359,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_connect.setInvalid()"
+          }
+        },
+        {
+          "op" : "remove_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_variable_field"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 360,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_variable_field.setInvalid()"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "length"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x000b"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 363,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.length = (bit<16>)(8 + (bit<16>)hdr.mqttsn_fixed.length"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "totalLen"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x001f"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 364,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.totalLen = (bit<16>)(((bit<16>)hdr.ipv4.ihl) * 4 + hdr.udp.length"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "hdrChecksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 367,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "checksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 368,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.checksum = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "egress_spec"]
+            },
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "ingress_port"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 371,
+            "column" : 8,
+            "source_fragment" : "standard_metadata.egress_spec = standard_metadata.ingress_port"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.send_connack_response_reject_not_supported",
+      "id" : 2,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcMac_1"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ethernet", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 376,
+            "column" : 8,
+            "source_fragment" : "macAddr_t srcMac = hdr.ethernet.srcAddr;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "srcAddr"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x000000000002"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 377,
+            "column" : 33,
+            "source_fragment" : "0x000000000002; // Tem como pegar esse mac na tabela de encaminhamento? ..."
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "dstAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcMac_1"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 379,
+            "column" : 8,
+            "source_fragment" : "hdr.ethernet.dstAddr = srcMac"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcIP_1"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 382,
+            "column" : 8,
+            "source_fragment" : "ipv4Addr_t srcIP = hdr.ipv4.srcAddr;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 383,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.srcAddr = hdr.ipv4.dstAddr"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcIP_1"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 384,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.dstAddr = srcIP"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "ttl"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x40"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 386,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.ttl = 64"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "version"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x04"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 387,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.version = 4"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "ihl"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x05"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 388,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.ihl = 5"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "identification"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 389,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.identification = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "fragOffset"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 390,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.fragOffset = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "flags"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 391,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.flags = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcPort_1"]
+            },
+            {
+              "type" : "field",
+              "value" : ["udp", "srcPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 394,
+            "column" : 8,
+            "source_fragment" : "bit<16> srcPort = hdr.udp.srcPort;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "srcPort"]
+            },
+            {
+              "type" : "field",
+              "value" : ["udp", "dstPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 395,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.srcPort = hdr.udp.dstPort"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "dstPort"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcPort_1"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 396,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.dstPort = srcPort"
+          }
+        },
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_fixed"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 399,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_fixed.setValid()"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_fixed", "length"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x03"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 400,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_fixed.length = 3"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_fixed", "msgType"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x05"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 18,
+            "column" : 30,
+            "source_fragment" : "0x05; ..."
+          }
+        },
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_connack"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 403,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_connack.setValid()"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_connack", "returnCode"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x03"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 51,
+            "column" : 56,
+            "source_fragment" : "0x03; ..."
+          }
+        },
+        {
+          "op" : "remove_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_flags_connect"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 407,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_flags_connect.setInvalid()"
+          }
+        },
+        {
+          "op" : "remove_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_connect"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 408,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_connect.setInvalid()"
+          }
+        },
+        {
+          "op" : "remove_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_variable_field"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 409,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_variable_field.setInvalid()"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "length"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x000b"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 412,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.length = (bit<16>)(8 + (bit<16>)hdr.mqttsn_fixed.length"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "totalLen"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x001f"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 413,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.totalLen = (bit<16>)(((bit<16>)hdr.ipv4.ihl) * 4 + hdr.udp.length"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "hdrChecksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 416,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "checksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 417,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.checksum = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "egress_spec"]
+            },
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "ingress_port"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 420,
+            "column" : 8,
+            "source_fragment" : "standard_metadata.egress_spec = standard_metadata.ingress_port"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.send_connack_response_reject_not_supported",
+      "id" : 3,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcMac_1"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ethernet", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 376,
+            "column" : 8,
+            "source_fragment" : "macAddr_t srcMac = hdr.ethernet.srcAddr;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "srcAddr"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x000000000002"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 377,
+            "column" : 33,
+            "source_fragment" : "0x000000000002; // Tem como pegar esse mac na tabela de encaminhamento? ..."
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "dstAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcMac_1"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 379,
+            "column" : 8,
+            "source_fragment" : "hdr.ethernet.dstAddr = srcMac"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcIP_1"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 382,
+            "column" : 8,
+            "source_fragment" : "ipv4Addr_t srcIP = hdr.ipv4.srcAddr;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 383,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.srcAddr = hdr.ipv4.dstAddr"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcIP_1"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 384,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.dstAddr = srcIP"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "ttl"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x40"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 386,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.ttl = 64"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "version"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x04"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 387,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.version = 4"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "ihl"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x05"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 388,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.ihl = 5"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "identification"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 389,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.identification = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "fragOffset"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 390,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.fragOffset = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "flags"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 391,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.flags = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcPort_1"]
+            },
+            {
+              "type" : "field",
+              "value" : ["udp", "srcPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 394,
+            "column" : 8,
+            "source_fragment" : "bit<16> srcPort = hdr.udp.srcPort;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "srcPort"]
+            },
+            {
+              "type" : "field",
+              "value" : ["udp", "dstPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 395,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.srcPort = hdr.udp.dstPort"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "dstPort"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "srcPort_1"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 396,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.dstPort = srcPort"
+          }
+        },
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_fixed"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 399,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_fixed.setValid()"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_fixed", "length"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x03"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 400,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_fixed.length = 3"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_fixed", "msgType"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x05"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 18,
+            "column" : 30,
+            "source_fragment" : "0x05; ..."
+          }
+        },
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_connack"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 403,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_connack.setValid()"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_connack", "returnCode"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x03"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 51,
+            "column" : 56,
+            "source_fragment" : "0x03; ..."
+          }
+        },
+        {
+          "op" : "remove_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_flags_connect"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 407,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_flags_connect.setInvalid()"
+          }
+        },
+        {
+          "op" : "remove_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_connect"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 408,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_connect.setInvalid()"
+          }
+        },
+        {
+          "op" : "remove_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_variable_field"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 409,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_variable_field.setInvalid()"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "length"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x000b"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 412,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.length = (bit<16>)(8 + (bit<16>)hdr.mqttsn_fixed.length"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "totalLen"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x001f"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 413,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.totalLen = (bit<16>)(((bit<16>)hdr.ipv4.ihl) * 4 + hdr.udp.length"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "hdrChecksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 416,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "checksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 417,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.checksum = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "egress_spec"]
+            },
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "ingress_port"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 420,
+            "column" : 8,
+            "source_fragment" : "standard_metadata.egress_spec = standard_metadata.ingress_port"
+          }
+        }
+      ]
+    }
+  ],
+  "pipelines" : [
+    {
+      "name" : "ingress",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "gw_agg_mqtt_sn.p4",
+        "line" : 277,
+        "column" : 8,
+        "source_fragment" : "MyIngress"
+      },
+      "init_table" : "node_2",
+      "tables" : [
+        {
+          "name" : "tbl_send_connack_response_accept_connection",
+          "id" : 0,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 435,
+            "column" : 24,
+            "source_fragment" : "send_connack_response_accept_connection()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [1],
+          "actions" : ["MyIngress.send_connack_response_accept_connection"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "MyIngress.send_connack_response_accept_connection" : null
+          },
+          "default_entry" : {
+            "action_id" : 1,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_send_connack_response_reject_not_supported",
+          "id" : 1,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 437,
+            "column" : 20,
+            "source_fragment" : "send_connack_response_reject_not_supported()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [2],
+          "actions" : ["MyIngress.send_connack_response_reject_not_supported"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "MyIngress.send_connack_response_reject_not_supported" : null
+          },
+          "default_entry" : {
+            "action_id" : 2,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_send_connack_response_reject_not_supported_0",
+          "id" : 2,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 440,
+            "column" : 16,
+            "source_fragment" : "send_connack_response_reject_not_supported()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [3],
+          "actions" : ["MyIngress.send_connack_response_reject_not_supported"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "MyIngress.send_connack_response_reject_not_supported" : null
+          },
+          "default_entry" : {
+            "action_id" : 3,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_drop",
+          "id" : 3,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 443,
+            "column" : 12,
+            "source_fragment" : "drop()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [0],
+          "actions" : ["MyIngress.drop"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "MyIngress.drop" : null
+          },
+          "default_entry" : {
+            "action_id" : 0,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        }
+      ],
+      "action_profiles" : [],
+      "conditionals" : [
+        {
+          "name" : "node_2",
+          "id" : 0,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 428,
+            "column" : 12,
+            "source_fragment" : "hdr.mqttsn_fixed.isValid()"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "d2b",
+              "left" : null,
+              "right" : {
+                "type" : "field",
+                "value" : ["mqttsn_fixed", "$valid$"]
+              }
+            }
+          },
+          "true_next" : "node_3",
+          "false_next" : "tbl_drop"
+        },
+        {
+          "name" : "node_3",
+          "id" : 1,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 429,
+            "column" : 16,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT && ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "and",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "and",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "==",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "msgType"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x04"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "d2b",
+                          "left" : null,
+                          "right" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_connect", "$valid$"]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "d2b",
+                      "left" : null,
+                      "right" : {
+                        "type" : "field",
+                        "value" : ["mqttsn_flags_connect", "$valid$"]
+                      }
+                    }
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_connect", "protocolId"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x01"
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "node_4",
+          "false_next" : "tbl_send_connack_response_reject_not_supported_0"
+        },
+        {
+          "name" : "node_4",
+          "id" : 2,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 433,
+            "column" : 20,
+            "source_fragment" : "hdr.udp.dstPort == UDP_PORT && // porta 1884 ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["udp", "dstPort"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x075c"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["ipv4", "dstAddr"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x0a000002"
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "tbl_send_connack_response_accept_connection",
+          "false_next" : "tbl_send_connack_response_reject_not_supported"
+        }
+      ]
+    },
+    {
+      "name" : "egress",
+      "id" : 1,
+      "source_info" : {
+        "filename" : "gw_agg_mqtt_sn.p4",
+        "line" : 453,
+        "column" : 8,
+        "source_fragment" : "MyEgress"
+      },
+      "init_table" : null,
+      "tables" : [],
+      "action_profiles" : [],
+      "conditionals" : []
+    }
+  ],
+  "checksums" : [
+    {
+      "name" : "cksum",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "gw_agg_mqtt_sn.p4",
+        "line" : 466,
+        "column" : 8,
+        "source_fragment" : "update_checksum( ..."
+      },
+      "target" : ["ipv4", "hdrChecksum"],
+      "type" : "generic",
+      "calculation" : "calc",
+      "verify" : false,
+      "update" : true,
+      "if_cond" : {
+        "type" : "expression",
+        "value" : {
+          "op" : "d2b",
+          "left" : null,
+          "right" : {
+            "type" : "field",
+            "value" : ["ipv4", "$valid$"]
+          }
+        }
+      }
+    }
+  ],
+  "force_arith" : [],
+  "extern_instances" : [],
+  "field_aliases" : [
+    [
+      "queueing_metadata.enq_timestamp",
+      ["standard_metadata", "enq_timestamp"]
+    ],
+    [
+      "queueing_metadata.enq_qdepth",
+      ["standard_metadata", "enq_qdepth"]
+    ],
+    [
+      "queueing_metadata.deq_timedelta",
+      ["standard_metadata", "deq_timedelta"]
+    ],
+    [
+      "queueing_metadata.deq_qdepth",
+      ["standard_metadata", "deq_qdepth"]
+    ],
+    [
+      "intrinsic_metadata.ingress_global_timestamp",
+      ["standard_metadata", "ingress_global_timestamp"]
+    ],
+    [
+      "intrinsic_metadata.egress_global_timestamp",
+      ["standard_metadata", "egress_global_timestamp"]
+    ],
+    [
+      "intrinsic_metadata.mcast_grp",
+      ["standard_metadata", "mcast_grp"]
+    ],
+    [
+      "intrinsic_metadata.egress_rid",
+      ["standard_metadata", "egress_rid"]
+    ],
+    [
+      "intrinsic_metadata.priority",
+      ["standard_metadata", "priority"]
+    ]
+  ],
+  "program" : "./gw_agg_mqtt_sn.p4i",
+  "__meta__" : {
+    "version" : [2, 23],
+    "compiler" : "https://github.com/p4lang/p4c"
+  }
+}
