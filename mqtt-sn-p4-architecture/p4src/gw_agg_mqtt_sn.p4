@@ -69,10 +69,10 @@ const bit<16> TYPE_IPV4 = 0x800;
 *************************************************************************/
 
 /*Packet IP*/
-typedef bit<32> ipv4Addr;
+typedef bit<32> ipv4Addr_t;
 
 /*Frame Ethernet*/
-typedef bit<48> macAddr;
+typedef bit<48> macAddr_t;
 
 /*Generic Port*/
 typedef bit<9>  egressSpec_t; // representa a porta de saída do switich com 9 bits
@@ -146,16 +146,16 @@ header IPv4_h {
     bit<8>   ttl;
     bit<8>   protocol;
     bit<16>  hdrChecksum;
-    ipv4Addr srcAddr;
-    ipv4Addr dstAddr;
+    ipv4Addr_t srcAddr;
+    ipv4Addr_t dstAddr;
 }
 
 /////////////////// ETHERNET Header //////////////////////
 
 /*Frame Ethernet*/
 header Ethernet_h {
-    macAddr dstAddr;
-    macAddr srcAddr;
+    macAddr_t dstAddr;
+    macAddr_t srcAddr;
     bit<16> ethertype;
 }
 
@@ -231,8 +231,8 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.mqttsn_fixed);
         verify(hdr.mqttsn_fixed.length >= 2, error.MQTT_SN_InvalidLength);
         transition select(hdr.mqttsn_fixed.msgType) {
-            MQTTSN_CONNECT:       parse_mqttsn_connect;
-            // MQTTSN_CONNACK:       parse_mqttsn_connack; // Não preciso parsear pois nunca vou receber essa mensagem
+            MQTTSN_CONNECT: parse_mqttsn_connect;
+            // MQTTSN_CONNACK: parse_mqttsn_connack; // Não preciso parsear pois nunca vou receber essa mensagem
             default: accept;
         }
     }
@@ -278,32 +278,77 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
+    //////////////////////////////////////////////////////
+    // ACTION: DESCARTE AUTOMÁTICO DE PACOTES
+    //////////////////////////////////////////////////////
+
     action drop() {
-        mark_to_drop(standard_metadata); // descarta pacote
+        mark_to_drop(standard_metadata);
     }
 
     //////////////////////////////////////////////////////
-    // ACTIONS PARA CONNACK
+    // ACTION: ENCAMINHAMENTO ESTÁTICO
     //////////////////////////////////////////////////////
 
-    action send_connack_response_accept_connection(macAddr dstAddr, egressSpec_t port) {
-        // Ethernet
+    action forwarding(macAddr_t dstAddr, egressSpec_t port) {
+        // o novo mac de origem recebe o mac de destino anterior
+        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
+        // o novo mac de destino recebe o mac do próximo dispositivo (tabela de encaminhamento)
         hdr.ethernet.dstAddr = dstAddr;
-        hdr.ethernet.srcAddr = 0x0000000000AA; // MAC do gateway (fixo, pode parametrizar)
+        // define a porta de do switch para qual o pacote deve ser encaminhado (tabela de encaminhamento)
+        standard_metadata.egress_spec = port;
+        // decrementar o ttl em 1
+        hdr.ipv4.ttl = hdr.ipv4.ttl -1;
+    }
+
+    //////////////////////////////////////////////////////
+    // TABELA DE ENCAMINHAMENTO ESTÁTICO
+    //////////////////////////////////////////////////////
+
+    table static_forwarding {
+        key = {
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            forwarding;
+            drop;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
+    //////////////////////////////////////////////////////
+    // ACTIONS: CONNECT <-> CONNACK
+    //////////////////////////////////////////////////////
+
+    action send_connack_response_accept_connection() {
+        // Ethernet
+        macAddr_t srcMac = hdr.ethernet.srcAddr;
+        const macAddr_t GW_MAC = 0x000000000002; // Tem como pegar esse mac na tabela de encaminhamento?
+        hdr.ethernet.srcAddr = GW_MAC;
+        hdr.ethernet.dstAddr = srcMac;
 
         // IPv4
-        ipv4Addr client_ip = hdr.ipv4.srcAddr;
-        hdr.ipv4.srcAddr = 0x0A000001;  // 10.0.0.1 (gateway)
-        hdr.ipv4.dstAddr = client_ip;
+        ipv4Addr_t srcIP = hdr.ipv4.srcAddr;
+        hdr.ipv4.srcAddr = hdr.ipv4.dstAddr;
+        hdr.ipv4.dstAddr = srcIP;
+
+        hdr.ipv4.ttl = 64;
+        hdr.ipv4.version = 4;
+        hdr.ipv4.ihl = 5;   // sempre 20 bytes
+        hdr.ipv4.identification = 0;
+        hdr.ipv4.fragOffset = 0;
+        hdr.ipv4.flags = 0;
 
         // UDP
-        bit<16> client_port = hdr.udp.srcPort;
-        hdr.udp.srcPort = hdr.udp.dstPort;   // 1884
-        hdr.udp.dstPort = client_port;
+        bit<16> srcPort = hdr.udp.srcPort;
+        hdr.udp.srcPort = hdr.udp.dstPort;
+        hdr.udp.dstPort = srcPort;
 
         // CONNACK payload
         hdr.mqttsn_fixed.setValid();
-        hdr.mqttsn_fixed.length  = 3;
+        hdr.mqttsn_fixed.length  = 3;   // 2 bytes fixed + 1 byte returnCode
         hdr.mqttsn_fixed.msgType = MQTTSN_CONNACK;
 
         hdr.mqttsn_connack.setValid();
@@ -314,14 +359,45 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_connect.setInvalid();
         hdr.mqttsn_variable_field.setInvalid();
 
+        // Ajustar comprimentos
+        hdr.udp.length    = (bit<16>)(8 + (bit<16>)hdr.mqttsn_fixed.length);
+        hdr.ipv4.totalLen = (bit<16>)(((bit<16>)hdr.ipv4.ihl) * 4 + hdr.udp.length);
+
+        // Zerar checksums (recalculados depois)
+        hdr.ipv4.hdrChecksum = 0;
+        hdr.udp.checksum     = 0;
+
         // Porta de saída
-        standard_metadata.egress_spec = port;
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     action send_connack_response_reject_not_supported() {
-        // Apenas troca msgType e returnCode, mantém IP/MAC do CONNECT recebido
+        // Ethernet
+        macAddr_t srcMac = hdr.ethernet.srcAddr;
+        const macAddr_t GW_MAC = 0x000000000002; // Tem como pegar esse mac na tabela de encaminhamento?
+        hdr.ethernet.srcAddr = GW_MAC;
+        hdr.ethernet.dstAddr = srcMac;
+
+        // IPv4
+        ipv4Addr_t srcIP = hdr.ipv4.srcAddr;
+        hdr.ipv4.srcAddr = hdr.ipv4.dstAddr;
+        hdr.ipv4.dstAddr = srcIP;
+
+        hdr.ipv4.ttl = 64;
+        hdr.ipv4.version = 4;
+        hdr.ipv4.ihl = 5;   // sempre 20 bytes
+        hdr.ipv4.identification = 0;
+        hdr.ipv4.fragOffset = 0;
+        hdr.ipv4.flags = 0;
+
+        // UDP
+        bit<16> srcPort = hdr.udp.srcPort;
+        hdr.udp.srcPort = hdr.udp.dstPort;
+        hdr.udp.dstPort = srcPort;
+
+        // CONNACK payload
         hdr.mqttsn_fixed.setValid();
-        hdr.mqttsn_fixed.length  = 3;
+        hdr.mqttsn_fixed.length  = 3;   // 2 bytes fixed + 1 byte returnCode
         hdr.mqttsn_fixed.msgType = MQTTSN_CONNACK;
 
         hdr.mqttsn_connack.setValid();
@@ -331,23 +407,17 @@ control MyIngress(inout headers hdr,
         hdr.mqttsn_flags_connect.setInvalid();
         hdr.mqttsn_connect.setInvalid();
         hdr.mqttsn_variable_field.setInvalid();
-    }
 
-    //////////////////////////////////////////////////////
-    // TABELA DE CLIENTES
-    //////////////////////////////////////////////////////
+        // Ajustar comprimentos
+        hdr.udp.length    = (bit<16>)(8 + (bit<16>)hdr.mqttsn_fixed.length);
+        hdr.ipv4.totalLen = (bit<16>)(((bit<16>)hdr.ipv4.ihl) * 4 + hdr.udp.length);
 
-    table clients_registry {
-        key = {
-            hdr.ipv4.srcAddr : exact;   // Cliente que enviou CONNECT
-        }
-        actions = {
-            send_connack_response_accept_connection;
-            drop;
-            NoAction;
-        }
-        size = 1024;
-        default_action = NoAction();
+        // Zerar checksums (recalculados depois)
+        hdr.ipv4.hdrChecksum = 0;
+        hdr.udp.checksum     = 0;
+
+        // Porta de saída
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     //////////////////////////////////////////////////////
@@ -355,17 +425,14 @@ control MyIngress(inout headers hdr,
     //////////////////////////////////////////////////////
 
     apply {
-        if (hdr.mqttsn_fixed.isValid() &&
-            hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT &&
-            hdr.ipv4.dstAddr == 0x0A000001 &&   // gateway 10.0.0.1
-            hdr.udp.dstPort == UDP_PORT) {      // porta 1884
-
-            if (hdr.mqttsn_connect.isValid() &&
+        if (hdr.mqttsn_fixed.isValid()) {
+            if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT &&
+                hdr.mqttsn_connect.isValid() &&
                 hdr.mqttsn_flags_connect.isValid() &&
-                hdr.mqttsn_variable_field.isValid()) {
-
-                if (hdr.mqttsn_connect.protocolId == 0x01) {
-                    clients_registry.apply();
+                hdr.mqttsn_connect.protocolId == 0x01) {
+                if (hdr.udp.dstPort == UDP_PORT &&     // porta 1884
+                    hdr.ipv4.dstAddr == 0x0A000002) {  // gateway 10.0.0.2
+                        send_connack_response_accept_connection();
                 } else {
                     send_connack_response_reject_not_supported();
                 }
@@ -411,15 +478,6 @@ control MyComputeChecksum(inout headers hdr,
                   hdr.ipv4.dstAddr },
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16);
-
-        // Adicionado cálculo do checksum UDP
-        update_checksum(
-            hdr.udp.isValid(),
-                { hdr.udp.srcPort,
-                  hdr.udp.dstPort,
-                  hdr.udp.length },
-            hdr.udp.checksum,
-            HashAlgorithm.csum16);
     }
 }
 
@@ -434,9 +492,9 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.ipv4);
         packet.emit(hdr.udp);
         packet.emit(hdr.mqttsn_fixed);
-        packet.emit(hdr.mqttsn_variable_field);
-        packet.emit(hdr.mqttsn_flags_connect);
-        packet.emit(hdr.mqttsn_connect);
+        //packet.emit(hdr.mqttsn_variable_field);
+        //packet.emit(hdr.mqttsn_flags_connect);
+        //packet.emit(hdr.mqttsn_connect);
         packet.emit(hdr.mqttsn_connack);
     }
 }
@@ -455,14 +513,16 @@ V1Switch(
     MyDeparser()
 ) main;
 
-// docker run -dit --name=p4 --rm ramonfontes/bmv2:latest
-// docker cp mqtt-sn-p4-architecture/p4src p4:/tmp/
-// docker exec -it p4 bash
+// cd ~/dissertacao_ppgti
+// docker run -dit --name=p4c --rm ramonfontes/bmv2:latest
+// docker cp mqtt-sn-p4-architecture/p4src p4c:/tmp/
+// docker exec -it p4c bash
 // cd /tmp/p4src
 // p4c --target bmv2 --arch v1model gw_agg_mqtt_sn.p4
 // exit
-// docker cp p4:/tmp/p4src/gw_agg_mqtt_sn.json mqtt-sn-p4-architecture/
+// docker cp p4c:/tmp/p4src/gw_agg_mqtt_sn.json mqtt-sn-p4-architecture/
+// sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
 
-// docker stop p4
+// docker stop p4c
 // docker stop mn.s1 mn.ss1 mn.pb1 mn.gw mn.bk
 // docker rm mn.s1 mn.ss1 mn.pb1 mn.gw mn.bk

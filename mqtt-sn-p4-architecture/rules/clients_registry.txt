@@ -1,4 +1,0 @@
-table_set_default clients_registry drop
-table_add MyIngress.clients_registry send_connack_response_accept_connection 10.0.0.1 => 00:00:00:00:00:01 1
-table_add MyIngress.clients_registry send_connack_response_accept_connection 10.0.0.2 => 00:00:00:00:00:02 2
-table_add MyIngress.clients_registry send_connack_response_accept_connection 10.0.0.3 => 00:00:00:00:00:03 3

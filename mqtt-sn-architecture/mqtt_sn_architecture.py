@@ -43,7 +43,6 @@ info("Iniciando gateway\n")
 makeTerm(gw)
 
 info("Iniciando publisher\n")
-# Temperatura
 makeTerm(pb1)
 
 info("Iniciando subscriber\n")

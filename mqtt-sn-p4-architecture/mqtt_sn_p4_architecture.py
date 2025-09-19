@@ -21,11 +21,14 @@ def topology():
     debug('Adicionando Broker MQTT\n')
     bk = net.addDocker('bk', ip='10.0.0.1/8', mac="00:00:00:00:00:01", dimage='mqtt-broker')
 
+    debug('Adicionando Gateway MQTT-SN\n')
+    gw = net.addDocker('gw', ip='10.0.0.2/8', mac="00:00:00:00:00:02", dimage='mqtt-sn-gw')
+
     debug("Adicionando sensores publishers\n")
     pb1 = net.addDocker(
         'pb1', 
-        ip='10.0.0.2/8', 
-        mac="00:00:00:00:00:02", 
+        ip='10.0.0.3/8', 
+        mac="00:00:00:00:00:03", 
         dimage="mqtt-sn-client", 
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
@@ -34,8 +37,8 @@ def topology():
     debug("Adicionando subscriber\n")
     ss1 = net.addDocker(
         'ss1', 
-        ip='10.0.0.3/8', 
-        mac="00:00:00:00:00:03", 
+        ip='10.0.0.4/8', 
+        mac="00:00:00:00:00:04", 
         dimage="mqtt-sn-client", 
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
@@ -43,7 +46,7 @@ def topology():
 
     path = os.path.dirname(os.path.abspath(__file__))
     json_file = '/root/gw_agg_mqtt_sn.json' # container directory
-    config = path + '/rules/clients_registry.txt'
+    config = path + '/rules/static_forwarding.txt'
     args = {'json': json_file, 'switch_config': config}
 
     debug('*** Adding P4 Switch\n')
@@ -56,6 +59,7 @@ def topology():
     
     debug('Adicionando links\n')
     net.addLink(bk, s1, txo=False, rxo=False)
+    net.addLink(gw, s1, txo=False, rxo=False)
     net.addLink(pb1, s1, txo=False, rxo=False)
     net.addLink(ss1, s1, txo=False, rxo=False)
 
@@ -65,13 +69,16 @@ def topology():
     net.staticArp()
 
     debug("Iniciando broker mqtt\n")
-    makeTerm(bk)
+    #makeTerm(bk)
+
+    debug("Iniciando gateway\n")
+    #makeTerm(gw)
 
     debug("Iniciando publisher\n")
     makeTerm(pb1)
 
     debug("Iniciando subscriber\n")
-    makeTerm(ss1)
+    #makeTerm(ss1)
 
     debug("CLI containernet\n")
     CLI(net)
