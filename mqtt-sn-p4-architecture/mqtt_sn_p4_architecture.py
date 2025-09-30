@@ -85,7 +85,7 @@ def topology():
     makeTerm(pb1)
 
     debug("Iniciando subscriber\n")
-    #makeTerm(ss1)
+    makeTerm(ss1)
 
     debug("CLI containernet\n")
     CLI(net)

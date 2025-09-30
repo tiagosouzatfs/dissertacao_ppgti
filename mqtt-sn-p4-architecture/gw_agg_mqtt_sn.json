@@ -7,27 +7,31 @@
         ["tmp", 1, false],
         ["tmp_0", 1, false],
         ["tmp_1", 1, false],
-        ["tmp_2", 32, false],
+        ["tmp_2", 1, false],
         ["tmp_3", 1, false],
-        ["tmp_4", 1, false],
-        ["tmp_5", 32, false],
-        ["tmp_6", 1, false],
+        ["tmp_4", 32, false],
+        ["tmp_5", 1, false],
+        ["tmp_6", 32, false],
         ["tmp_7", 1, false],
-        ["tmp_8", 32, false],
-        ["tmp_9", 1, false],
+        ["tmp_8", 1, false],
+        ["tmp_9", 32, false],
         ["tmp_10", 1, false],
         ["tmp_11", 1, false],
-        ["tmp_12", 1, false],
+        ["tmp_12", 32, false],
         ["tmp_13", 1, false],
         ["tmp_14", 1, false],
         ["tmp_15", 1, false],
         ["tmp_16", 1, false],
-        ["tmp_17", 32, false],
+        ["tmp_17", 1, false],
         ["tmp_18", 1, false],
         ["tmp_19", 1, false],
-        ["tmp_20", 32, false],
-        ["tmp_21", 1, false],
-        ["_padding_0", 6, false]
+        ["tmp_20", 1, false],
+        ["tmp_21", 32, false],
+        ["tmp_22", 1, false],
+        ["tmp_23", 1, false],
+        ["tmp_24", 32, false],
+        ["tmp_25", 1, false],
+        ["_padding_0", 3, false]
       ]
     },
     {
@@ -99,8 +103,30 @@
       ]
     },
     {
-      "name" : "MQTTSN_flags_connect_h",
+      "name" : "MQTTSN_advertise_h",
       "id" : 6,
+      "fields" : [
+        ["gwId", 8, false],
+        ["duration", 16, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_searchgw_h",
+      "id" : 7,
+      "fields" : [
+        ["radius", 8, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_gwinfo_h",
+      "id" : 8,
+      "fields" : [
+        ["gwId", 8, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_flags_connect_h",
+      "id" : 9,
       "fields" : [
         ["will", 1, false],
         ["cleanSession", 1, false],
@@ -109,7 +135,7 @@
     },
     {
       "name" : "MQTTSN_connect_h",
-      "id" : 7,
+      "id" : 10,
       "fields" : [
         ["protocolId", 8, false],
         ["duration", 16, false]
@@ -117,14 +143,43 @@
     },
     {
       "name" : "MQTTSN_connack_h",
-      "id" : 8,
+      "id" : 11,
       "fields" : [
         ["returnCode", 8, false]
       ]
     },
     {
+      "name" : "MQTTSN_willtopicreq_h",
+      "id" : 12,
+      "fields" : []
+    },
+    {
+      "name" : "MQTTSN_flags_willtopic_h",
+      "id" : 13,
+      "fields" : [
+        ["qos", 2, false],
+        ["retain", 1, false],
+        ["reserved", 5, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_willtopic_h",
+      "id" : 14,
+      "fields" : []
+    },
+    {
+      "name" : "MQTTSN_willmsgreq_h",
+      "id" : 15,
+      "fields" : []
+    },
+    {
+      "name" : "MQTTSN_willmsg_h",
+      "id" : 16,
+      "fields" : []
+    },
+    {
       "name" : "MQTTSN_register_h",
-      "id" : 9,
+      "id" : 17,
       "fields" : [
         ["topicId", 16, false],
         ["msgId", 16, false]
@@ -132,7 +187,7 @@
     },
     {
       "name" : "MQTTSN_regack_h",
-      "id" : 10,
+      "id" : 18,
       "fields" : [
         ["topicId", 16, false],
         ["msgId", 16, false],
@@ -141,7 +196,7 @@
     },
     {
       "name" : "MQTTSN_flags_publish_h",
-      "id" : 11,
+      "id" : 19,
       "fields" : [
         ["dup", 1, false],
         ["qos", 2, false],
@@ -152,7 +207,7 @@
     },
     {
       "name" : "MQTTSN_publish_h",
-      "id" : 12,
+      "id" : 20,
       "fields" : [
         ["topicId", 16, false],
         ["msgId", 16, false]
@@ -160,7 +215,7 @@
     },
     {
       "name" : "MQTTSN_puback_h",
-      "id" : 13,
+      "id" : 21,
       "fields" : [
         ["topicId", 16, false],
         ["msgId", 16, false],
@@ -169,43 +224,28 @@
     },
     {
       "name" : "MQTTSN_pubrec_h",
-      "id" : 14,
+      "id" : 22,
       "fields" : [
         ["msgId", 16, false]
       ]
     },
     {
       "name" : "MQTTSN_pubrel_h",
-      "id" : 15,
+      "id" : 23,
       "fields" : [
         ["msgId", 16, false]
       ]
     },
     {
       "name" : "MQTTSN_pubcomp_h",
-      "id" : 16,
+      "id" : 24,
       "fields" : [
         ["msgId", 16, false]
       ]
     },
     {
-      "name" : "MQTTSN_disconnect_h",
-      "id" : 17,
-      "fields" : []
-    },
-    {
-      "name" : "MQTTSN_pingreq_h",
-      "id" : 18,
-      "fields" : []
-    },
-    {
-      "name" : "MQTTSN_pingresp_h",
-      "id" : 19,
-      "fields" : []
-    },
-    {
       "name" : "MQTTSN_flags_subscribe_h",
-      "id" : 20,
+      "id" : 25,
       "fields" : [
         ["dup", 1, false],
         ["qos", 2, false],
@@ -215,15 +255,14 @@
     },
     {
       "name" : "MQTTSN_subscribe_h",
-      "id" : 21,
+      "id" : 26,
       "fields" : [
-        ["msgId", 16, false],
-        ["topicId", 16, false]
+        ["msgId", 16, false]
       ]
     },
     {
       "name" : "MQTTSN_flags_suback_h",
-      "id" : 22,
+      "id" : 27,
       "fields" : [
         ["qos", 2, false],
         ["reserved", 6, false]
@@ -231,7 +270,7 @@
     },
     {
       "name" : "MQTTSN_suback_h",
-      "id" : 23,
+      "id" : 28,
       "fields" : [
         ["topicId", 16, false],
         ["msgId", 16, false],
@@ -240,7 +279,7 @@
     },
     {
       "name" : "MQTTSN_flags_unsubscribe_h",
-      "id" : 24,
+      "id" : 29,
       "fields" : [
         ["dup", 1, false],
         ["qos", 2, false],
@@ -250,22 +289,69 @@
     },
     {
       "name" : "MQTTSN_unsubscribe_h",
-      "id" : 25,
-      "fields" : [
-        ["msgId", 16, false],
-        ["topicId", 16, false]
-      ]
-    },
-    {
-      "name" : "MQTTSN_unsuback_h",
-      "id" : 26,
+      "id" : 30,
       "fields" : [
         ["msgId", 16, false]
       ]
     },
     {
+      "name" : "MQTTSN_unsuback_h",
+      "id" : 31,
+      "fields" : [
+        ["msgId", 16, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_pingreq_h",
+      "id" : 32,
+      "fields" : []
+    },
+    {
+      "name" : "MQTTSN_pingresp_h",
+      "id" : 33,
+      "fields" : []
+    },
+    {
+      "name" : "MQTTSN_disconnect_h",
+      "id" : 34,
+      "fields" : []
+    },
+    {
+      "name" : "MQTTSN_flags_willtopicupd_h",
+      "id" : 35,
+      "fields" : [
+        ["qos", 2, false],
+        ["retain", 1, false],
+        ["reserved", 5, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_willtopicupd_h",
+      "id" : 36,
+      "fields" : []
+    },
+    {
+      "name" : "MQTTSN_willmsgupd_h",
+      "id" : 37,
+      "fields" : []
+    },
+    {
+      "name" : "MQTTSN_willtopicresp_h",
+      "id" : 38,
+      "fields" : [
+        ["returnCode", 8, false]
+      ]
+    },
+    {
+      "name" : "MQTTSN_willmsgresp_h",
+      "id" : 39,
+      "fields" : [
+        ["returnCode", 8, false]
+      ]
+    },
+    {
       "name" : "MQTTSN_variable_field_h",
-      "id" : 27,
+      "id" : 40,
       "fields" : [
         ["data", "*"]
       ],
@@ -316,155 +402,246 @@
       "pi_omit" : true
     },
     {
-      "name" : "mqttsn_flags_connect",
+      "name" : "mqttsn_advertise",
       "id" : 6,
+      "header_type" : "MQTTSN_advertise_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_searchgw",
+      "id" : 7,
+      "header_type" : "MQTTSN_searchgw_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_gwinfo",
+      "id" : 8,
+      "header_type" : "MQTTSN_gwinfo_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_flags_connect",
+      "id" : 9,
       "header_type" : "MQTTSN_flags_connect_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_connect",
-      "id" : 7,
+      "id" : 10,
       "header_type" : "MQTTSN_connect_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_connack",
-      "id" : 8,
+      "id" : 11,
       "header_type" : "MQTTSN_connack_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
+      "name" : "mqttsn_willtopicreq",
+      "id" : 12,
+      "header_type" : "MQTTSN_willtopicreq_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_flags_willtopic",
+      "id" : 13,
+      "header_type" : "MQTTSN_flags_willtopic_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_willtopic",
+      "id" : 14,
+      "header_type" : "MQTTSN_willtopic_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_willmsgreq",
+      "id" : 15,
+      "header_type" : "MQTTSN_willmsgreq_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_willmsg",
+      "id" : 16,
+      "header_type" : "MQTTSN_willmsg_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
       "name" : "mqttsn_register",
-      "id" : 9,
+      "id" : 17,
       "header_type" : "MQTTSN_register_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_regack",
-      "id" : 10,
+      "id" : 18,
       "header_type" : "MQTTSN_regack_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_flags_publish",
-      "id" : 11,
+      "id" : 19,
       "header_type" : "MQTTSN_flags_publish_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_publish",
-      "id" : 12,
+      "id" : 20,
       "header_type" : "MQTTSN_publish_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_puback",
-      "id" : 13,
+      "id" : 21,
       "header_type" : "MQTTSN_puback_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_pubrec",
-      "id" : 14,
+      "id" : 22,
       "header_type" : "MQTTSN_pubrec_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_pubrel",
-      "id" : 15,
+      "id" : 23,
       "header_type" : "MQTTSN_pubrel_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_pubcomp",
-      "id" : 16,
+      "id" : 24,
       "header_type" : "MQTTSN_pubcomp_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
-      "name" : "mqttsn_disconnect",
-      "id" : 17,
-      "header_type" : "MQTTSN_disconnect_h",
-      "metadata" : false,
-      "pi_omit" : true
-    },
-    {
-      "name" : "mqttsn_pingreq",
-      "id" : 18,
-      "header_type" : "MQTTSN_pingreq_h",
-      "metadata" : false,
-      "pi_omit" : true
-    },
-    {
-      "name" : "mqttsn_pingresp",
-      "id" : 19,
-      "header_type" : "MQTTSN_pingresp_h",
-      "metadata" : false,
-      "pi_omit" : true
-    },
-    {
       "name" : "mqttsn_flags_subscribe",
-      "id" : 20,
+      "id" : 25,
       "header_type" : "MQTTSN_flags_subscribe_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_subscribe",
-      "id" : 21,
+      "id" : 26,
       "header_type" : "MQTTSN_subscribe_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_flags_suback",
-      "id" : 22,
+      "id" : 27,
       "header_type" : "MQTTSN_flags_suback_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_suback",
-      "id" : 23,
+      "id" : 28,
       "header_type" : "MQTTSN_suback_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_flags_unsubscribe",
-      "id" : 24,
+      "id" : 29,
       "header_type" : "MQTTSN_flags_unsubscribe_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_unsubscribe",
-      "id" : 25,
+      "id" : 30,
       "header_type" : "MQTTSN_unsubscribe_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
       "name" : "mqttsn_unsuback",
-      "id" : 26,
+      "id" : 31,
       "header_type" : "MQTTSN_unsuback_h",
       "metadata" : false,
       "pi_omit" : true
     },
     {
+      "name" : "mqttsn_pingreq",
+      "id" : 32,
+      "header_type" : "MQTTSN_pingreq_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_pingresp",
+      "id" : 33,
+      "header_type" : "MQTTSN_pingresp_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_disconnect",
+      "id" : 34,
+      "header_type" : "MQTTSN_disconnect_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_flags_willtopicupd",
+      "id" : 35,
+      "header_type" : "MQTTSN_flags_willtopicupd_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_willtopicupd",
+      "id" : 36,
+      "header_type" : "MQTTSN_willtopicupd_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_willmsgupd",
+      "id" : 37,
+      "header_type" : "MQTTSN_willmsgupd_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_willtopicresp",
+      "id" : 38,
+      "header_type" : "MQTTSN_willtopicresp_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
+      "name" : "mqttsn_willmsgresp",
+      "id" : 39,
+      "header_type" : "MQTTSN_willmsgresp_h",
+      "metadata" : false,
+      "pi_omit" : true
+    },
+    {
       "name" : "mqttsn_variable_field",
-      "id" : 27,
+      "id" : 40,
       "header_type" : "MQTTSN_variable_field_h",
       "metadata" : false,
       "pi_omit" : true
@@ -738,6 +915,24 @@
           "transitions" : [
             {
               "type" : "hexstr",
+              "value" : "0x00",
+              "mask" : null,
+              "next_state" : "parse_mqttsn_advertise"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x01",
+              "mask" : null,
+              "next_state" : "parse_mqttsn_searchgw"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x02",
+              "mask" : null,
+              "next_state" : "parse_mqttsn_gwinfo"
+            },
+            {
+              "type" : "hexstr",
               "value" : "0x04",
               "mask" : null,
               "next_state" : "parse_mqttsn_connect"
@@ -792,24 +987,6 @@
             },
             {
               "type" : "hexstr",
-              "value" : "0x18",
-              "mask" : null,
-              "next_state" : "parse_mqttsn_disconnect"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x16",
-              "mask" : null,
-              "next_state" : "parse_mqttsn_pingreq"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x17",
-              "mask" : null,
-              "next_state" : "parse_mqttsn_pingresp"
-            },
-            {
-              "type" : "hexstr",
               "value" : "0x12",
               "mask" : null,
               "next_state" : "parse_mqttsn_subscribe"
@@ -833,6 +1010,24 @@
               "next_state" : "parse_mqttsn_unsuback"
             },
             {
+              "type" : "hexstr",
+              "value" : "0x16",
+              "mask" : null,
+              "next_state" : "parse_mqttsn_pingreq"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x17",
+              "mask" : null,
+              "next_state" : "parse_mqttsn_pingresp"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x18",
+              "mask" : null,
+              "next_state" : "parse_mqttsn_disconnect"
+            },
+            {
               "type" : "default",
               "value" : null,
               "mask" : null,
@@ -847,23 +1042,14 @@
           ]
         },
         {
-          "name" : "parse_mqttsn_connect",
+          "name" : "parse_mqttsn_advertise",
           "id" : 4,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_flags_connect"
-                }
-              ],
-              "op" : "extract"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "regular",
-                  "value" : "mqttsn_connect"
+                  "value" : "mqttsn_advertise"
                 }
               ],
               "op" : "extract"
@@ -884,14 +1070,14 @@
                       "right" : {
                         "type" : "expression",
                         "value" : {
-                          "op" : ">=",
+                          "op" : "==",
                           "left" : {
                             "type" : "field",
                             "value" : ["mqttsn_fixed", "length"]
                           },
                           "right" : {
                             "type" : "hexstr",
-                            "value" : "0x07"
+                            "value" : "0x05"
                           }
                         }
                       }
@@ -920,88 +1106,6 @@
                 }
               ],
               "op" : "verify"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "field",
-                  "value" : ["scalars", "tmp_2"]
-                },
-                {
-                  "type" : "expression",
-                  "value" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "&",
-                      "left" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "<<",
-                          "left" : {
-                            "type" : "expression",
-                            "value" : {
-                              "op" : "&",
-                              "left" : {
-                                "type" : "expression",
-                                "value" : {
-                                  "op" : "+",
-                                  "left" : {
-                                    "type" : "expression",
-                                    "value" : {
-                                      "op" : "&",
-                                      "left" : {
-                                        "type" : "field",
-                                        "value" : ["mqttsn_fixed", "length"]
-                                      },
-                                      "right" : {
-                                        "type" : "hexstr",
-                                        "value" : "0xffffffff"
-                                      }
-                                    }
-                                  },
-                                  "right" : {
-                                    "type" : "hexstr",
-                                    "value" : "0xfffffffa"
-                                  }
-                                }
-                              },
-                              "right" : {
-                                "type" : "hexstr",
-                                "value" : "0xffffffff"
-                              }
-                            }
-                          },
-                          "right" : {
-                            "type" : "hexstr",
-                            "value" : "0x3"
-                          }
-                        }
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0xffffffff"
-                      }
-                    }
-                  }
-                }
-              ],
-              "op" : "set"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "regular",
-                  "value" : "mqttsn_variable_field"
-                },
-                {
-                  "type" : "expression",
-                  "value" : {
-                    "type" : "field",
-                    "value" : ["scalars", "tmp_2"]
-                  }
-                }
-              ],
-              "op" : "extract_VL"
             }
           ],
           "transitions" : [
@@ -1015,14 +1119,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_connack",
+          "name" : "parse_mqttsn_searchgw",
           "id" : 5,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_connack"
+                  "value" : "mqttsn_searchgw"
                 }
               ],
               "op" : "extract"
@@ -1031,7 +1135,7 @@
               "parameters" : [
                 {
                   "type" : "field",
-                  "value" : ["scalars", "tmp_3"]
+                  "value" : ["scalars", "tmp_2"]
                 },
                 {
                   "type" : "expression",
@@ -1069,7 +1173,7 @@
                     "left" : null,
                     "right" : {
                       "type" : "field",
-                      "value" : ["scalars", "tmp_3"]
+                      "value" : ["scalars", "tmp_2"]
                     }
                   }
                 },
@@ -1092,14 +1196,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_register",
+          "name" : "parse_mqttsn_gwinfo",
           "id" : 6,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_register"
+                  "value" : "mqttsn_gwinfo"
                 }
               ],
               "op" : "extract"
@@ -1108,7 +1212,175 @@
               "parameters" : [
                 {
                   "type" : "field",
+                  "value" : ["scalars", "tmp_3"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "b2d",
+                      "left" : null,
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : ">=",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "length"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x03"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "op" : "d2b",
+                    "left" : null,
+                    "right" : {
+                      "type" : "field",
+                      "value" : ["scalars", "tmp_3"]
+                    }
+                  }
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0xd"
+                }
+              ],
+              "op" : "verify"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
                   "value" : ["scalars", "tmp_4"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "<<",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "+",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "field",
+                                        "value" : ["mqttsn_fixed", "length"]
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffffffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xfffffffd"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffffffff"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x3"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffffffff"
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_variable_field"
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "field",
+                    "value" : ["scalars", "tmp_4"]
+                  }
+                }
+              ],
+              "op" : "extract_VL"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : []
+        },
+        {
+          "name" : "parse_mqttsn_connect",
+          "id" : 7,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_flags_connect"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_connect"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_5"]
                 },
                 {
                   "type" : "expression",
@@ -1146,7 +1418,7 @@
                     "left" : null,
                     "right" : {
                       "type" : "field",
-                      "value" : ["scalars", "tmp_4"]
+                      "value" : ["scalars", "tmp_5"]
                     }
                   }
                 },
@@ -1161,7 +1433,7 @@
               "parameters" : [
                 {
                   "type" : "field",
-                  "value" : ["scalars", "tmp_5"]
+                  "value" : ["scalars", "tmp_6"]
                 },
                 {
                   "type" : "expression",
@@ -1233,7 +1505,7 @@
                   "type" : "expression",
                   "value" : {
                     "type" : "field",
-                    "value" : ["scalars", "tmp_5"]
+                    "value" : ["scalars", "tmp_6"]
                   }
                 }
               ],
@@ -1251,14 +1523,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_regack",
-          "id" : 7,
+          "name" : "parse_mqttsn_connack",
+          "id" : 8,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_regack"
+                  "value" : "mqttsn_connack"
                 }
               ],
               "op" : "extract"
@@ -1267,7 +1539,7 @@
               "parameters" : [
                 {
                   "type" : "field",
-                  "value" : ["scalars", "tmp_6"]
+                  "value" : ["scalars", "tmp_7"]
                 },
                 {
                   "type" : "expression",
@@ -1286,7 +1558,7 @@
                           },
                           "right" : {
                             "type" : "hexstr",
-                            "value" : "0x07"
+                            "value" : "0x03"
                           }
                         }
                       }
@@ -1305,7 +1577,7 @@
                     "left" : null,
                     "right" : {
                       "type" : "field",
-                      "value" : ["scalars", "tmp_6"]
+                      "value" : ["scalars", "tmp_7"]
                     }
                   }
                 },
@@ -1328,23 +1600,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_publish",
-          "id" : 8,
+          "name" : "parse_mqttsn_register",
+          "id" : 9,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_flags_publish"
-                }
-              ],
-              "op" : "extract"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "regular",
-                  "value" : "mqttsn_publish"
+                  "value" : "mqttsn_register"
                 }
               ],
               "op" : "extract"
@@ -1353,7 +1616,7 @@
               "parameters" : [
                 {
                   "type" : "field",
-                  "value" : ["scalars", "tmp_7"]
+                  "value" : ["scalars", "tmp_8"]
                 },
                 {
                   "type" : "expression",
@@ -1391,7 +1654,7 @@
                     "left" : null,
                     "right" : {
                       "type" : "field",
-                      "value" : ["scalars", "tmp_7"]
+                      "value" : ["scalars", "tmp_8"]
                     }
                   }
                 },
@@ -1406,7 +1669,7 @@
               "parameters" : [
                 {
                   "type" : "field",
-                  "value" : ["scalars", "tmp_8"]
+                  "value" : ["scalars", "tmp_9"]
                 },
                 {
                   "type" : "expression",
@@ -1442,7 +1705,7 @@
                                   },
                                   "right" : {
                                     "type" : "hexstr",
-                                    "value" : "0xfffffff9"
+                                    "value" : "0xfffffffa"
                                   }
                                 }
                               },
@@ -1478,7 +1741,7 @@
                   "type" : "expression",
                   "value" : {
                     "type" : "field",
-                    "value" : ["scalars", "tmp_8"]
+                    "value" : ["scalars", "tmp_9"]
                   }
                 }
               ],
@@ -1496,91 +1759,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_puback",
-          "id" : 9,
-          "parser_ops" : [
-            {
-              "parameters" : [
-                {
-                  "type" : "regular",
-                  "value" : "mqttsn_puback"
-                }
-              ],
-              "op" : "extract"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "field",
-                  "value" : ["scalars", "tmp_9"]
-                },
-                {
-                  "type" : "expression",
-                  "value" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "b2d",
-                      "left" : null,
-                      "right" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "==",
-                          "left" : {
-                            "type" : "field",
-                            "value" : ["mqttsn_fixed", "length"]
-                          },
-                          "right" : {
-                            "type" : "hexstr",
-                            "value" : "0x07"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              ],
-              "op" : "set"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "expression",
-                  "value" : {
-                    "op" : "d2b",
-                    "left" : null,
-                    "right" : {
-                      "type" : "field",
-                      "value" : ["scalars", "tmp_9"]
-                    }
-                  }
-                },
-                {
-                  "type" : "hexstr",
-                  "value" : "0xd"
-                }
-              ],
-              "op" : "verify"
-            }
-          ],
-          "transitions" : [
-            {
-              "type" : "default",
-              "value" : null,
-              "mask" : null,
-              "next_state" : null
-            }
-          ],
-          "transition_key" : []
-        },
-        {
-          "name" : "parse_mqttsn_pubrec",
+          "name" : "parse_mqttsn_regack",
           "id" : 10,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_pubrec"
+                  "value" : "mqttsn_regack"
                 }
               ],
               "op" : "extract"
@@ -1608,7 +1794,7 @@
                           },
                           "right" : {
                             "type" : "hexstr",
-                            "value" : "0x04"
+                            "value" : "0x07"
                           }
                         }
                       }
@@ -1650,14 +1836,23 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_pubrel",
+          "name" : "parse_mqttsn_publish",
           "id" : 11,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_pubrel"
+                  "value" : "mqttsn_flags_publish"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_publish"
                 }
               ],
               "op" : "extract"
@@ -1678,14 +1873,14 @@
                       "right" : {
                         "type" : "expression",
                         "value" : {
-                          "op" : "==",
+                          "op" : ">=",
                           "left" : {
                             "type" : "field",
                             "value" : ["mqttsn_fixed", "length"]
                           },
                           "right" : {
                             "type" : "hexstr",
-                            "value" : "0x04"
+                            "value" : "0x07"
                           }
                         }
                       }
@@ -1714,30 +1909,6 @@
                 }
               ],
               "op" : "verify"
-            }
-          ],
-          "transitions" : [
-            {
-              "type" : "default",
-              "value" : null,
-              "mask" : null,
-              "next_state" : null
-            }
-          ],
-          "transition_key" : []
-        },
-        {
-          "name" : "parse_mqttsn_pubcomp",
-          "id" : 12,
-          "parser_ops" : [
-            {
-              "parameters" : [
-                {
-                  "type" : "regular",
-                  "value" : "mqttsn_pubcomp"
-                }
-              ],
-              "op" : "extract"
             },
             {
               "parameters" : [
@@ -1750,21 +1921,54 @@
                   "value" : {
                     "type" : "expression",
                     "value" : {
-                      "op" : "b2d",
-                      "left" : null,
-                      "right" : {
+                      "op" : "&",
+                      "left" : {
                         "type" : "expression",
                         "value" : {
-                          "op" : "==",
+                          "op" : "<<",
                           "left" : {
-                            "type" : "field",
-                            "value" : ["mqttsn_fixed", "length"]
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "+",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "field",
+                                        "value" : ["mqttsn_fixed", "length"]
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffffffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xfffffff9"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffffffff"
+                              }
+                            }
                           },
                           "right" : {
                             "type" : "hexstr",
-                            "value" : "0x04"
+                            "value" : "0x3"
                           }
                         }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffffffff"
                       }
                     }
                   }
@@ -1775,22 +1979,18 @@
             {
               "parameters" : [
                 {
-                  "type" : "expression",
-                  "value" : {
-                    "op" : "d2b",
-                    "left" : null,
-                    "right" : {
-                      "type" : "field",
-                      "value" : ["scalars", "tmp_12"]
-                    }
-                  }
+                  "type" : "regular",
+                  "value" : "mqttsn_variable_field"
                 },
                 {
-                  "type" : "hexstr",
-                  "value" : "0xd"
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "field",
+                    "value" : ["scalars", "tmp_12"]
+                  }
                 }
               ],
-              "op" : "verify"
+              "op" : "extract_VL"
             }
           ],
           "transitions" : [
@@ -1804,14 +2004,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_disconnect",
-          "id" : 13,
+          "name" : "parse_mqttsn_puback",
+          "id" : 12,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_disconnect"
+                  "value" : "mqttsn_puback"
                 }
               ],
               "op" : "extract"
@@ -1832,14 +2032,14 @@
                       "right" : {
                         "type" : "expression",
                         "value" : {
-                          "op" : ">=",
+                          "op" : "==",
                           "left" : {
                             "type" : "field",
                             "value" : ["mqttsn_fixed", "length"]
                           },
                           "right" : {
                             "type" : "hexstr",
-                            "value" : "0x02"
+                            "value" : "0x07"
                           }
                         }
                       }
@@ -1881,14 +2081,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_pingreq",
-          "id" : 14,
+          "name" : "parse_mqttsn_pubrec",
+          "id" : 13,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_pingreq"
+                  "value" : "mqttsn_pubrec"
                 }
               ],
               "op" : "extract"
@@ -1909,14 +2109,14 @@
                       "right" : {
                         "type" : "expression",
                         "value" : {
-                          "op" : ">=",
+                          "op" : "==",
                           "left" : {
                             "type" : "field",
                             "value" : ["mqttsn_fixed", "length"]
                           },
                           "right" : {
                             "type" : "hexstr",
-                            "value" : "0x02"
+                            "value" : "0x04"
                           }
                         }
                       }
@@ -1958,14 +2158,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_pingresp",
-          "id" : 15,
+          "name" : "parse_mqttsn_pubrel",
+          "id" : 14,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_pingresp"
+                  "value" : "mqttsn_pubrel"
                 }
               ],
               "op" : "extract"
@@ -1993,7 +2193,7 @@
                           },
                           "right" : {
                             "type" : "hexstr",
-                            "value" : "0x02"
+                            "value" : "0x04"
                           }
                         }
                       }
@@ -2035,23 +2235,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_subscribe",
-          "id" : 16,
+          "name" : "parse_mqttsn_pubcomp",
+          "id" : 15,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_flags_subscribe"
-                }
-              ],
-              "op" : "extract"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "regular",
-                  "value" : "mqttsn_subscribe"
+                  "value" : "mqttsn_pubcomp"
                 }
               ],
               "op" : "extract"
@@ -2072,14 +2263,14 @@
                       "right" : {
                         "type" : "expression",
                         "value" : {
-                          "op" : ">=",
+                          "op" : "==",
                           "left" : {
                             "type" : "field",
                             "value" : ["mqttsn_fixed", "length"]
                           },
                           "right" : {
                             "type" : "hexstr",
-                            "value" : "0x07"
+                            "value" : "0x04"
                           }
                         }
                       }
@@ -2108,88 +2299,6 @@
                 }
               ],
               "op" : "verify"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "field",
-                  "value" : ["scalars", "tmp_17"]
-                },
-                {
-                  "type" : "expression",
-                  "value" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "&",
-                      "left" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "<<",
-                          "left" : {
-                            "type" : "expression",
-                            "value" : {
-                              "op" : "&",
-                              "left" : {
-                                "type" : "expression",
-                                "value" : {
-                                  "op" : "+",
-                                  "left" : {
-                                    "type" : "expression",
-                                    "value" : {
-                                      "op" : "&",
-                                      "left" : {
-                                        "type" : "field",
-                                        "value" : ["mqttsn_fixed", "length"]
-                                      },
-                                      "right" : {
-                                        "type" : "hexstr",
-                                        "value" : "0xffffffff"
-                                      }
-                                    }
-                                  },
-                                  "right" : {
-                                    "type" : "hexstr",
-                                    "value" : "0xfffffff9"
-                                  }
-                                }
-                              },
-                              "right" : {
-                                "type" : "hexstr",
-                                "value" : "0xffffffff"
-                              }
-                            }
-                          },
-                          "right" : {
-                            "type" : "hexstr",
-                            "value" : "0x3"
-                          }
-                        }
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0xffffffff"
-                      }
-                    }
-                  }
-                }
-              ],
-              "op" : "set"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "regular",
-                  "value" : "mqttsn_variable_field"
-                },
-                {
-                  "type" : "expression",
-                  "value" : {
-                    "type" : "field",
-                    "value" : ["scalars", "tmp_17"]
-                  }
-                }
-              ],
-              "op" : "extract_VL"
             }
           ],
           "transitions" : [
@@ -2203,14 +2312,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_suback",
-          "id" : 17,
+          "name" : "parse_mqttsn_disconnect",
+          "id" : 16,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_flags_suback"
+                  "value" : "mqttsn_disconnect"
                 }
               ],
               "op" : "extract"
@@ -2218,8 +2327,76 @@
             {
               "parameters" : [
                 {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_17"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "b2d",
+                      "left" : null,
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : ">=",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "length"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x02"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "op" : "d2b",
+                    "left" : null,
+                    "right" : {
+                      "type" : "field",
+                      "value" : ["scalars", "tmp_17"]
+                    }
+                  }
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0xd"
+                }
+              ],
+              "op" : "verify"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : []
+        },
+        {
+          "name" : "parse_mqttsn_pingreq",
+          "id" : 17,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
                   "type" : "regular",
-                  "value" : "mqttsn_suback"
+                  "value" : "mqttsn_pingreq"
                 }
               ],
               "op" : "extract"
@@ -2240,14 +2417,14 @@
                       "right" : {
                         "type" : "expression",
                         "value" : {
-                          "op" : "==",
+                          "op" : ">=",
                           "left" : {
                             "type" : "field",
                             "value" : ["mqttsn_fixed", "length"]
                           },
                           "right" : {
                             "type" : "hexstr",
-                            "value" : "0x08"
+                            "value" : "0x02"
                           }
                         }
                       }
@@ -2289,23 +2466,14 @@
           "transition_key" : []
         },
         {
-          "name" : "parse_mqttsn_unsubscribe",
+          "name" : "parse_mqttsn_pingresp",
           "id" : 18,
           "parser_ops" : [
             {
               "parameters" : [
                 {
                   "type" : "regular",
-                  "value" : "mqttsn_flags_unsubscribe"
-                }
-              ],
-              "op" : "extract"
-            },
-            {
-              "parameters" : [
-                {
-                  "type" : "regular",
-                  "value" : "mqttsn_unsubscribe"
+                  "value" : "mqttsn_pingresp"
                 }
               ],
               "op" : "extract"
@@ -2315,6 +2483,92 @@
                 {
                   "type" : "field",
                   "value" : ["scalars", "tmp_19"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "b2d",
+                      "left" : null,
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "==",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "length"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x02"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "op" : "d2b",
+                    "left" : null,
+                    "right" : {
+                      "type" : "field",
+                      "value" : ["scalars", "tmp_19"]
+                    }
+                  }
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0xd"
+                }
+              ],
+              "op" : "verify"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : []
+        },
+        {
+          "name" : "parse_mqttsn_subscribe",
+          "id" : 19,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_flags_subscribe"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_subscribe"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_20"]
                 },
                 {
                   "type" : "expression",
@@ -2352,7 +2606,7 @@
                     "left" : null,
                     "right" : {
                       "type" : "field",
-                      "value" : ["scalars", "tmp_19"]
+                      "value" : ["scalars", "tmp_20"]
                     }
                   }
                 },
@@ -2367,7 +2621,7 @@
               "parameters" : [
                 {
                   "type" : "field",
-                  "value" : ["scalars", "tmp_20"]
+                  "value" : ["scalars", "tmp_21"]
                 },
                 {
                   "type" : "expression",
@@ -2439,7 +2693,261 @@
                   "type" : "expression",
                   "value" : {
                     "type" : "field",
-                    "value" : ["scalars", "tmp_20"]
+                    "value" : ["scalars", "tmp_21"]
+                  }
+                }
+              ],
+              "op" : "extract_VL"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : []
+        },
+        {
+          "name" : "parse_mqttsn_suback",
+          "id" : 20,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_flags_suback"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_suback"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_22"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "b2d",
+                      "left" : null,
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "==",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "length"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x08"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "op" : "d2b",
+                    "left" : null,
+                    "right" : {
+                      "type" : "field",
+                      "value" : ["scalars", "tmp_22"]
+                    }
+                  }
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0xd"
+                }
+              ],
+              "op" : "verify"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "default",
+              "value" : null,
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : []
+        },
+        {
+          "name" : "parse_mqttsn_unsubscribe",
+          "id" : 21,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_flags_unsubscribe"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_unsubscribe"
+                }
+              ],
+              "op" : "extract"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_23"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "b2d",
+                      "left" : null,
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : ">=",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "length"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x07"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "op" : "d2b",
+                    "left" : null,
+                    "right" : {
+                      "type" : "field",
+                      "value" : ["scalars", "tmp_23"]
+                    }
+                  }
+                },
+                {
+                  "type" : "hexstr",
+                  "value" : "0xd"
+                }
+              ],
+              "op" : "verify"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "field",
+                  "value" : ["scalars", "tmp_24"]
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "<<",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "+",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "field",
+                                        "value" : ["mqttsn_fixed", "length"]
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffffffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xfffffff9"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffffffff"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x3"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffffffff"
+                      }
+                    }
+                  }
+                }
+              ],
+              "op" : "set"
+            },
+            {
+              "parameters" : [
+                {
+                  "type" : "regular",
+                  "value" : "mqttsn_variable_field"
+                },
+                {
+                  "type" : "expression",
+                  "value" : {
+                    "type" : "field",
+                    "value" : ["scalars", "tmp_24"]
                   }
                 }
               ],
@@ -2458,7 +2966,7 @@
         },
         {
           "name" : "parse_mqttsn_unsuback",
-          "id" : 19,
+          "id" : 22,
           "parser_ops" : [
             {
               "parameters" : [
@@ -2473,7 +2981,7 @@
               "parameters" : [
                 {
                   "type" : "field",
-                  "value" : ["scalars", "tmp_21"]
+                  "value" : ["scalars", "tmp_25"]
                 },
                 {
                   "type" : "expression",
@@ -2511,7 +3019,7 @@
                     "left" : null,
                     "right" : {
                       "type" : "field",
-                      "value" : ["scalars", "tmp_21"]
+                      "value" : ["scalars", "tmp_25"]
                     }
                   }
                 },
@@ -2543,11 +3051,11 @@
       "id" : 0,
       "source_info" : {
         "filename" : "gw_agg_mqtt_sn.p4",
-        "line" : 807,
+        "line" : 1024,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
-      "order" : ["ethernet", "ipv4", "udp", "mqttsn_fixed", "mqttsn_flags_connect", "mqttsn_connect", "mqttsn_connack", "mqttsn_register", "mqttsn_regack", "mqttsn_flags_publish", "mqttsn_publish", "mqttsn_puback", "mqttsn_pubrec", "mqttsn_pubrel", "mqttsn_pubcomp", "mqttsn_disconnect", "mqttsn_pingreq", "mqttsn_pingresp", "mqttsn_flags_subscribe", "mqttsn_subscribe", "mqttsn_flags_suback", "mqttsn_suback", "mqttsn_flags_unsubscribe", "mqttsn_unsubscribe", "mqttsn_unsuback", "mqttsn_variable_field"],
+      "order" : ["ethernet", "ipv4", "udp", "mqttsn_fixed", "mqttsn_advertise", "mqttsn_searchgw", "mqttsn_gwinfo", "mqttsn_flags_connect", "mqttsn_connect", "mqttsn_connack", "mqttsn_register", "mqttsn_regack", "mqttsn_flags_publish", "mqttsn_publish", "mqttsn_puback", "mqttsn_pubrec", "mqttsn_pubrel", "mqttsn_pubcomp", "mqttsn_flags_subscribe", "mqttsn_subscribe", "mqttsn_flags_suback", "mqttsn_suback", "mqttsn_flags_unsubscribe", "mqttsn_unsubscribe", "mqttsn_unsuback", "mqttsn_pingreq", "mqttsn_pingresp", "mqttsn_disconnect", "mqttsn_variable_field"],
       "primitives" : []
     }
   ],
@@ -2560,7 +3068,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "gw_agg_mqtt_sn.p4",
-        "line" : 785,
+        "line" : 1002,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },
@@ -2636,7 +3144,7 @@
           ],
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 573,
+            "line" : 759,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -2658,7 +3166,7 @@
           ],
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 573,
+            "line" : 759,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -2680,7 +3188,7 @@
           ],
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 573,
+            "line" : 759,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -2715,7 +3223,7 @@
           ],
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 582,
+            "line" : 768,
             "column" : 8,
             "source_fragment" : "hdr.ethernet.dstAddr = dstAddr"
           }
@@ -2734,7 +3242,7 @@
           ],
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 584,
+            "line" : 770,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
           }
@@ -2776,7 +3284,7 @@
           ],
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 586,
+            "line" : 772,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl -1"
           }
@@ -2790,7 +3298,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "gw_agg_mqtt_sn.p4",
-        "line" : 564,
+        "line" : 750,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
@@ -2801,7 +3309,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 593,
+            "line" : 779,
             "column" : 10,
             "source_fragment" : "static_forwarding"
           },
@@ -2839,7 +3347,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 759,
+            "line" : 976,
             "column" : 16,
             "source_fragment" : "drop()"
           },
@@ -2868,7 +3376,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 763,
+            "line" : 980,
             "column" : 12,
             "source_fragment" : "drop()"
           },
@@ -2900,7 +3408,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 611,
+            "line" : 797,
             "column" : 12,
             "source_fragment" : "hdr.mqttsn_fixed.isValid()"
           },
@@ -2923,9 +3431,52 @@
           "id" : 1,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 612,
+            "line" : 802,
             "column" : 16,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT && ..."
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE && ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed", "msgType"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x00"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_advertise", "$valid$"]
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_5"
+        },
+        {
+          "name" : "node_5",
+          "id" : 2,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 807,
+            "column" : 21,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW && ..."
           },
           "expression" : {
             "type" : "expression",
@@ -2945,7 +3496,7 @@
                       },
                       "right" : {
                         "type" : "hexstr",
-                        "value" : "0x04"
+                        "value" : "0x01"
                       }
                     }
                   },
@@ -2956,7 +3507,7 @@
                       "left" : null,
                       "right" : {
                         "type" : "field",
-                        "value" : ["mqttsn_connect", "$valid$"]
+                        "value" : ["mqttsn_searchgw", "$valid$"]
                       }
                     }
                   }
@@ -2965,29 +3516,69 @@
               "right" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_connect", "protocolId"]
-                  },
+                  "op" : "d2b",
+                  "left" : null,
                   "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x01"
+                    "type" : "field",
+                    "value" : ["mqttsn_variable_field", "$valid$"]
                   }
                 }
               }
             }
           },
-          "true_next" : "node_4",
-          "false_next" : "node_6"
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_7"
         },
         {
-          "name" : "node_4",
-          "id" : 2,
+          "name" : "node_7",
+          "id" : 3,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 615,
-            "column" : 20,
+            "line" : 813,
+            "column" : 21,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_GWINFO && ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed", "msgType"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x02"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_gwinfo", "$valid$"]
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_9"
+        },
+        {
+          "name" : "node_9",
+          "id" : 4,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 820,
+            "column" : 21,
             "source_fragment" : "hdr.udp.dstPort == UDP_PORT && // porta 1884 ..."
           },
           "expression" : {
@@ -3024,105 +3615,96 @@
               }
             }
           },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
+          "true_next" : "node_10",
+          "false_next" : "node_35"
         },
         {
-          "name" : "node_6",
-          "id" : 3,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 620,
-            "column" : 21,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK && ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_fixed", "msgType"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x05"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "d2b",
-                  "left" : null,
-                  "right" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_connack", "$valid$"]
-                  }
-                }
-              }
-            }
-          },
-          "true_next" : "node_7",
-          "false_next" : "node_9"
-        },
-        {
-          "name" : "node_7",
-          "id" : 4,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 622,
-            "column" : 20,
-            "source_fragment" : "hdr.udp.srcPort == UDP_PORT && // porta 1884 ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["udp", "srcPort"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x075c"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "srcAddr"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a000002"
-                  }
-                }
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
-        },
-        {
-          "name" : "node_9",
+          "name" : "node_10",
           "id" : 5,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 627,
-            "column" : 21,
+            "line" : 823,
+            "column" : 20,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT && ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "and",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "and",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "==",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "msgType"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x04"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "d2b",
+                          "left" : null,
+                          "right" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_flags_connect", "$valid$"]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "d2b",
+                      "left" : null,
+                      "right" : {
+                        "type" : "field",
+                        "value" : ["mqttsn_connect", "$valid$"]
+                      }
+                    }
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_connect", "protocolId"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x01"
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_12"
+        },
+        {
+          "name" : "node_12",
+          "id" : 6,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 830,
+            "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER && ..."
           },
           "expression" : {
@@ -3132,75 +3714,46 @@
               "left" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_fixed", "msgType"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "d2b",
-                  "left" : null,
-                  "right" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_register", "$valid$"]
-                  }
-                }
-              }
-            }
-          },
-          "true_next" : "node_10",
-          "false_next" : "node_12"
-        },
-        {
-          "name" : "node_10",
-          "id" : 6,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 629,
-            "column" : 20,
-            "source_fragment" : "hdr.mqttsn_register.topicId == 0x0000 && // if sent by a client, it is coded 0x0000 and is not relevant; ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
                   "op" : "and",
                   "left" : {
                     "type" : "expression",
                     "value" : {
-                      "op" : "==",
+                      "op" : "and",
                       "left" : {
-                        "type" : "field",
-                        "value" : ["mqttsn_register", "topicId"]
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "==",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "msgType"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x0a"
+                          }
+                        }
                       },
                       "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x0000"
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "d2b",
+                          "left" : null,
+                          "right" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_register", "$valid$"]
+                          }
+                        }
                       }
                     }
                   },
                   "right" : {
                     "type" : "expression",
                     "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["udp", "dstPort"]
-                      },
+                      "op" : "d2b",
+                      "left" : null,
                       "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x075c"
+                        "type" : "field",
+                        "value" : ["mqttsn_variable_field", "$valid$"]
                       }
                     }
                   }
@@ -3212,135 +3765,26 @@
                   "op" : "==",
                   "left" : {
                     "type" : "field",
-                    "value" : ["ipv4", "dstAddr"]
+                    "value" : ["mqttsn_register", "topicId"]
                   },
                   "right" : {
                     "type" : "hexstr",
-                    "value" : "0x0a000002"
+                    "value" : "0x0000"
                   }
                 }
               }
             }
           },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_14"
         },
         {
-          "name" : "node_12",
+          "name" : "node_14",
           "id" : 7,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 635,
-            "column" : 21,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGACK && ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_fixed", "msgType"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0b"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "d2b",
-                  "left" : null,
-                  "right" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_regack", "$valid$"]
-                  }
-                }
-              }
-            }
-          },
-          "true_next" : "node_13",
-          "false_next" : "node_15"
-        },
-        {
-          "name" : "node_13",
-          "id" : 8,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 637,
-            "column" : 20,
-            "source_fragment" : "hdr.mqttsn_regack.topicId != 0x0000 && ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "and",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "!=",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["mqttsn_regack", "topicId"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x0000"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["udp", "srcPort"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x075c"
-                      }
-                    }
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "srcAddr"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a000002"
-                  }
-                }
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
-        },
-        {
-          "name" : "node_15",
-          "id" : 9,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 643,
-            "column" : 21,
+            "line" : 837,
+            "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH && ..."
           },
           "expression" : {
@@ -3408,62 +3852,16 @@
               }
             }
           },
-          "true_next" : "node_16",
-          "false_next" : "node_25"
+          "true_next" : "node_15",
+          "false_next" : "node_21"
         },
         {
-          "name" : "node_16",
-          "id" : 10,
+          "name" : "node_15",
+          "id" : 8,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 648,
-            "column" : 20,
-            "source_fragment" : "hdr.udp.dstPort == UDP_PORT && ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["udp", "dstPort"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x075c"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "dstAddr"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a000002"
-                  }
-                }
-              }
-            }
-          },
-          "true_next" : "node_17",
-          "false_next" : "node_23"
-        },
-        {
-          "name" : "node_17",
-          "id" : 11,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 651,
-            "column" : 24,
+            "line" : 842,
+            "column" : 28,
             "source_fragment" : "hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1 && ..."
           },
           "expression" : {
@@ -3501,15 +3899,15 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_19"
+          "false_next" : "node_17"
         },
         {
-          "name" : "node_19",
-          "id" : 12,
+          "name" : "node_17",
+          "id" : 9,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 656,
-            "column" : 29,
+            "line" : 847,
+            "column" : 33,
             "source_fragment" : "hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0"
           },
           "expression" : {
@@ -3527,15 +3925,15 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_21"
+          "false_next" : "node_19"
         },
         {
-          "name" : "node_21",
-          "id" : 13,
+          "name" : "node_19",
+          "id" : 10,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 661,
-            "column" : 29,
+            "line" : 852,
+            "column" : 33,
             "source_fragment" : "(hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_1 || ..."
           },
           "expression" : {
@@ -3596,191 +3994,13 @@
           "true_next" : "MyIngress.static_forwarding"
         },
         {
-          "name" : "node_23",
-          "id" : 14,
+          "name" : "node_21",
+          "id" : 11,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 668,
-            "column" : 26,
-            "source_fragment" : "hdr.udp.srcPort == UDP_PORT && ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["udp", "srcPort"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x075c"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "srcAddr"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a000002"
-                  }
-                }
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
-        },
-        {
-          "name" : "node_25",
-          "id" : 15,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 674,
-            "column" : 21,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // só há para qos = 1 ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_fixed", "msgType"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0d"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "d2b",
-                  "left" : null,
-                  "right" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_puback", "$valid$"]
-                  }
-                }
-              }
-            }
-          },
-          "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_27"
-        },
-        {
-          "name" : "node_27",
-          "id" : 16,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 678,
-            "column" : 21,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && // só há para qos = 2 ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_fixed", "msgType"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0f"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "d2b",
-                  "left" : null,
-                  "right" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_pubrec", "$valid$"]
-                  }
-                }
-              }
-            }
-          },
-          "true_next" : "node_28",
-          "false_next" : "node_30"
-        },
-        {
-          "name" : "node_28",
-          "id" : 17,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 680,
-            "column" : 20,
-            "source_fragment" : "hdr.udp.srcPort == UDP_PORT && // porta 1884 ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["udp", "srcPort"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x075c"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "srcAddr"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a000002"
-                  }
-                }
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
-        },
-        {
-          "name" : "node_30",
-          "id" : 18,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 685,
-            "column" : 21,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && // só há para qos = 2 ..."
+            "line" : 859,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && // QoS 2 ..."
           },
           "expression" : {
             "type" : "expression",
@@ -3813,194 +4033,302 @@
               }
             }
           },
-          "true_next" : "node_31",
-          "false_next" : "node_33"
-        },
-        {
-          "name" : "node_31",
-          "id" : 19,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 687,
-            "column" : 20,
-            "source_fragment" : "hdr.udp.dstPort == UDP_PORT && // porta 1884 ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["udp", "dstPort"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x075c"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "dstAddr"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a000002"
-                  }
-                }
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
-        },
-        {
-          "name" : "node_33",
-          "id" : 20,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 692,
-            "column" : 21,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && // só há para qos = 2 ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_fixed", "msgType"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0e"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "d2b",
-                  "left" : null,
-                  "right" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_pubcomp", "$valid$"]
-                  }
-                }
-              }
-            }
-          },
-          "true_next" : "node_34",
-          "false_next" : "node_36"
-        },
-        {
-          "name" : "node_34",
-          "id" : 21,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 694,
-            "column" : 20,
-            "source_fragment" : "hdr.udp.srcPort == UDP_PORT && // porta 1884 ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["udp", "srcPort"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x075c"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "srcAddr"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a000002"
-                  }
-                }
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
-        },
-        {
-          "name" : "node_36",
-          "id" : 22,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 699,
-            "column" : 21,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT && ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_fixed", "msgType"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x18"
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "d2b",
-                  "left" : null,
-                  "right" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_disconnect", "$valid$"]
-                  }
-                }
-              }
-            }
-          },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_38"
+          "false_next" : "node_23"
         },
         {
-          "name" : "node_38",
-          "id" : 23,
+          "name" : "node_23",
+          "id" : 12,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 703,
-            "column" : 21,
+            "line" : 864,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE && // qos = -1 not implemented, only relevant within PUBLISH messages sent by a client ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "and",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "and",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "==",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "msgType"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x12"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "d2b",
+                          "left" : null,
+                          "right" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_flags_subscribe", "$valid$"]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "d2b",
+                      "left" : null,
+                      "right" : {
+                        "type" : "field",
+                        "value" : ["mqttsn_subscribe", "$valid$"]
+                      }
+                    }
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_variable_field", "$valid$"]
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "node_24",
+          "false_next" : "node_26"
+        },
+        {
+          "name" : "node_24",
+          "id" : 13,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 868,
+            "column" : 24,
+            "source_fragment" : "hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_0 || // QoS 0 ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "or",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "or",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "==",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["mqttsn_flags_subscribe", "qos"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x00"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "==",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["mqttsn_flags_subscribe", "qos"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x01"
+                      }
+                    }
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_flags_subscribe", "qos"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x02"
+                  }
+                }
+              }
+            }
+          },
+          "false_next" : null,
+          "true_next" : "MyIngress.static_forwarding"
+        },
+        {
+          "name" : "node_26",
+          "id" : 14,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 875,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE && ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "and",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "and",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "==",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "msgType"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x14"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "d2b",
+                          "left" : null,
+                          "right" : {
+                            "type" : "field",
+                            "value" : ["mqttsn_flags_unsubscribe", "$valid$"]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "d2b",
+                      "left" : null,
+                      "right" : {
+                        "type" : "field",
+                        "value" : ["mqttsn_unsubscribe", "$valid$"]
+                      }
+                    }
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_variable_field", "$valid$"]
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "node_27",
+          "false_next" : "node_29"
+        },
+        {
+          "name" : "node_27",
+          "id" : 15,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 879,
+            "column" : 24,
+            "source_fragment" : "hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_0 || // QoS 0 ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "or",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "or",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "==",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["mqttsn_flags_subscribe", "qos"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x00"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "==",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["mqttsn_flags_subscribe", "qos"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x01"
+                      }
+                    }
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_flags_subscribe", "qos"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x02"
+                  }
+                }
+              }
+            }
+          },
+          "false_next" : null,
+          "true_next" : "MyIngress.static_forwarding"
+        },
+        {
+          "name" : "node_29",
+          "id" : 16,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 889,
+            "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ && ..."
           },
           "expression" : {
@@ -4035,15 +4363,15 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_40"
+          "false_next" : "node_31"
         },
         {
-          "name" : "node_40",
-          "id" : 24,
+          "name" : "node_31",
+          "id" : 17,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 707,
-            "column" : 21,
+            "line" : 894,
+            "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP && ..."
           },
           "expression" : {
@@ -4078,16 +4406,16 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_42"
+          "false_next" : "node_33"
         },
         {
-          "name" : "node_42",
-          "id" : 25,
+          "name" : "node_33",
+          "id" : 18,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 711,
-            "column" : 21,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE && // qos = -1 not implemented, only relevant within PUBLISH messages sent by a client ..."
+            "line" : 899,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT && ..."
           },
           "expression" : {
             "type" : "expression",
@@ -4096,31 +4424,14 @@
               "left" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "and",
+                  "op" : "==",
                   "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["mqttsn_fixed", "msgType"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x12"
-                      }
-                    }
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed", "msgType"]
                   },
                   "right" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "d2b",
-                      "left" : null,
-                      "right" : {
-                        "type" : "field",
-                        "value" : ["mqttsn_flags_subscribe", "$valid$"]
-                      }
-                    }
+                    "type" : "hexstr",
+                    "value" : "0x18"
                   }
                 }
               },
@@ -4131,23 +4442,155 @@
                   "left" : null,
                   "right" : {
                     "type" : "field",
-                    "value" : ["mqttsn_subscribe", "$valid$"]
+                    "value" : ["mqttsn_disconnect", "$valid$"]
                   }
                 }
               }
             }
           },
-          "true_next" : "node_43",
-          "false_next" : "node_45"
+          "false_next" : null,
+          "true_next" : "MyIngress.static_forwarding"
         },
         {
-          "name" : "node_43",
-          "id" : 26,
+          "name" : "node_35",
+          "id" : 19,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 714,
+            "line" : 907,
+            "column" : 21,
+            "source_fragment" : "hdr.udp.srcPort == UDP_PORT && // porta 1884 ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["udp", "srcPort"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x075c"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["ipv4", "srcAddr"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x0a000002"
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "node_36",
+          "false_next" : "tbl_drop"
+        },
+        {
+          "name" : "node_36",
+          "id" : 20,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 910,
             "column" : 20,
-            "source_fragment" : "(hdr.mqttsn_flags_subscribe.topicIdType == TOPICIDTYPE_TOPICNAME || ..."
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK && ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed", "msgType"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x05"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_connack", "$valid$"]
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_38"
+        },
+        {
+          "name" : "node_38",
+          "id" : 21,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 915,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGACK && ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed", "msgType"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x0b"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_regack", "$valid$"]
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_40"
+        },
+        {
+          "name" : "node_40",
+          "id" : 22,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 920,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH && ..."
           },
           "expression" : {
             "type" : "expression",
@@ -4164,88 +4607,25 @@
                       "left" : {
                         "type" : "expression",
                         "value" : {
-                          "op" : "or",
+                          "op" : "==",
                           "left" : {
-                            "type" : "expression",
-                            "value" : {
-                              "op" : "==",
-                              "left" : {
-                                "type" : "field",
-                                "value" : ["mqttsn_flags_subscribe", "topicIdType"]
-                              },
-                              "right" : {
-                                "type" : "hexstr",
-                                "value" : "0x00"
-                              }
-                            }
+                            "type" : "field",
+                            "value" : ["mqttsn_fixed", "msgType"]
                           },
                           "right" : {
-                            "type" : "expression",
-                            "value" : {
-                              "op" : "==",
-                              "left" : {
-                                "type" : "field",
-                                "value" : ["mqttsn_flags_subscribe", "topicIdType"]
-                              },
-                              "right" : {
-                                "type" : "hexstr",
-                                "value" : "0x02"
-                              }
-                            }
+                            "type" : "hexstr",
+                            "value" : "0x0c"
                           }
                         }
                       },
                       "right" : {
                         "type" : "expression",
                         "value" : {
-                          "op" : "or",
-                          "left" : {
-                            "type" : "expression",
-                            "value" : {
-                              "op" : "or",
-                              "left" : {
-                                "type" : "expression",
-                                "value" : {
-                                  "op" : "==",
-                                  "left" : {
-                                    "type" : "field",
-                                    "value" : ["mqttsn_flags_subscribe", "qos"]
-                                  },
-                                  "right" : {
-                                    "type" : "hexstr",
-                                    "value" : "0x00"
-                                  }
-                                }
-                              },
-                              "right" : {
-                                "type" : "expression",
-                                "value" : {
-                                  "op" : "==",
-                                  "left" : {
-                                    "type" : "field",
-                                    "value" : ["mqttsn_flags_subscribe", "qos"]
-                                  },
-                                  "right" : {
-                                    "type" : "hexstr",
-                                    "value" : "0x01"
-                                  }
-                                }
-                              }
-                            }
-                          },
+                          "op" : "d2b",
+                          "left" : null,
                           "right" : {
-                            "type" : "expression",
-                            "value" : {
-                              "op" : "==",
-                              "left" : {
-                                "type" : "field",
-                                "value" : ["mqttsn_flags_subscribe", "qos"]
-                              },
-                              "right" : {
-                                "type" : "hexstr",
-                                "value" : "0x02"
-                              }
-                            }
+                            "type" : "field",
+                            "value" : ["mqttsn_flags_publish", "$valid$"]
                           }
                         }
                       }
@@ -4254,14 +4634,11 @@
                   "right" : {
                     "type" : "expression",
                     "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["udp", "dstPort"]
-                      },
+                      "op" : "d2b",
+                      "left" : null,
                       "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x075c"
+                        "type" : "field",
+                        "value" : ["mqttsn_publish", "$valid$"]
                       }
                     }
                   }
@@ -4270,29 +4647,26 @@
               "right" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "dstAddr"]
-                  },
+                  "op" : "d2b",
+                  "left" : null,
                   "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a000002"
+                    "type" : "field",
+                    "value" : ["mqttsn_variable_field", "$valid$"]
                   }
                 }
               }
             }
           },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_42"
         },
         {
-          "name" : "node_45",
-          "id" : 27,
+          "name" : "node_42",
+          "id" : 23,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 724,
-            "column" : 21,
+            "line" : 928,
+            "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SUBACK && ..."
           },
           "expression" : {
@@ -4343,242 +4717,33 @@
               }
             }
           },
-          "true_next" : "node_46",
-          "false_next" : "node_50"
-        },
-        {
-          "name" : "node_46",
-          "id" : 28,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 727,
-            "column" : 20,
-            "source_fragment" : "hdr.mqttsn_suback.msgId == 0x0000 && // If the client subscribes to a topic name which contains a wildcard character, the returning SUBACK message will contain the topic id value 0x0000 ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "and",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["mqttsn_suback", "msgId"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x0000"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["udp", "srcPort"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x075c"
-                      }
-                    }
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "srcAddr"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a000002"
-                  }
-                }
-              }
-            }
-          },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_48"
+          "false_next" : "node_44"
         },
         {
-          "name" : "node_48",
-          "id" : 29,
+          "name" : "node_44",
+          "id" : 24,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 732,
+            "line" : 934,
             "column" : 25,
-            "source_fragment" : "(hdr.mqttsn_flags_suback.qos == FLAGS_QOS_LEVEL_0 || ..."
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // QoS 1 ..."
           },
           "expression" : {
             "type" : "expression",
             "value" : {
               "op" : "and",
               "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "and",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "and",
-                      "left" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "or",
-                          "left" : {
-                            "type" : "expression",
-                            "value" : {
-                              "op" : "or",
-                              "left" : {
-                                "type" : "expression",
-                                "value" : {
-                                  "op" : "==",
-                                  "left" : {
-                                    "type" : "field",
-                                    "value" : ["mqttsn_flags_suback", "qos"]
-                                  },
-                                  "right" : {
-                                    "type" : "hexstr",
-                                    "value" : "0x00"
-                                  }
-                                }
-                              },
-                              "right" : {
-                                "type" : "expression",
-                                "value" : {
-                                  "op" : "==",
-                                  "left" : {
-                                    "type" : "field",
-                                    "value" : ["mqttsn_flags_suback", "qos"]
-                                  },
-                                  "right" : {
-                                    "type" : "hexstr",
-                                    "value" : "0x01"
-                                  }
-                                }
-                              }
-                            }
-                          },
-                          "right" : {
-                            "type" : "expression",
-                            "value" : {
-                              "op" : "==",
-                              "left" : {
-                                "type" : "field",
-                                "value" : ["mqttsn_flags_suback", "qos"]
-                              },
-                              "right" : {
-                                "type" : "hexstr",
-                                "value" : "0x02"
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "right" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "!=",
-                          "left" : {
-                            "type" : "field",
-                            "value" : ["mqttsn_suback", "msgId"]
-                          },
-                          "right" : {
-                            "type" : "hexstr",
-                            "value" : "0x0000"
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["udp", "srcPort"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x075c"
-                      }
-                    }
-                  }
-                }
-              },
-              "right" : {
                 "type" : "expression",
                 "value" : {
                   "op" : "==",
                   "left" : {
                     "type" : "field",
-                    "value" : ["ipv4", "srcAddr"]
+                    "value" : ["mqttsn_fixed", "msgType"]
                   },
                   "right" : {
                     "type" : "hexstr",
-                    "value" : "0x0a000002"
-                  }
-                }
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
-        },
-        {
-          "name" : "node_50",
-          "id" : 30,
-          "source_info" : {
-            "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 741,
-            "column" : 21,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE && ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "and",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["mqttsn_fixed", "msgType"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x14"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "d2b",
-                      "left" : null,
-                      "right" : {
-                        "type" : "field",
-                        "value" : ["mqttsn_flags_unsubscribe", "$valid$"]
-                      }
-                    }
+                    "value" : "0x0d"
                   }
                 }
               },
@@ -4589,23 +4754,23 @@
                   "left" : null,
                   "right" : {
                     "type" : "field",
-                    "value" : ["mqttsn_unsubscribe", "$valid$"]
+                    "value" : ["mqttsn_puback", "$valid$"]
                   }
                 }
               }
             }
           },
-          "true_next" : "node_51",
-          "false_next" : "node_53"
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_46"
         },
         {
-          "name" : "node_51",
-          "id" : 31,
+          "name" : "node_46",
+          "id" : 25,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 744,
-            "column" : 20,
-            "source_fragment" : "(hdr.mqttsn_flags_unsubscribe.topicIdType == TOPICIDTYPE_TOPICNAME || ..."
+            "line" : 939,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && // QoS 2 ..."
           },
           "expression" : {
             "type" : "expression",
@@ -4614,83 +4779,83 @@
               "left" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "and",
+                  "op" : "==",
                   "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "or",
-                      "left" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "==",
-                          "left" : {
-                            "type" : "field",
-                            "value" : ["mqttsn_flags_unsubscribe", "topicIdType"]
-                          },
-                          "right" : {
-                            "type" : "hexstr",
-                            "value" : "0x00"
-                          }
-                        }
-                      },
-                      "right" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "==",
-                          "left" : {
-                            "type" : "field",
-                            "value" : ["mqttsn_flags_unsubscribe", "topicIdType"]
-                          },
-                          "right" : {
-                            "type" : "hexstr",
-                            "value" : "0x02"
-                          }
-                        }
-                      }
-                    }
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed", "msgType"]
                   },
                   "right" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["udp", "dstPort"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x075c"
-                      }
-                    }
+                    "type" : "hexstr",
+                    "value" : "0x0f"
                   }
                 }
               },
               "right" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "dstAddr"]
-                  },
+                  "op" : "d2b",
+                  "left" : null,
                   "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0a000002"
+                    "type" : "field",
+                    "value" : ["mqttsn_pubrec", "$valid$"]
                   }
                 }
               }
             }
           },
-          "false_next" : null,
-          "true_next" : "MyIngress.static_forwarding"
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_48"
         },
         {
-          "name" : "node_53",
-          "id" : 32,
+          "name" : "node_48",
+          "id" : 26,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 751,
-            "column" : 21,
+            "line" : 944,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && // QoS 2 ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed", "msgType"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x0e"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_pubcomp", "$valid$"]
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_50"
+        },
+        {
+          "name" : "node_50",
+          "id" : 27,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 949,
+            "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBACK && ..."
           },
           "expression" : {
@@ -4724,17 +4889,17 @@
               }
             }
           },
-          "true_next" : "node_54",
-          "false_next" : "tbl_drop"
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_52"
         },
         {
-          "name" : "node_54",
-          "id" : 33,
+          "name" : "node_52",
+          "id" : 28,
           "source_info" : {
             "filename" : "gw_agg_mqtt_sn.p4",
-            "line" : 753,
-            "column" : 20,
-            "source_fragment" : "hdr.udp.srcPort == UDP_PORT && // porta 1884 ..."
+            "line" : 957,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ && ..."
           },
           "expression" : {
             "type" : "expression",
@@ -4746,25 +4911,108 @@
                   "op" : "==",
                   "left" : {
                     "type" : "field",
-                    "value" : ["udp", "srcPort"]
+                    "value" : ["mqttsn_fixed", "msgType"]
                   },
                   "right" : {
                     "type" : "hexstr",
-                    "value" : "0x075c"
+                    "value" : "0x16"
                   }
                 }
               },
               "right" : {
                 "type" : "expression",
                 "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_pingreq", "$valid$"]
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_54"
+        },
+        {
+          "name" : "node_54",
+          "id" : 29,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 962,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP && ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
                   "op" : "==",
                   "left" : {
                     "type" : "field",
-                    "value" : ["ipv4", "srcAddr"]
+                    "value" : ["mqttsn_fixed", "msgType"]
                   },
                   "right" : {
                     "type" : "hexstr",
-                    "value" : "0x0a000002"
+                    "value" : "0x17"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_pingresp", "$valid$"]
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_56"
+        },
+        {
+          "name" : "node_56",
+          "id" : 30,
+          "source_info" : {
+            "filename" : "gw_agg_mqtt_sn.p4",
+            "line" : 967,
+            "column" : 25,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT && ..."
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed", "msgType"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x18"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_disconnect", "$valid$"]
                   }
                 }
               }
@@ -4780,7 +5028,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "gw_agg_mqtt_sn.p4",
-        "line" : 772,
+        "line" : 989,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -4796,7 +5044,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "gw_agg_mqtt_sn.p4",
-        "line" : 785,
+        "line" : 1002,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },
