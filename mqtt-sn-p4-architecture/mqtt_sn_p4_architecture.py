@@ -51,11 +51,18 @@ def topology():
 
     debug('*** Adding P4 Switch\n')
     # IPBASE: subnet from eth0 interface,
-    s1 = net.addSwitch('s1', cls=DockerP4Switch,
-                       volumes=[path + "/:/root"],
-                       dimage="ramonfontes/bmv2", cpu_shares=20,
-                       netcfg=True, thriftport=50001,
-                       IPBASE="172.17.0.0/16", **args)
+    s1 = net.addSwitch(
+        's1', 
+        cls=DockerP4Switch,
+        volumes=[path + "/:/root"],
+        dimage="ramonfontes/bmv2", 
+        cpu_shares=20,
+        netcfg=True, 
+        thriftport=50001,
+        IPBASE="172.17.0.0/16",
+        loglevel="debug",
+        **args
+    )
     
     debug('Adicionando links\n')
     net.addLink(bk, s1, txo=False, rxo=False)
@@ -72,13 +79,13 @@ def topology():
     #makeTerm(bk)
 
     debug("Iniciando gateway\n")
-    #makeTerm(gw)
+    makeTerm(gw)
 
     debug("Iniciando publisher\n")
     makeTerm(pb1)
 
     debug("Iniciando subscriber\n")
-    #makeTerm(ss1)
+    makeTerm(ss1)
 
     debug("CLI containernet\n")
     CLI(net)
