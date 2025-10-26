@@ -128,6 +128,7 @@ header MQTTSN_connack_h {
 header MQTTSN_register_h {
     bit<16> topicId;
     bit<16> msgId;
+    bit<128> topicName; // Fixado para testes
     // bit<32> topicName; // Removido topicName fixo. Será extraído dinamicamente.
 }
 
@@ -396,8 +397,48 @@ struct headers {
     MQTTSN_variable_field_h mqttsn_variable_field; // Para campos variáveis
 }
 
-// Metadados
-struct metadata { }
+struct metadata {
+    // Cache
+    bit<1> cache_hit;
+    bit<16> cached_topicid;
+    bit<32> free_slot;
+    bit<1> do_forward;
+
+    // Slots
+    bit<1> slot_valid0;
+    bit<1> slot_valid1;
+    bit<1> slot_valid2;
+    bit<1> slot_valid3;
+    bit<1> slot_valid4;
+    bit<1> slot_valid5;
+    bit<1> slot_valid6;
+    bit<1> slot_valid7;
+
+    bit<128> slot_topicname0;
+    bit<128> slot_topicname1;
+    bit<128> slot_topicname2;
+    bit<128> slot_topicname3;
+    bit<128> slot_topicname4;
+    bit<128> slot_topicname5;
+    bit<128> slot_topicname6;
+    bit<128> slot_topicname7;
+
+    bit<16> slot_topicid0;
+    bit<16> slot_topicid1;
+    bit<16> slot_topicid2;
+    bit<16> slot_topicid3;
+    bit<16> slot_topicid4;
+    bit<16> slot_topicid5;
+    bit<16> slot_topicid6;
+    bit<16> slot_topicid7;
+
+    bit<128> current_topicname;
+    bit<32> update_slot_index;
+    bit<128> update_topicname;
+    bit<16> update_topicid;
+    bit<16> regack_topicId;
+    bit<16> regack_msgId;
+};
 
 // Erros customizados para validação dos headers
 error {
@@ -534,6 +575,7 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
+/*
     state parse_mqttsn_register {
         packet.extract(hdr.mqttsn_register);
         // O topicName é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + register_h)
@@ -544,6 +586,14 @@ parser MyParser(packet_in packet,
         bit<32> mqttsn_var_bits;
         mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)6) * (bit<32>)8;
         packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
+        transition accept;
+    }
+*/
+
+    state parse_mqttsn_register {
+        packet.extract(hdr.mqttsn_register);
+        // MQTTSN_fixed_h (2 bytes) + MQTTSN_register_h (20 bytes) = 22 bytes
+        verify(hdr.mqttsn_fixed.length == 22, error.MQTT_SN_InvalidLength);
         transition accept;
     }
 
@@ -738,10 +788,125 @@ control MyVerifyChecksum(inout headers hdr,
 1 - Veja a seção 6.14 Support of sleeping clients.
 */
 
+// ---- Constantes ----
+const bit<32> NUM_SLOTS = 8;
+
+// ---- Registers ----
+register<bit<1>>(NUM_SLOTS) map_valid;
+register<bit<128>>(NUM_SLOTS) map_topicname;
+register<bit<16>>(NUM_SLOTS) map_topicid;
+
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
+    //////////////////////////////////////////////////////
+    // Funções auxiliares
+    //////////////////////////////////////////////////////
+
+    // ---- Lookup topic usando metadados ----
+    action lookup_topic(inout metadata m) {
+        m.cached_topicid = 0; // default
+        if ((m.slot_valid0 != 0) && (m.slot_topicname0 == m.current_topicname))
+            m.cached_topicid = m.slot_topicid0;
+        else if ((m.slot_valid1 != 0) && (m.slot_topicname1 == m.current_topicname))
+            m.cached_topicid = m.slot_topicid1;
+        else if ((m.slot_valid2 != 0) && (m.slot_topicname2 == m.current_topicname))
+            m.cached_topicid = m.slot_topicid2;
+        else if ((m.slot_valid3 != 0) && (m.slot_topicname3 == m.current_topicname))
+            m.cached_topicid = m.slot_topicid3;
+        else if ((m.slot_valid4 != 0) && (m.slot_topicname4 == m.current_topicname))
+            m.cached_topicid = m.slot_topicid4;
+        else if ((m.slot_valid5 != 0) && (m.slot_topicname5 == m.current_topicname))
+            m.cached_topicid = m.slot_topicid5;
+        else if ((m.slot_valid6 != 0) && (m.slot_topicname6 == m.current_topicname))
+            m.cached_topicid = m.slot_topicid6;
+        else if ((m.slot_valid7 != 0) && (m.slot_topicname7 == m.current_topicname))
+            m.cached_topicid = m.slot_topicid7;
+    }
+
+    // =================== Atualização de slots ===================
+    action update_slot(inout metadata m) {
+        bit<32> slot = m.update_slot_index;
+        bit<128> topicname = m.update_topicname;
+        bit<16> topicid = m.update_topicid;
+
+        map_valid.write(slot, 1);
+        map_topicname.write(slot, topicname);
+        map_topicid.write(slot, topicid);
+
+        if (slot == 0) { m.slot_valid0 = 1; m.slot_topicname0 = topicname; m.slot_topicid0 = topicid; }
+        else if (slot == 1) { m.slot_valid1 = 1; m.slot_topicname1 = topicname; m.slot_topicid1 = topicid; }
+        else if (slot == 2) { m.slot_valid2 = 1; m.slot_topicname2 = topicname; m.slot_topicid2 = topicid; }
+        else if (slot == 3) { m.slot_valid3 = 1; m.slot_topicname3 = topicname; m.slot_topicid3 = topicid; }
+        else if (slot == 4) { m.slot_valid4 = 1; m.slot_topicname4 = topicname; m.slot_topicid4 = topicid; }
+        else if (slot == 5) { m.slot_valid5 = 1; m.slot_topicname5 = topicname; m.slot_topicid5 = topicid; }
+        else if (slot == 6) { m.slot_valid6 = 1; m.slot_topicname6 = topicname; m.slot_topicid6 = topicid; }
+        else if (slot == 7) { m.slot_valid7 = 1; m.slot_topicname7 = topicname; m.slot_topicid7 = topicid; }
+    }
+
+    // =================== Encontrar slot livre ===================
+    action find_free_slot(inout metadata m) {
+        m.free_slot = 0xFF;
+        if (m.slot_valid0 == 0) m.free_slot = 0;
+        else if (m.slot_valid1 == 0) m.free_slot = 1;
+        else if (m.slot_valid2 == 0) m.free_slot = 2;
+        else if (m.slot_valid3 == 0) m.free_slot = 3;
+        else if (m.slot_valid4 == 0) m.free_slot = 4;
+        else if (m.slot_valid5 == 0) m.free_slot = 5;
+        else if (m.slot_valid6 == 0) m.free_slot = 6;
+        else if (m.slot_valid7 == 0) m.free_slot = 7;
+    }
+
+    // =================== Lookup tópico ===================
+    action lookup_map_and_set(inout metadata m) {
+        m.cache_hit = 0;
+        m.cached_topicid = 0;
+
+        if ((m.slot_valid0 != 0) && (m.slot_topicname0 == m.current_topicname)) {
+            m.cache_hit = 1; m.cached_topicid = m.slot_topicid0;
+        } else if ((m.slot_valid1 != 0) && (m.slot_topicname1 == m.current_topicname)) {
+            m.cache_hit = 1; m.cached_topicid = m.slot_topicid1;
+        } else if ((m.slot_valid2 != 0) && (m.slot_topicname2 == m.current_topicname)) {
+            m.cache_hit = 1; m.cached_topicid = m.slot_topicid2;
+        } else if ((m.slot_valid3 != 0) && (m.slot_topicname3 == m.current_topicname)) {
+            m.cache_hit = 1; m.cached_topicid = m.slot_topicid3;
+        } else if ((m.slot_valid4 != 0) && (m.slot_topicname4 == m.current_topicname)) {
+            m.cache_hit = 1; m.cached_topicid = m.slot_topicid4;
+        } else if ((m.slot_valid5 != 0) && (m.slot_topicname5 == m.current_topicname)) {
+            m.cache_hit = 1; m.cached_topicid = m.slot_topicid5;
+        } else if ((m.slot_valid6 != 0) && (m.slot_topicname6 == m.current_topicname)) {
+            m.cache_hit = 1; m.cached_topicid = m.slot_topicid6;
+        } else if ((m.slot_valid7 != 0) && (m.slot_topicname7 == m.current_topicname)) {
+            m.cache_hit = 1; m.cached_topicid = m.slot_topicid7;
+        }
+    }
+
+    // =================== Armazenar novo registro ===================
+    action store_pending_register(inout metadata m) {
+        find_free_slot(m);
+        if (m.free_slot != 0xFF) {
+            update_slot(m);
+        }
+    }
+
+    //////////////////////////////////////////////////////
+    // ---- Construir REGACK e enviar ----
+    //////////////////////////////////////////////////////
+    action build_regack_and_send(inout metadata m) {
+        hdr.mqttsn_register.setInvalid();
+
+        hdr.mqttsn_fixed.setValid();
+        hdr.mqttsn_fixed.msgType = MQTTSN_REGACK;
+        hdr.mqttsn_regack.setValid();
+        hdr.mqttsn_regack.topicId = m.regack_topicId;
+        hdr.mqttsn_regack.msgId = m.regack_msgId;
+        hdr.mqttsn_regack.returnCode = 0x00; // Accepted
+
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+        m.do_forward = 0;
+    }
+    
     //////////////////////////////////////////////////////
     // ACTION: DESCARTE AUTOMÁTICO DE PACOTES
     //////////////////////////////////////////////////////
@@ -760,7 +925,7 @@ control MyIngress(inout headers hdr,
         // 255.255.255.255 (broadcast IP)
         hdr.ipv4.dstAddr = 0xFFFFFFFF;
         // saída em broadcast (todas portas exceto entrada)
-        standard_metadata.egress_spec = 0xFFFF; // Validar com o professor!!!!
+        standard_metadata.egress_spec = 0x1FF; // Validar com o professor!!!!
         // decrementar o ttl em 1
         hdr.ipv4.ttl = hdr.ipv4.ttl-1;
     }
@@ -800,6 +965,18 @@ control MyIngress(inout headers hdr,
     //////////////////////////////////////////////////////
 
     apply {
+
+        // ---- Ler registers no início do apply ----
+        map_valid.read(meta.slot_valid0, 0); map_topicname.read(meta.slot_topicname0, 0); map_topicid.read(meta.slot_topicid0, 0);
+        map_valid.read(meta.slot_valid1, 1); map_topicname.read(meta.slot_topicname1, 1); map_topicid.read(meta.slot_topicid1, 1);
+        map_valid.read(meta.slot_valid2, 2); map_topicname.read(meta.slot_topicname2, 2); map_topicid.read(meta.slot_topicid2, 2);
+        map_valid.read(meta.slot_valid3, 3); map_topicname.read(meta.slot_topicname3, 3); map_topicid.read(meta.slot_topicid3, 3);
+        map_valid.read(meta.slot_valid4, 4); map_topicname.read(meta.slot_topicname4, 4); map_topicid.read(meta.slot_topicid4, 4);
+        map_valid.read(meta.slot_valid5, 5); map_topicname.read(meta.slot_topicname5, 5); map_topicid.read(meta.slot_topicid5, 5);
+        map_valid.read(meta.slot_valid6, 6); map_topicname.read(meta.slot_topicname6, 6); map_topicid.read(meta.slot_topicid6, 6);
+        map_valid.read(meta.slot_valid7, 7); map_topicname.read(meta.slot_topicname7, 7); map_topicid.read(meta.slot_topicid7, 7);
+
+
         if (hdr.mqttsn_fixed.isValid()) {
             ///////////////////////////////////////////////////////////////////
             ///////////////////////// Broadcast //////////////////////////////
@@ -832,12 +1009,31 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_connect.protocolId == 0x01) { // corresponds to the “Protocol Name” and “Protocol Version” of the MQTT CONNECT message.
                         static_forwarding.apply();
                 }
-                // REGISTER
+                // ---- REGISTER ----
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER &&
                     hdr.mqttsn_register.isValid() &&
-                    hdr.mqttsn_variable_field.isValid() &&
-                    hdr.mqttsn_register.topicId == 0x0000) { // if sent by a client, it is coded 0x0000 and is not relevant;
+                    hdr.mqttsn_register.topicId == 0x0000) {
+
+                    // Preenche o campo current_topicname para lookup
+                    meta.current_topicname = hdr.mqttsn_register.topicName;
+                    lookup_map_and_set(meta);
+
+                    if (meta.cache_hit == 1) {
+                        // REGACK local usando topicId já existente
+                        meta.regack_topicId = meta.cached_topicid;
+                        meta.regack_msgId = hdr.mqttsn_register.msgId;
+                        build_regack_and_send(meta);
+                    } else {
+                        // Novo registro: encontra slot livre
+                        meta.update_topicname = hdr.mqttsn_register.topicName;
+                        meta.update_topicid = /* novo topicId gerado */ 0x0001; // exemplo
+                        find_free_slot(meta);
+                        meta.update_slot_index = meta.free_slot;
+                        update_slot(meta);
+
+                        // Encaminha REGISTER para gateway
                         static_forwarding.apply();
+                    }
                 }
                 // PUBLISH
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH &&
@@ -845,26 +1041,16 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_publish.isValid() &&
                     hdr.mqttsn_variable_field.isValid()) {
                         // QoS -1
-                        if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1 &&
-                            hdr.mqttsn_publish.msgId == 0x0000) {
+                        if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
                             static_forwarding.apply();
                         }
-                        // QoS 0
-                        else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
-                            // msgId pode ser 0x0000 ou diferente
-                            static_forwarding.apply();
-                        }
-                        // QoS 1 ou 2
-                        else if ((hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_1 ||
-                            hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_2) &&
-                            hdr.mqttsn_publish.msgId != 0x0000) {
+                        // QoS 0, 1 ou 2
+                        else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0 ||
+                            hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_1 ||
+                            hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_2) {
+                                // Aplicar a tabela de encaminhamento
                                 static_forwarding.apply();
                         }
-                }
-                // PUBREL
-                else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && // QoS 2
-                    hdr.mqttsn_pubrel.isValid()) {
-                        static_forwarding.apply();
                 }
                 // SUBSCRIBE
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE && // qos = -1 not implemented, only relevant within PUBLISH messages sent by a client
@@ -882,9 +1068,9 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_unsubscribe.isValid() && 
                     hdr.mqttsn_unsubscribe.isValid() &&
                     hdr.mqttsn_variable_field.isValid()) {
-                    if (hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_0 || // QoS 0
-                        hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_1 || // QoS 1
-                        hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_2) { // QoS 2
+                    if (hdr.mqttsn_flags_unsubscribe.qos == FLAGS_QOS_LEVEL_0 || // QoS 0
+                        hdr.mqttsn_flags_unsubscribe.qos == FLAGS_QOS_LEVEL_1 || // QoS 1
+                        hdr.mqttsn_flags_unsubscribe.qos == FLAGS_QOS_LEVEL_2) { // QoS 2
                             static_forwarding.apply();
                     }
                 }
@@ -914,29 +1100,6 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_variable_field.isValid()) {
                         static_forwarding.apply();
                 }
-                ///////////////////////////////////////////////////////////////////////////////////////
-                ////// Mensagens que podem vir de qualquer cliente pub/sub ou do Gateway MQTT-SN //////
-                ///////////////////////////////////////////////////////////////////////////////////////
-                // PUBACK
-                else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // QoS 1
-                    hdr.mqttsn_puback.isValid()) {
-                        static_forwarding.apply();
-                }
-                // PINGREQ
-                else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ &&
-                    hdr.mqttsn_pingreq.isValid()) {
-                        static_forwarding.apply(); 
-                }
-                // PINGRESP
-                else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP &&
-                    hdr.mqttsn_pingresp.isValid()) {
-                        static_forwarding.apply(); 
-                }
-                // DISCONNECT
-                else if (hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT &&
-                    hdr.mqttsn_disconnect.isValid()) {
-                        static_forwarding.apply();
-                }
             }
             //////////////////////////////////////////////////////////////////
             ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
@@ -948,10 +1111,21 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_connack.isValid()) {
                         static_forwarding.apply();
                 }
-                // REGACK
+                // ---- REGACK ----
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGACK &&
-                    hdr.mqttsn_regack.isValid()) {
-                        static_forwarding.apply();
+                        hdr.mqttsn_regack.isValid()) {
+
+                    // Preenche metadata para armazenar o mapping topicId -> topicName
+                    // Se você tiver o topicName associado ao topicId em outro lugar (por ex. cache do switch), coloque aqui
+                    // Exemplo: meta.update_topicname = <topicName correspondente ao topicId>;
+                    meta.update_topicid = hdr.mqttsn_regack.topicId;
+                    // meta.update_topicname deve ser preenchido previamente com o topicName correto
+                    find_free_slot(meta);
+                    meta.update_slot_index = meta.free_slot;
+                    update_slot(meta);
+
+                    // Encaminha REGACK para o cliente original
+                    static_forwarding.apply();
                 }
                 // PUBLISH
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH &&
@@ -965,16 +1139,6 @@ control MyIngress(inout headers hdr,
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBACK &&
                     hdr.mqttsn_flags_suback.isValid() &&
                     hdr.mqttsn_suback.isValid()) {
-                        static_forwarding.apply();
-                }
-                // PUBREC
-                else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && // QoS 2
-                    hdr.mqttsn_pubrec.isValid()) {
-                        static_forwarding.apply();
-                }
-                // PUBCOMP
-                else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && // QoS 2
-                    hdr.mqttsn_pubcomp.isValid()) {
                         static_forwarding.apply();
                 }
                 // UNSUBACK
@@ -1008,6 +1172,21 @@ control MyIngress(inout headers hdr,
                 // PUBACK
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // QoS 1
                     hdr.mqttsn_puback.isValid()) {
+                        static_forwarding.apply();
+                }
+                // PUBREC
+                else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && // QoS 2
+                    hdr.mqttsn_pubrec.isValid()) {
+                        static_forwarding.apply();
+                }
+                // PUBREL
+                else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && // QoS 2
+                    hdr.mqttsn_pubrel.isValid()) {
+                        static_forwarding.apply();
+                }
+                // PUBCOMP
+                else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && // QoS 2
+                    hdr.mqttsn_pubcomp.isValid()) {
                         static_forwarding.apply();
                 }
                 // PINGREQ
@@ -1137,23 +1316,28 @@ V1Switch(
     MyDeparser()
 ) main;
 
+
 // cd ~/dissertacao_ppgti
 // docker run -dit --name=p4c --rm ramonfontes/bmv2:latest
 // docker cp mqtt-sn-p4-architecture/p4src p4c:/tmp/
 // docker exec -it p4c bash
 // cd /tmp/p4src
-// p4c --target bmv2 --arch v1model gw_agg_mqtt_sn.p4
+// p4c --target bmv2 --arch v1model p4sn.p4
 // exit
-// docker cp p4c:/tmp/p4src/gw_agg_mqtt_sn.json mqtt-sn-p4-architecture/
+// docker cp p4c:/tmp/p4src/p4sn.json mqtt-sn-p4-architecture/
 // sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
 
-// mqtt-sn-pub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "teste" -m "teste"
-// mqtt-sn-sub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "teste" -v &
+// mqtt-sn-pub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "teste" -m "teste"      => 7
+// mqtt-sn-sub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "teste" -v &            => 4
+// mqtt-sn-sub -dddddddddd -q 1 -h 10.0.0.2 -p 1884 -t "teste" -v &            => 4
 
-// mqtt-sn-pub -dddddddddd -q 1 -h 10.0.0.2 -p 1884 -t "teste" -m "teste"
-// mqtt-sn-sub -dddddddddd -q 1 -h 10.0.0.2 -p 1884 -t "teste" -v &
+// mqtt-sn-pub -dddddddddd -q 1 -h 10.0.0.2 -p 1884 -t "teste" -m "teste"      => 8 *
+// mqtt-sn-sub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "teste" -v &            => 4
+// mqtt-sn-sub -dddddddddd -q 1 -h 10.0.0.2 -p 1884 -t "teste" -v &            => 4 + 1
 
-// mqtt-sn-pub -dddddddddd -q -1 -h 10.0.0.2 -p 1884 -t "ta" -m "teste"
+// mqtt-sn-sub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "ta" -v &               => 4
+// mqtt-sn-sub -dddddddddd -q 1 -h 10.0.0.2 -p 1884 -t "ta" -v &               => 4
+// mqtt-sn-pub -dddddddddd -q -1 -h 10.0.0.2 -p 1884 -t "ta" -m "teste"        => 1
 
 // docker stop p4c
 // docker stop mn.s1 mn.ss1 mn.pb1 mn.gw mn.bk
