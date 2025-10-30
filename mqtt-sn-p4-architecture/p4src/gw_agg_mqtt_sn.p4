@@ -2,6 +2,14 @@
 #include <core.p4>
 #include <v1model.p4>
 
+#define PKT_INSTANCE_TYPE_NORMAL 0
+#define PKT_INSTANCE_TYPE_INGRESS_CLONE 1
+#define PKT_INSTANCE_TYPE_EGRESS_CLONE 2
+#define PKT_INSTANCE_TYPE_COALESCED 3
+#define PKT_INSTANCE_TYPE_INGRESS_RECIRC 4
+#define PKT_INSTANCE_TYPE_REPLICATION 5
+#define PKT_INSTANCE_TYPE_RESUBMIT 6
+
 /*************************************************************************
 *********************** C O N S T S **************************************
 *************************************************************************/
@@ -71,6 +79,17 @@ const bit<16> UDP_PORT = 1884;
 const bit<16> TYPE_IPV4 = 0x800; // 2048
 
 /*************************************************************************
+*********************** REGISTRO PARA PACOTES VISTOS *********************
+*************************************************************************/
+
+const bit<32> NUM_SLOTS = 1024;  // buffer de verificação de pacotes duplicados
+
+register<bit<1>>(NUM_SLOTS) seen_incoming;  // CONNECT, PUBLISH, SUBSCRIBE, etc.
+register<bit<1>>(NUM_SLOTS) seen_outgoing;  // CONNACK, PUBACK, etc.
+
+//register<bit<1>>(NUM_SLOTS) seen_packets; // buffer de pacotes vistos
+
+/*************************************************************************
 *********************** T Y P E D E F S  *********************************
 *************************************************************************/
 
@@ -116,7 +135,7 @@ header MQTTSN_gwinfo_h {
 header MQTTSN_connect_h {
     bit<8>   protocolId;
     bit<16>  duration;
-    // bit<184> clientId; // Removido clientId fixo. Será extraído dinamicamente.
+    // bit<184> clientId; // Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header CONNACK*/
@@ -128,8 +147,7 @@ header MQTTSN_connack_h {
 header MQTTSN_register_h {
     bit<16> topicId;
     bit<16> msgId;
-    bit<128> topicName; // Fixado para testes
-    // bit<32> topicName; // Removido topicName fixo. Será extraído dinamicamente.
+    // bit<n> topicName; // Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header REGACK*/
@@ -143,7 +161,7 @@ header MQTTSN_regack_h {
 header MQTTSN_publish_h {
     bit<16> topicId;
     bit<16> msgId;
-    // bit<32> data; // Removido data fixo. Será extraído dinamicamente.
+    // bit<n> data; // Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header PUBACK*/
@@ -188,8 +206,8 @@ header MQTTSN_pingresp_h {
 /*Message MQTT-SN variable header SUBSCRIBE*/
 header MQTTSN_subscribe_h {
     bit<16> msgId;
-    // bit<16> topicId; // Removido topicId fixo. Será extraído dinamicamente.
-    // bit<32> topicName; // Removido topicName fixo. Será extraído dinamicamente.
+    bit<16> topicId;
+    // bit<n> topicName; // Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header SUBACK*/
@@ -202,8 +220,8 @@ header MQTTSN_suback_h {
 /*Message MQTT-SN variable header UNSUBSCRIBE*/
 header MQTTSN_unsubscribe_h {
     bit<16> msgId;
-    // bit<16> topicId; // Removido topicIdfixo. Será extraído dinamicamente.
-    // bit<32> topicName; // Removido topicName fixo. Será extraído dinamicamente.
+    bit<16> topicId;
+    // bit<n> topicName; // Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header UNSUBACK*/
@@ -218,7 +236,7 @@ header MQTTSN_willtopicreq_h {
 
 /*Message MQTT-SN variable header WILLTOPIC*/
 header MQTTSN_willtopic_h {
-   // bit<32> willTopic; // Removido willTopic fixo. Será extraído dinamicamente.
+   // bit<n> willTopic; // Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header WILLMSGREQ*/
@@ -228,17 +246,17 @@ header MQTTSN_willmsgreq_h {
 
 /*Message MQTT-SN variable header WILLMSG*/
 header MQTTSN_willmsg_h {
-    // bit<32> willMsg; // Removido willMsg fixo. Será extraído dinamicamente.
+    // bit<n> willMsg; // Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header WILLTOPICUPD*/
 header MQTTSN_willtopicupd_h {
-    // bit<32> willTopic; // Removido willTopic fixo. Será extraído dinamicamente.
+    // bit<n> willTopic; // Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header WILLMSGUPD*/
 header MQTTSN_willmsgupd_h {
-    // bit<32> willMsg; // Removido willMsg fixo. Será extraído dinamicamente.
+    // bit<n> willMsg; // Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header WILLTOPICRESP*/
@@ -394,51 +412,11 @@ struct headers {
     MQTTSN_willmsgupd_h mqttsn_willmsgupd;
     MQTTSN_willtopicresp_h mqttsn_willtopicresp;
     MQTTSN_willmsgresp_h mqttsn_willmsgresp;
-    MQTTSN_variable_field_h mqttsn_variable_field; // Para campos variáveis
+    MQTTSN_variable_field_h mqttsn_variable_field;
 }
 
-struct metadata {
-    // Cache
-    bit<1> cache_hit;
-    bit<16> cached_topicid;
-    bit<32> free_slot;
-    bit<1> do_forward;
-
-    // Slots
-    bit<1> slot_valid0;
-    bit<1> slot_valid1;
-    bit<1> slot_valid2;
-    //bit<1> slot_valid3;
-    //bit<1> slot_valid4;
-    //bit<1> slot_valid5;
-    //bit<1> slot_valid6;
-    //bit<1> slot_valid7;
-
-    bit<128> slot_topicname0;
-    bit<128> slot_topicname1;
-    bit<128> slot_topicname2;
-    //bit<128> slot_topicname3;
-    //bit<128> slot_topicname4;
-    //bit<128> slot_topicname5;
-    //bit<128> slot_topicname6;
-    //bit<128> slot_topicname7;
-
-    bit<16> slot_topicid0;
-    bit<16> slot_topicid1;
-    bit<16> slot_topicid2;
-    //bit<16> slot_topicid3;
-    //bit<16> slot_topicid4;
-    //bit<16> slot_topicid5;
-    //bit<16> slot_topicid6;
-    //bit<16> slot_topicid7;
-
-    bit<128> current_topicname;
-    bit<32> update_slot_index;
-    bit<128> update_topicname;
-    bit<16> update_topicid;
-    bit<16> regack_topicId;
-    bit<16> regack_msgId;
-};
+// Metadados
+struct metadata { }
 
 // Erros customizados para validação dos headers
 error {
@@ -447,15 +425,9 @@ error {
 
     // IPv4
     IPv4IncorrectVersion,
-    IPv4HeaderLengthError,
-    IPv4ChecksumError,
-    IPv4UnsupportedProtocol,
-    IPv4OptionsNotSupported,
 
     // MQTT-SN
-    MQTT_SN_InvalidLength,
-    MQTT_SN_UnsupportedMessageType,
-    MQTT_SN_InvalidFlags
+    MQTT_SN_InvalidLength
 }
 
 /*************************************************************************
@@ -469,6 +441,7 @@ parser MyParser(packet_in packet,
     
     state start {
         packet.extract(hdr.ethernet);
+        verify(hdr.ethernet.etherType == 0x800, error.UnsupportedEtherType);
         transition select(hdr.ethernet.etherType) {
             TYPE_IPV4: parse_ipv4;
             default: accept;
@@ -542,7 +515,7 @@ parser MyParser(packet_in packet,
 
     state parse_mqttsn_gwinfo {
         packet.extract(hdr.mqttsn_gwinfo);
-        // O gwAdd é um campo variável. Extrair o restante do pacote como um campo variável.
+        // O gwAdd é um campo fixo e opcional. Extrair o restante do pacote como um campo variável.
         // O comprimento do gwAdd é o comprimento total da mensagem - (fixed_h + gwinfo_h)
         // MQTTSN_fixed_h (2 bytes) + MQTTSN_gwinfo_h (1 byte) = 3 bytes
         verify(hdr.mqttsn_fixed.length >= 3, error.MQTT_SN_InvalidLength);
@@ -556,7 +529,7 @@ parser MyParser(packet_in packet,
     state parse_mqttsn_connect {
         packet.extract(hdr.mqttsn_flags_connect);
         packet.extract(hdr.mqttsn_connect);
-        // O clientId é um campo variável. Extrair o restante do pacote como um campo variável.
+        // O clientId é um campo fixo mas muito grande. Extrair o restante do pacote como um campo variável.
         // O comprimento do clientId é o comprimento total da mensagem - (fixed_h + flags_connect_h + connect_h)
         // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_connect_h (1 byte) + MQTTSN_connect_h (3 bytes) = 6 bytes
         // Comprimento do clientId = hdr.mqttsn_fixed.length - 6
@@ -577,8 +550,14 @@ parser MyParser(packet_in packet,
 
     state parse_mqttsn_register {
         packet.extract(hdr.mqttsn_register);
-        // MQTTSN_fixed_h (2 bytes) + MQTTSN_register_h (20 bytes) = 22 bytes
-        verify(hdr.mqttsn_fixed.length == 22, error.MQTT_SN_InvalidLength);
+        // O topicName é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + register_h)
+        // MQTTSN_fixed_h (2 bytes) + MQTTSN_register_h (4 bytes) = 6 bytes
+        // O comprimento mínimo para REGISTER é 6 bytes (fixos) + pelo menos 1 byte de  topicName = 7 bytes
+        verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
+        // calcular tamanho em bits em uma variável bit<32> antes do extract
+        bit<32> mqttsn_var_bits;
+        mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)6) * (bit<32>)8;
+        packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
         transition accept;
     }
 
@@ -773,164 +752,17 @@ control MyVerifyChecksum(inout headers hdr,
 1 - Veja a seção 6.14 Support of sleeping clients.
 */
 
-// ---- Constantes ----
-const bit<32> NUM_SLOTS = 3; //8
-
-// ---- Registers ----
-register<bit<1>>(NUM_SLOTS) map_valid;
-register<bit<128>>(NUM_SLOTS) map_topicname;
-register<bit<16>>(NUM_SLOTS) map_topicid;
-
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
     //////////////////////////////////////////////////////
-    // Funções auxiliares
+    // ACTION: FUNÇÃO HASH
     //////////////////////////////////////////////////////
-
-    // ---- Lookup topic usando metadados ----
-    action lookup_topic(inout metadata m) {
-        m.cached_topicid = 0; // default
-        if ((m.slot_valid0 != 0) && (m.slot_topicname0 == m.current_topicname))
-            m.cached_topicid = m.slot_topicid0;
-        else if ((m.slot_valid1 != 0) && (m.slot_topicname1 == m.current_topicname))
-            m.cached_topicid = m.slot_topicid1;
-        else if ((m.slot_valid2 != 0) && (m.slot_topicname2 == m.current_topicname))
-            m.cached_topicid = m.slot_topicid2;
-        /*else if ((m.slot_valid3 != 0) && (m.slot_topicname3 == m.current_topicname))
-            m.cached_topicid = m.slot_topicid3;
-        else if ((m.slot_valid4 != 0) && (m.slot_topicname4 == m.current_topicname))
-            m.cached_topicid = m.slot_topicid4;
-        else if ((m.slot_valid5 != 0) && (m.slot_topicname5 == m.current_topicname))
-            m.cached_topicid = m.slot_topicid5;
-        else if ((m.slot_valid6 != 0) && (m.slot_topicname6 == m.current_topicname))
-            m.cached_topicid = m.slot_topicid6;
-        else if ((m.slot_valid7 != 0) && (m.slot_topicname7 == m.current_topicname))
-            m.cached_topicid = m.slot_topicid7;*/
+    action compute_index(in bit<32> key, out bit<32> index) {
+        index = key % NUM_SLOTS;
     }
 
-    // =================== Atualização de slots ===================
-    action update_slot(inout metadata m) {
-        bit<32> slot = m.update_slot_index;
-        bit<128> topicname = m.update_topicname;
-        bit<16> topicid = m.update_topicid;
-
-        map_valid.write(slot, 1);
-        map_topicname.write(slot, topicname);
-        map_topicid.write(slot, topicid);
-
-        if (slot == 0) { m.slot_valid0 = 1; m.slot_topicname0 = topicname; m.slot_topicid0 = topicid; }
-        else if (slot == 1) { m.slot_valid1 = 1; m.slot_topicname1 = topicname; m.slot_topicid1 = topicid; }
-        else if (slot == 2) { m.slot_valid2 = 1; m.slot_topicname2 = topicname; m.slot_topicid2 = topicid; }
-        //else if (slot == 3) { m.slot_valid3 = 1; m.slot_topicname3 = topicname; m.slot_topicid3 = topicid; }
-        //else if (slot == 4) { m.slot_valid4 = 1; m.slot_topicname4 = topicname; m.slot_topicid4 = topicid; }
-        //else if (slot == 5) { m.slot_valid5 = 1; m.slot_topicname5 = topicname; m.slot_topicid5 = topicid; }
-        //else if (slot == 6) { m.slot_valid6 = 1; m.slot_topicname6 = topicname; m.slot_topicid6 = topicid; }
-        //else if (slot == 7) { m.slot_valid7 = 1; m.slot_topicname7 = topicname; m.slot_topicid7 = topicid; }
-    }
-
-    // =================== Encontrar slot livre ===================
-    action find_free_slot(inout metadata m) {
-        m.free_slot = 0xFF;
-        if (m.slot_valid0 == 0) m.free_slot = 0;
-        else if (m.slot_valid1 == 0) m.free_slot = 1;
-        else if (m.slot_valid2 == 0) m.free_slot = 2;
-        //else if (m.slot_valid3 == 0) m.free_slot = 3;
-        //else if (m.slot_valid4 == 0) m.free_slot = 4;
-        //else if (m.slot_valid5 == 0) m.free_slot = 5;
-        //else if (m.slot_valid6 == 0) m.free_slot = 6;
-        //else if (m.slot_valid7 == 0) m.free_slot = 7;
-    }
-
-    // =================== Lookup tópico ===================
-    action lookup_map_and_set(inout metadata m) {
-        m.cache_hit = 0;
-        m.cached_topicid = 0;
-
-        if ((m.slot_valid0 != 0) && (m.slot_topicname0 == m.current_topicname)) {
-            m.cache_hit = 1; m.cached_topicid = m.slot_topicid0;
-        } else if ((m.slot_valid1 != 0) && (m.slot_topicname1 == m.current_topicname)) {
-            m.cache_hit = 1; m.cached_topicid = m.slot_topicid1;
-        } else if ((m.slot_valid2 != 0) && (m.slot_topicname2 == m.current_topicname)) {
-            m.cache_hit = 1; m.cached_topicid = m.slot_topicid2;
-        } /*else if ((m.slot_valid3 != 0) && (m.slot_topicname3 == m.current_topicname)) {
-            m.cache_hit = 1; m.cached_topicid = m.slot_topicid3;
-        } else if ((m.slot_valid4 != 0) && (m.slot_topicname4 == m.current_topicname)) {
-            m.cache_hit = 1; m.cached_topicid = m.slot_topicid4;
-        } else if ((m.slot_valid5 != 0) && (m.slot_topicname5 == m.current_topicname)) {
-            m.cache_hit = 1; m.cached_topicid = m.slot_topicid5;
-        } else if ((m.slot_valid6 != 0) && (m.slot_topicname6 == m.current_topicname)) {
-            m.cache_hit = 1; m.cached_topicid = m.slot_topicid6;
-        } else if ((m.slot_valid7 != 0) && (m.slot_topicname7 == m.current_topicname)) {
-            m.cache_hit = 1; m.cached_topicid = m.slot_topicid7;
-        }*/
-    }
-
-    // =================== Armazenar novo registro ===================
-    action store_pending_register(inout metadata m) {
-        find_free_slot(m);
-        if (m.free_slot != 0xFF) {
-            update_slot(m);
-        }
-    }
-
-    //////////////////////////////////////////////////////
-    // ---- Construir REGACK e enviar ----
-    //////////////////////////////////////////////////////
-    action build_regack_and_send(inout metadata m,
-                                macAddr_t macSrcAddr,
-                                ipv4Addr_t ipv4SrcAddr,
-                                ipv4Addr_t ipv4DstAddr,
-                                bit<16> udpSrcPort,
-                                bit<16> udpDstPort,
-                                bit<9> output_sw_port) {
-
-        // ---- Invalida o REGISTER original ----
-        hdr.mqttsn_fixed.setInvalid();
-        hdr.mqttsn_register.setInvalid();
-
-        // ---- MQTT-SN REGACK ----
-        hdr.mqttsn_fixed.setValid();
-        hdr.mqttsn_fixed.length = 7;
-        hdr.mqttsn_fixed.msgType = MQTTSN_REGACK;
-
-        hdr.mqttsn_regack.setValid();
-        hdr.mqttsn_regack.topicId   = m.regack_topicId;
-        hdr.mqttsn_regack.msgId     = m.regack_msgId;
-        hdr.mqttsn_regack.returnCode = MQTTSN_RETURNCODE_ACCEPTED;
-
-        // ---- UDP ----
-        hdr.udp.setValid();
-        hdr.udp.srcPort  = udpDstPort;  // porta do gateway
-        hdr.udp.dstPort  = udpSrcPort;  // porta do cliente
-        hdr.udp.length   = 15;          // UDP(8) + MQTT-SN REGACK(7)
-        hdr.udp.checksum = 0;           // recalculado no deparser
-
-        // ---- IPv4 ----
-        hdr.ipv4.setValid();
-        hdr.ipv4.srcAddr    = ipv4DstAddr;  // gateway
-        hdr.ipv4.dstAddr    = ipv4SrcAddr;  // cliente
-        hdr.ipv4.ttl        = 63;
-        hdr.ipv4.protocol   = TYPE_UDP;
-        hdr.ipv4.ihl        = 5;
-        hdr.ipv4.version    = 4;
-        hdr.ipv4.totalLen   = 35;
-        hdr.ipv4.hdrChecksum = 0;
-
-        // ---- Ethernet ----
-        hdr.ethernet.setValid();
-        hdr.ethernet.dstAddr   = macSrcAddr;          // MAC do cliente
-        hdr.ethernet.srcAddr   = 0x000000000002;      // MAC do gateway
-        hdr.ethernet.etherType = TYPE_IPV4;
-
-        // ---- Encaminhar ----
-        standard_metadata.egress_spec = output_sw_port;
-
-        // ---- Evitar reencaminhamento duplicado ----
-        m.do_forward = 0;
-    }
-    
     //////////////////////////////////////////////////////
     // ACTION: DESCARTE AUTOMÁTICO DE PACOTES
     //////////////////////////////////////////////////////
@@ -987,19 +819,75 @@ control MyIngress(inout headers hdr,
     //////////////////////////////////////////////////////
     // APPLY
     //////////////////////////////////////////////////////
-
     apply {
 
-        // ---- Ler registers no início do apply ----
-        map_valid.read(meta.slot_valid0, 0); map_topicname.read(meta.slot_topicname0, 0); map_topicid.read(meta.slot_topicid0, 0);
-        map_valid.read(meta.slot_valid1, 1); map_topicname.read(meta.slot_topicname1, 1); map_topicid.read(meta.slot_topicid1, 1);
-        map_valid.read(meta.slot_valid2, 2); map_topicname.read(meta.slot_topicname2, 2); map_topicid.read(meta.slot_topicid2, 2);
-        //map_valid.read(meta.slot_valid3, 3); map_topicname.read(meta.slot_topicname3, 3); map_topicid.read(meta.slot_topicid3, 3);
-        //map_valid.read(meta.slot_valid4, 4); map_topicname.read(meta.slot_topicname4, 4); map_topicid.read(meta.slot_topicid4, 4);
-        //map_valid.read(meta.slot_valid5, 5); map_topicname.read(meta.slot_topicname5, 5); map_topicid.read(meta.slot_topicid5, 5);
-        //map_valid.read(meta.slot_valid6, 6); map_topicname.read(meta.slot_topicname6, 6); map_topicid.read(meta.slot_topicid6, 6);
-        //map_valid.read(meta.slot_valid7, 7); map_topicname.read(meta.slot_topicname7, 7); map_topicid.read(meta.slot_topicid7, 7);
+        ///////////////////////////////////////////////////////////////////
+        /////////// Proteção contra loop interno (recirculação) ///////////
+        ///////////////////////////////////////////////////////////////////
+        if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_RECIRC) {
+            drop();  // descarta pacote recirculado internamente
+            return;          // finaliza o parser
+        }
+        /*
+        ///////////////////////////////////////////////////////////////////
+        ///////// Proteção contra pacotes duplicados / já vistos //////////
+        ///////////////////////////////////////////////////////////////////
+        bit<32> packet_key;
+        bit<32> idx;
+        bit<1> already_seen;
 
+        // Construir chave única do pacote
+        packet_key = hdr.ipv4.srcAddr
+                     ^ hdr.ipv4.dstAddr
+                     ^ (bit<32>) hdr.udp.srcPort
+                     ^ (bit<32>) hdr.udp.dstPort
+                     ^ (bit<32>) hdr.mqttsn_fixed.msgType;
+                     //^ (bit<32>) standard_metadata.ingress_global_timestamp;
+
+        // Calcular índice no registro
+        compute_index(packet_key, idx);
+
+        // Ler flag do registro
+        //seen_packets.read(already_seen, idx);
+        if (hdr.udp.dstPort == UDP_PORT) {
+            // Cliente -> Gateway
+            seen_incoming.read(already_seen, idx);
+        } else if (hdr.udp.srcPort == UDP_PORT) {
+            // Gateway -> Cliente
+            seen_outgoing.read(already_seen, idx);
+        }
+
+        if (hdr.udp.dstPort == UDP_PORT) {
+            // Cliente → Gateway
+            seen_incoming.read(already_seen, idx);
+            if (already_seen == 1) {
+                drop();
+                return;
+            } else {
+                seen_incoming.write(idx, 1);
+            }
+        }
+        else if (hdr.udp.srcPort == UDP_PORT) {
+            // Gateway → Cliente
+            seen_outgoing.read(already_seen, idx);
+            if (already_seen == 1) {
+                drop();
+                return;
+            } else {
+                seen_outgoing.write(idx, 1);
+            }
+        }
+
+
+        if (already_seen == 1) {
+            // Pacote duplicado na rede ou que voltou ao switch -> descartar
+            drop();
+            return;
+        } else {
+            // Primeira vez que o pacote passa pelo switch
+            // Marcar como visto
+            seen_packets.write(idx, 1);
+        }*/
 
         if (hdr.mqttsn_fixed.isValid()) {
             ///////////////////////////////////////////////////////////////////
@@ -1024,7 +912,7 @@ control MyIngress(inout headers hdr,
             ///////////////////////////////////////////////////////////////////
             ////// Mensagens dos clientes com destino ao Gateway MQTT-SN //////
             //////////////////////////////////////////////////////////////////
-            else if (hdr.udp.dstPort == UDP_PORT) {  // porta 1884
+            else if (hdr.udp.dstPort == UDP_PORT) {    // porta 1884
                 /// CONNECT
                 if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT &&
                     hdr.mqttsn_flags_connect.isValid() &&
@@ -1032,32 +920,11 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_connect.protocolId == 0x01) { // corresponds to the “Protocol Name” and “Protocol Version” of the MQTT CONNECT message.
                         static_forwarding.apply();
                 }
-                // ---- REGISTER ----
+                // REGISTER
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER &&
                     hdr.mqttsn_register.isValid() &&
-                    hdr.mqttsn_register.topicId == 0x0000) {
-
-                    // Preenche o campo current_topicname para lookup
-                    meta.current_topicname = hdr.mqttsn_register.topicName;
-                    lookup_map_and_set(meta);
-
-                    if (meta.cache_hit == 1) {
-                        // REGACK local usando topicId já existente
-                        meta.regack_topicId = meta.cached_topicid;
-                        meta.regack_msgId = hdr.mqttsn_register.msgId;
-                        bit<9> input_sw_port = standard_metadata.ingress_port;
-                        build_regack_and_send(meta, hdr.ethernet.srcAddr, hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, hdr.udp.srcPort, hdr.udp.dstPort, input_sw_port);
-                    } else {
-                        // Novo registro: encontra slot livre
-                        meta.update_topicname = hdr.mqttsn_register.topicName;
-                        meta.update_topicid = /* novo topicId gerado */ 0x0001; // exemplo
-                        find_free_slot(meta);
-                        meta.update_slot_index = meta.free_slot;
-                        update_slot(meta);
-
-                        // Encaminha REGISTER para gateway
+                    hdr.mqttsn_variable_field.isValid()) {
                         static_forwarding.apply();
-                    }
                 }
                 // PUBLISH
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH &&
@@ -1068,16 +935,18 @@ control MyIngress(inout headers hdr,
                         if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
                             static_forwarding.apply();
                         }
-                        // QoS 0, 1 ou 2
-                        else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0 ||
-                            hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_1 ||
-                            hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_2) {
-                                // Aplicar a tabela de encaminhamento
-                                static_forwarding.apply();
+                        // QoS 0
+                        else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
+                            static_forwarding.apply();
+                        }
+                        // QoS 1 ou 2
+                        else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_1 ||
+                                hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_2) {
+                                    static_forwarding.apply();
                         }
                 }
                 // SUBSCRIBE
-                else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE && // qos = -1 not implemented, only relevant within PUBLISH messages sent by a client
+                else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE && // qos = -1 not implemented
                     hdr.mqttsn_flags_subscribe.isValid() &&
                     hdr.mqttsn_subscribe.isValid() &&
                     hdr.mqttsn_variable_field.isValid()) {
@@ -1092,9 +961,9 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_unsubscribe.isValid() && 
                     hdr.mqttsn_unsubscribe.isValid() &&
                     hdr.mqttsn_variable_field.isValid()) {
-                    if (hdr.mqttsn_flags_unsubscribe.qos == FLAGS_QOS_LEVEL_0 || // QoS 0
-                        hdr.mqttsn_flags_unsubscribe.qos == FLAGS_QOS_LEVEL_1 || // QoS 1
-                        hdr.mqttsn_flags_unsubscribe.qos == FLAGS_QOS_LEVEL_2) { // QoS 2
+                    if (hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_0 || // QoS 0
+                        hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_1 || // QoS 1
+                        hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_2) { // QoS 2
                             static_forwarding.apply();
                     }
                 }
@@ -1166,27 +1035,16 @@ control MyIngress(inout headers hdr,
             //////////////////////////////////////////////////////////////////
             ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
             /////////////////////////////////////////////////////////////////
-            else if (hdr.udp.srcPort == UDP_PORT) {     // porta 1884
+            else if (hdr.udp.srcPort == UDP_PORT) {    // porta 1884
                 // CONNACK
                 if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK &&
                     hdr.mqttsn_connack.isValid()) {
                         static_forwarding.apply();
                 }
-                // ---- REGACK ----
+                // REGACK
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGACK &&
-                        hdr.mqttsn_regack.isValid()) {
-
-                    // Preenche metadata para armazenar o mapping topicId -> topicName
-                    // Se você tiver o topicName associado ao topicId em outro lugar (por ex. cache do switch), coloque aqui
-                    // Exemplo: meta.update_topicname = <topicName correspondente ao topicId>;
-                    meta.update_topicid = hdr.mqttsn_regack.topicId;
-                    // meta.update_topicname deve ser preenchido previamente com o topicName correto
-                    find_free_slot(meta);
-                    meta.update_slot_index = meta.free_slot;
-                    update_slot(meta);
-
-                    // Encaminha REGACK para o cliente original
-                    static_forwarding.apply();
+                    hdr.mqttsn_regack.isValid()) {
+                        static_forwarding.apply();
                 }
                 // PUBLISH
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH &&
@@ -1273,7 +1131,10 @@ control MyIngress(inout headers hdr,
                 drop();
             }
         }
-        else { // Se a parte fixa da mensagem mqttsn não for válida, drop
+        //////////////////////////////////////////////////////////////
+        // Se a parte fixa da mensagem mqttsn não for válida, drop //
+        /////////////////////////////////////////////////////////////
+        else {
             drop();
         }
     }
@@ -1377,15 +1238,14 @@ V1Switch(
     MyDeparser()
 ) main;
 
-
 // cd ~/dissertacao_ppgti
 // docker run -dit --name=p4c --rm ramonfontes/bmv2:latest
 // docker cp mqtt-sn-p4-architecture/p4src p4c:/tmp/
 // docker exec -it p4c bash
 // cd /tmp/p4src
-// p4c --target bmv2 --arch v1model p4sn.p4
+// p4c --target bmv2 --arch v1model gw_agg_mqtt_sn.p4
 // exit
-// docker cp p4c:/tmp/p4src/p4sn.json mqtt-sn-p4-architecture/
+// docker cp p4c:/tmp/p4src/gw_agg_mqtt_sn.json mqtt-sn-p4-architecture/
 // sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
 
 // mqtt-sn-pub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "teste" -m "teste"      => 7
