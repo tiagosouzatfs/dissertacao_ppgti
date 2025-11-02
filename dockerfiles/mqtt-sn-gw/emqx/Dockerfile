@@ -2,7 +2,10 @@ FROM emqx/emqx:5.8.6
 
 USER root
 
-RUN apt-get update && apt-get install ethtool net-tools iproute2 iputils-ping -y
+# Define variável para não pedir confirmação interativa
+RUN export DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install ethtool net-tools iproute2 iputils-ping wireshark -y
 
 USER emqx
 

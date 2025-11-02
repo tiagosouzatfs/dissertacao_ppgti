@@ -22,7 +22,14 @@ def topology():
     bk = net.addDocker('bk', ip='10.0.0.1/8', mac="00:00:00:00:00:01", dimage='mqtt-broker')
 
     debug('Adicionando Gateway MQTT-SN\n')
-    gw = net.addDocker('gw', ip='10.0.0.2/8', mac="00:00:00:00:00:02", dimage='mqtt-sn-gw')
+    gw = net.addDocker(
+        'gw', 
+        ip='10.0.0.2/8', 
+        mac="00:00:00:00:00:02", 
+        dimage='mqtt-sn-gw',
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
+        environment={'DISPLAY':":{}".format(DISPLAY_ID)}
+    )
 
     debug("Adicionando sensores publishers\n")
     pb1 = net.addDocker(

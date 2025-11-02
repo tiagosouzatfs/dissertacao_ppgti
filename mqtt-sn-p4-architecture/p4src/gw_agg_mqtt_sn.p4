@@ -73,19 +73,25 @@ const bit<2> FLAGS_QOS_LEVEL_MINUS1 = 0b11;
 
 /*Segment UDP*/
 const bit<8> TYPE_UDP = 0x11; // 17
-const bit<16> UDP_PORT = 1884;
+const bit<16> UDP_PORT_SVC_GW = 1884;
 
 /*Packet IP*/
 const bit<16> TYPE_IPV4 = 0x800; // 2048
+
+/*SECSN*/
+const bit<16> TYPE_SECSN = 0x3F7A;
+const bit<16> SECSN_HEADER_SIZE = 4;
+const bit<32> SECRET_KEY_SECSN = 0xA5C3F27B;
+
+/*Buffer de verificação de pacotes visto*/
+//const bit<32> NUM_SLOTS = 1024;
 
 /*************************************************************************
 *********************** REGISTRO PARA PACOTES VISTOS *********************
 *************************************************************************/
 
-const bit<32> NUM_SLOTS = 1024;  // buffer de verificação de pacotes duplicados
-
-register<bit<1>>(NUM_SLOTS) seen_incoming;  // CONNECT, PUBLISH, SUBSCRIBE, etc.
-register<bit<1>>(NUM_SLOTS) seen_outgoing;  // CONNACK, PUBACK, etc.
+//register<bit<1>>(NUM_SLOTS) seen_incoming;  // CONNECT, PUBLISH, SUBSCRIBE, etc.
+//register<bit<1>>(NUM_SLOTS) seen_outgoing;  // CONNACK, PUBACK, etc.
 
 //register<bit<1>>(NUM_SLOTS) seen_packets; // buffer de pacotes vistos
 
@@ -105,6 +111,52 @@ typedef bit<9>  egressSpec_t; // representa a porta de saída do switch com 9 bi
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
+
+
+/////////////////// ETHERNET Header //////////////////////
+
+/*Frame Ethernet*/
+header Ethernet_h {
+    macAddr_t dstAddr;
+    macAddr_t srcAddr;
+    bit<16> etherType;
+}
+
+/////////////////// IPV4 Header ///////////////////////
+
+/*Packet IP*/
+header IPv4_h {
+    bit<4>   version;
+    bit<4>   ihl;
+    bit<8>   diffServ;
+    bit<16>  totalLen;
+    bit<16>  identification;
+    bit<3>   flags;
+    bit<13>  fragOffset;
+    bit<8>   ttl;
+    bit<8>   protocol;
+    bit<16>  hdrChecksum;
+    ipv4Addr_t srcAddr;
+    ipv4Addr_t dstAddr;
+}
+
+///////////////////// UDP Header ////////////////////
+
+/*Segment UDP*/
+header UDP_h {
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<16> length;
+    bit<16> checksum;
+}
+
+/////////////////// SECSN Header ////////////////////
+
+/*Header de autenticação AuthX*/
+header SECSN_h {
+    bit<16> msgSecType; 
+    bit<16> authChecksum;
+}
 
 //////////////////// MQTT-SN Headers ////////////////////
 
@@ -334,49 +386,13 @@ header MQTTSN_variable_field_h {
     varbit<11760> data;
 }
 
-///////////////////// UDP Header ////////////////////
-
-/*Segment UDP*/
-header UDP_h {
-    bit<16> srcPort;
-    bit<16> dstPort;
-    bit<16> length;
-    bit<16> checksum;
-}
-
-/////////////////// IPV4 Header ///////////////////////
-
-/*Packet IP*/
-header IPv4_h {
-    bit<4>   version;
-    bit<4>   ihl;
-    bit<8>   diffServ;
-    bit<16>  totalLen;
-    bit<16>  identification;
-    bit<3>   flags;
-    bit<13>  fragOffset;
-    bit<8>   ttl;
-    bit<8>   protocol;
-    bit<16>  hdrChecksum;
-    ipv4Addr_t srcAddr;
-    ipv4Addr_t dstAddr;
-}
-
-/////////////////// ETHERNET Header //////////////////////
-
-/*Frame Ethernet*/
-header Ethernet_h {
-    macAddr_t dstAddr;
-    macAddr_t srcAddr;
-    bit<16> etherType;
-}
-
 //////////////////// HEADERS /////////////////////////
 
 struct headers {
     Ethernet_h ethernet;
     IPv4_h ipv4;
     UDP_h udp;
+    SECSN_h secsn;
     MQTTSN_fixed_h mqttsn_fixed;
     MQTTSN_advertise_h mqttsn_advertise;
     MQTTSN_searchgw_h mqttsn_searchgw;
@@ -416,7 +432,9 @@ struct headers {
 }
 
 // Metadados
-struct metadata { }
+struct metadata {
+    bit<1> drop_flag;
+}
 
 // Erros customizados para validação dos headers
 error {
@@ -441,13 +459,23 @@ parser MyParser(packet_in packet,
     
     state start {
         packet.extract(hdr.ethernet);
-        verify(hdr.ethernet.etherType == 0x800, error.UnsupportedEtherType);
+        verify(hdr.ethernet.etherType == TYPE_IPV4, error.UnsupportedEtherType);
         transition select(hdr.ethernet.etherType) {
             TYPE_IPV4: parse_ipv4;
             default: accept;
         }
     }
 
+    /*
+    state parse_ipv4 {
+        packet.extract(hdr.ipv4);
+        verify(hdr.ipv4.version == 4, error.IPv4IncorrectVersion);
+        transition select(hdr.ipv4.protocol) {
+            TYPE_UDP: parse_udp;
+            default: accept;
+        }
+    }
+    */
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
         verify(hdr.ipv4.version == 4, error.IPv4IncorrectVersion);
@@ -457,11 +485,30 @@ parser MyParser(packet_in packet,
         }
     }
 
+    /*
     state parse_udp {
         packet.extract(hdr.udp);
         transition select(hdr.udp.srcPort, hdr.udp.dstPort) {
-            (UDP_PORT, _) : parse_mqttsn_fixed;   // Para mensagens com srcPort = 1884
-            (_, UDP_PORT) : parse_mqttsn_fixed;   // Para mensagens com dstPort = 1884
+            (UDP_PORT_SVC_GW, _): parse_mqttsn_fixed;   // Para mensagens com srcPort = 1884
+            (_, UDP_PORT_SVC_GW): parse_mqttsn_fixed;   // Para mensagens com dstPort = 1884
+            default: accept;
+        }
+    }
+    */
+
+    state parse_udp {
+        packet.extract(hdr.udp);
+        transition select(hdr.udp.srcPort, hdr.udp.dstPort) {
+            (UDP_PORT_SVC_GW, _): parse_mqttsn_fixed;   // Para mensagens com srcPort = 1884
+            (_, UDP_PORT_SVC_GW): parse_secsn;   // Para mensagens com dstPort = 1884
+            default: accept;
+        }
+    }
+
+    state parse_secsn {
+        packet.extract(hdr.secsn);
+        transition select(hdr.secsn.msgSecType) {
+            TYPE_SECSN: parse_mqttsn_fixed;
             default: accept;
         }
     }
@@ -757,22 +804,56 @@ control MyIngress(inout headers hdr,
                   inout standard_metadata_t standard_metadata) {
 
     //////////////////////////////////////////////////////
-    // ACTION: FUNÇÃO HASH
-    //////////////////////////////////////////////////////
-    action compute_index(in bit<32> key, out bit<32> index) {
-        index = key % NUM_SLOTS;
-    }
-
-    //////////////////////////////////////////////////////
-    // ACTION: DESCARTE AUTOMÁTICO DE PACOTES
+    /////// ACTION: DESCARTE AUTOMÁTICO DE PACOTES ///////
     //////////////////////////////////////////////////////
 
     action drop() {
         mark_to_drop(standard_metadata);
     }
 
+    //////////////////////////////////////////////////////////////////
+    ////////////////////////////// AuthX /////////////////////////////
+    //////////////////////////////////////////////////////////////////
+
+    action validate_authX(inout headers pkt_hdr) { 
+        bit<16> op1; 
+        bit<16> op2; 
+        bit<32> auth_hash; 
+        bit<16> auth_calc; 
+
+        op1 = ((bit<16>)(pkt_hdr.ipv4.srcAddr & 0xFFFF) ^ 
+            (bit<16>)(pkt_hdr.ipv4.dstAddr >> 16)) + pkt_hdr.udp.srcPort; 
+        op2 = (((pkt_hdr.udp.dstPort ^ 
+                (bit<16>)pkt_hdr.mqttsn_fixed.msgType) << 2) + 
+                (bit<16>)(SECRET_KEY_SECSN & 0xFFFF));
+
+        bit<32> h = 0;
+        h = h ^ pkt_hdr.ipv4.srcAddr;
+        h = ((h << 5) | (h >> 27)) & 0xFFFFFFFF;
+        h = (h + pkt_hdr.ipv4.dstAddr);
+        h = h ^ ((((bit<32>)pkt_hdr.udp.srcPort << 16) | (bit<32>)pkt_hdr.udp.dstPort));
+        h = (h + ((bit<32>)pkt_hdr.mqttsn_fixed.msgType << 8));
+        h = h ^ ((((bit<32>)op1 << 16) | (bit<32>)op2));
+        h = (h + SECRET_KEY_SECSN);
+
+        auth_hash = h & 0xFFFFFFFF;
+        auth_calc = (bit<16>)(auth_hash & 0xFFFF); 
+        
+        if (auth_calc != pkt_hdr.secsn.authChecksum) { 
+            meta.drop_flag = 1;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////
+    // ACTION: FUNÇÃO HASH PARA INDEX DO REGISTER DE PACOTES VISTOS //
+    //////////////////////////////////////////////////////////////////
+
+    //action compute_index(in bit<32> key, out bit<32> index) {
+    //    index = key % NUM_SLOTS;
+    //}
+
     //////////////////////////////////////////////////////
-    // ACTION: ENCAMINHAMENTO EM BROADCAST
+    /////// ACTION: ENCAMINHAMENTO EM BROADCAST //////////
     //////////////////////////////////////////////////////
 
     action broadcast() {
@@ -787,7 +868,7 @@ control MyIngress(inout headers hdr,
     }
 
     //////////////////////////////////////////////////////
-    // ACTION: ENCAMINHAMENTO ESTÁTICO
+    /////////// ACTION: ENCAMINHAMENTO ESTÁTICO //////////
     //////////////////////////////////////////////////////
 
     action forwarding(macAddr_t dstAddr, egressSpec_t port) {
@@ -800,7 +881,7 @@ control MyIngress(inout headers hdr,
     }
 
     //////////////////////////////////////////////////////
-    // TABELA DE ENCAMINHAMENTO ESTÁTICO
+    /////// TABELA DE ENCAMINHAMENTO ESTÁTICO ////////////
     //////////////////////////////////////////////////////
 
     table static_forwarding {
@@ -817,21 +898,24 @@ control MyIngress(inout headers hdr,
     }
 
     //////////////////////////////////////////////////////
-    // APPLY
+    /////////////////// APPLY ////////////////////////////
     //////////////////////////////////////////////////////
+
     apply {
 
         ///////////////////////////////////////////////////////////////////
         /////////// Proteção contra loop interno (recirculação) ///////////
         ///////////////////////////////////////////////////////////////////
+
         if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_RECIRC) {
             drop();  // descarta pacote recirculado internamente
-            return;          // finaliza o parser
         }
+
         /*
         ///////////////////////////////////////////////////////////////////
-        ///////// Proteção contra pacotes duplicados / já vistos //////////
+        ////////////// Proteção contra pacotes já vistos //////////////////
         ///////////////////////////////////////////////////////////////////
+
         bit<32> packet_key;
         bit<32> idx;
         bit<1> already_seen;
@@ -849,16 +933,16 @@ control MyIngress(inout headers hdr,
 
         // Ler flag do registro
         //seen_packets.read(already_seen, idx);
-        if (hdr.udp.dstPort == UDP_PORT) {
+        if (hdr.udp.dstPort == UDP_PORT_SVC_GW) {
             // Cliente -> Gateway
             seen_incoming.read(already_seen, idx);
-        } else if (hdr.udp.srcPort == UDP_PORT) {
+        } else if (hdr.udp.srcPort == UDP_PORT_SVC_GW) {
             // Gateway -> Cliente
             seen_outgoing.read(already_seen, idx);
         }
 
-        if (hdr.udp.dstPort == UDP_PORT) {
-            // Cliente → Gateway
+        if (hdr.udp.dstPort == UDP_PORT_SVC_GW) {
+            // Cliente => Gateway
             seen_incoming.read(already_seen, idx);
             if (already_seen == 1) {
                 drop();
@@ -867,8 +951,8 @@ control MyIngress(inout headers hdr,
                 seen_incoming.write(idx, 1);
             }
         }
-        else if (hdr.udp.srcPort == UDP_PORT) {
-            // Gateway → Cliente
+        else if (hdr.udp.srcPort == UDP_PORT_SVC_GW) {
+            // Gateway => Cliente
             seen_outgoing.read(already_seen, idx);
             if (already_seen == 1) {
                 drop();
@@ -889,10 +973,14 @@ control MyIngress(inout headers hdr,
             seen_packets.write(idx, 1);
         }*/
 
+        ///////////////////////////////////////////////////////////////////
+        ///////////////////////// MQTT-SN ////////////////////////////////
+        //////////////////////////////////////////////////////////////////
+
         if (hdr.mqttsn_fixed.isValid()) {
-            ///////////////////////////////////////////////////////////////////
-            ///////////////////////// Broadcast //////////////////////////////
-            //////////////////////////////////////////////////////////////////
+
+            ///////////////////////// BROADCAST //////////////////////////////
+
             // ADVERTISE
             if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE &&
                 hdr.mqttsn_advertise.isValid()) {
@@ -909,10 +997,17 @@ control MyIngress(inout headers hdr,
                 hdr.mqttsn_variable_field.isValid())  {
                     broadcast();
             }
-            ///////////////////////////////////////////////////////////////////
+
             ////// Mensagens dos clientes com destino ao Gateway MQTT-SN //////
-            //////////////////////////////////////////////////////////////////
-            else if (hdr.udp.dstPort == UDP_PORT) {    // porta 1884
+
+            else if (hdr.udp.dstPort == UDP_PORT_SVC_GW) {    // porta 1884
+
+                validate_authX(hdr);
+
+                if (meta.drop_flag == 1) {
+                    drop();
+                }
+
                 /// CONNECT
                 if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT &&
                     hdr.mqttsn_flags_connect.isValid() &&
@@ -993,9 +1088,9 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_variable_field.isValid()) {
                         static_forwarding.apply();
                 }
-                ///////////////////////////////////////////////////////////////////////////////////////
+
                 ////// Mensagens que podem vir de qualquer cliente pub/sub ou do Gateway MQTT-SN //////
-                ///////////////////////////////////////////////////////////////////////////////////////
+
                 // PUBACK
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // QoS 1
                     hdr.mqttsn_puback.isValid()) {
@@ -1032,10 +1127,11 @@ control MyIngress(inout headers hdr,
                         static_forwarding.apply();
                 }
             }
-            //////////////////////////////////////////////////////////////////
+
             ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
-            /////////////////////////////////////////////////////////////////
-            else if (hdr.udp.srcPort == UDP_PORT) {    // porta 1884
+
+            else if (hdr.udp.srcPort == UDP_PORT_SVC_GW) {    // porta 1884
+
                 // CONNACK
                 if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK &&
                     hdr.mqttsn_connack.isValid()) {
@@ -1085,9 +1181,9 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_willmsgresp.isValid()) {
                         static_forwarding.apply();
                 }
-                ///////////////////////////////////////////////////////////////////////////////////////
+
                 ////// Mensagens que podem vir de qualquer cliente pub/sub ou do Gateway MQTT-SN //////
-                ///////////////////////////////////////////////////////////////////////////////////////
+
                 // PUBACK
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // QoS 1
                     hdr.mqttsn_puback.isValid()) {
@@ -1124,16 +1220,16 @@ control MyIngress(inout headers hdr,
                         static_forwarding.apply();
                 }
             }
-            //////////////////////////////////////////////////////
+
             //// Se não for uma mensagem conhecida ao MQTT-SN ////
-            /////////////////////////////////////////////////////
+
             else {
                 drop();
             }
         }
-        //////////////////////////////////////////////////////////////
+
         // Se a parte fixa da mensagem mqttsn não for válida, drop //
-        /////////////////////////////////////////////////////////////
+
         else {
             drop();
         }
@@ -1147,7 +1243,59 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply {  }
+
+    //////////////////////////////////////////////////////////////////
+    ////////////////////////////// AuthX /////////////////////////////
+    //////////////////////////////////////////////////////////////////
+
+    action generate_authX(inout headers pkt_hdr) { 
+        bit<16> op1; 
+        bit<16> op2; 
+        bit<32> auth_hash; 
+        
+        op1 = ((bit<16>)(pkt_hdr.ipv4.srcAddr & 0xFFFF) ^ 
+            (bit<16>)(pkt_hdr.ipv4.dstAddr >> 16)) + pkt_hdr.udp.srcPort; 
+        op2 = (((pkt_hdr.udp.dstPort ^ 
+                (bit<16>)pkt_hdr.mqttsn_fixed.msgType) << 2) + 
+                (bit<16>)(SECRET_KEY_SECSN & 0xFFFF));
+
+        bit<32> h = 0;
+        h = h ^ pkt_hdr.ipv4.srcAddr;
+        h = ((h << 5) | (h >> 27)) & 0xFFFFFFFF;
+        h = (h + pkt_hdr.ipv4.dstAddr);
+        h = h ^ ((((bit<32>)pkt_hdr.udp.srcPort << 16) | (bit<32>)pkt_hdr.udp.dstPort));
+        h = (h + ((bit<32>)pkt_hdr.mqttsn_fixed.msgType << 8));
+        h = h ^ ((((bit<32>)op1 << 16) | (bit<32>)op2));
+        h = (h + SECRET_KEY_SECSN);
+
+        auth_hash = h & 0xFFFFFFFF;
+        pkt_hdr.secsn.authChecksum = (bit<16>)(auth_hash & 0xFFFF); 
+    } 
+
+    apply {
+
+        ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
+
+        if (hdr.udp.dstPort == UDP_PORT_SVC_GW) { // porta 1884
+            hdr.secsn.setInvalid();
+            hdr.udp.length = hdr.udp.length - SECSN_HEADER_SIZE;
+            hdr.udp.checksum = 0;
+            hdr.ipv4.totalLen = hdr.ipv4.totalLen - SECSN_HEADER_SIZE;
+            hdr.ipv4.hdrChecksum = 0;
+        } 
+
+        ///// Mensagens dos clientes com destino ao Gateway MQTT-SN //////
+
+        else if (hdr.udp.srcPort == UDP_PORT_SVC_GW) { // porta 1884
+            hdr.secsn.setValid();
+            hdr.secsn.msgSecType = TYPE_SECSN;
+            generate_authX(hdr);
+            hdr.udp.length = hdr.udp.length + SECSN_HEADER_SIZE;
+            hdr.udp.checksum = 0;
+            hdr.ipv4.totalLen = hdr.ipv4.totalLen + SECSN_HEADER_SIZE;
+            hdr.ipv4.hdrChecksum = 0;
+        }
+    }
 }
 
 /*************************************************************************
@@ -1185,6 +1333,7 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
         packet.emit(hdr.udp);
+        packet.emit(hdr.secsn); // será omitido quando inválido
         packet.emit(hdr.mqttsn_fixed);
         packet.emit(hdr.mqttsn_advertise);
         packet.emit(hdr.mqttsn_searchgw);
