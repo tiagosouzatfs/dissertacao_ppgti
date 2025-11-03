@@ -80,8 +80,10 @@ const bit<16> TYPE_IPV4 = 0x800; // 2048
 
 /*SECSN*/
 const bit<16> TYPE_SECSN = 0x3F7A;
-const bit<16> SECSN_HEADER_SIZE = 4;
+const bit<16> HEADER_SIZE_SECSN = 4;
 const bit<32> SECRET_KEY_SECSN = 0xA5C3F27B;
+// Essa variável está atrelada ao tamanho do campo data do header MQTTSN_variable_field_h
+const bit<512> SECRET_MASK_DATA_SECSN = 0xB37A94C4E18F2761A5F9C0B48D37ACD2E0B3C4D15A7F823BE6A2FDFE41C967A0F2E37B5C1DA4EF092B8D5C67A93F04D1B7E2C8A59431DE0A87B1F2C49E03D56A;
 
 /*Buffer de verificação de pacotes visto*/
 //const bit<32> NUM_SLOTS = 1024;
@@ -111,7 +113,6 @@ typedef bit<9>  egressSpec_t; // representa a porta de saída do switch com 9 bi
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
-
 
 /////////////////// ETHERNET Header //////////////////////
 
@@ -155,7 +156,7 @@ header UDP_h {
 /*Header de autenticação AuthX*/
 header SECSN_h {
     bit<16> msgSecType; 
-    bit<16> authChecksum;
+    bit<16> authX;
 }
 
 //////////////////// MQTT-SN Headers ////////////////////
@@ -180,7 +181,7 @@ header MQTTSN_searchgw_h {
 /*Message MQTT-SN variable header GWINFO*/
 header MQTTSN_gwinfo_h {
     bit<8> gwId;
-    //bit<32> gwAdd; // IPv4 address gw (only present if message is sent by a client). Será extraído dinamicamente.
+    //bit<32> gwAdd; // Será extraído dinamicamente.
 }
 
 /*Message MQTT-SN variable header CONNECT*/
@@ -379,12 +380,18 @@ header MQTTSN_flags_willtopicupd_h {
 }
 
 /*Default header to fields variables*/
-// Max payload size for Ethernet/IPv4/UDP/MQTT-SN(parte fixa) (1500 - 20 - 8 - 2 = 1470 bytes = 11760 bits)
-// O tamanho real será determinado pelo campo length do MQTTSN_fixed_h, pois ainda teria que diminuir
-//    os campos que tem tamanho fixo, mas como nem todas as mensagens tem, vou deixar assim.
+// Max payload size for Ethernet/IPv4/UDP/SECSN/MQTT-SN(parte fixa)/MQTT-SN(parte variável da maior mensagem que tem tamanho fixo -> SUBACK)
+// 255(Tamanho total da mensagem mqt-sn / 5.2.1 Length MQTT-SN_spec_v1.2) - 20 - 8 - 4 - 2 - 8 = 213 bytes = 1704 bits
 header MQTTSN_variable_field_h {
-    varbit<11760> data;
+    varbit<1704> data;
 }
+
+/*Teste publish*/
+// 106(P4SSN) - 20 - 8 - 4 - 2 - 8 = 64 bytes = 512 bits
+header MQTTSN_variable_publish_h {
+    bit<512> data;
+}
+
 
 //////////////////// HEADERS /////////////////////////
 
@@ -429,6 +436,7 @@ struct headers {
     MQTTSN_willtopicresp_h mqttsn_willtopicresp;
     MQTTSN_willmsgresp_h mqttsn_willmsgresp;
     MQTTSN_variable_field_h mqttsn_variable_field;
+    MQTTSN_variable_publish_h mqttsn_variable_publish;
 }
 
 // Metadados
@@ -466,7 +474,6 @@ parser MyParser(packet_in packet,
         }
     }
 
-    /*
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
         verify(hdr.ipv4.version == 4, error.IPv4IncorrectVersion);
@@ -475,26 +482,6 @@ parser MyParser(packet_in packet,
             default: accept;
         }
     }
-    */
-    state parse_ipv4 {
-        packet.extract(hdr.ipv4);
-        verify(hdr.ipv4.version == 4, error.IPv4IncorrectVersion);
-        transition select(hdr.ipv4.protocol) {
-            TYPE_UDP: parse_udp;
-            default: accept;
-        }
-    }
-
-    /*
-    state parse_udp {
-        packet.extract(hdr.udp);
-        transition select(hdr.udp.srcPort, hdr.udp.dstPort) {
-            (UDP_PORT_SVC_GW, _): parse_mqttsn_fixed;   // Para mensagens com srcPort = 1884
-            (_, UDP_PORT_SVC_GW): parse_mqttsn_fixed;   // Para mensagens com dstPort = 1884
-            default: accept;
-        }
-    }
-    */
 
     state parse_udp {
         packet.extract(hdr.udp);
@@ -613,7 +600,7 @@ parser MyParser(packet_in packet,
         verify(hdr.mqttsn_fixed.length == 7, error.MQTT_SN_InvalidLength);
         transition accept;
     }
-
+    /*
     state parse_mqttsn_publish {
         packet.extract(hdr.mqttsn_flags_publish);
         packet.extract(hdr.mqttsn_publish);
@@ -624,6 +611,16 @@ parser MyParser(packet_in packet,
         bit<32> mqttsn_var_bits;
         mqttsn_var_bits = ((bit<32>)hdr.mqttsn_fixed.length - (bit<32>)7) * (bit<32>)8;
         packet.extract(hdr.mqttsn_variable_field, mqttsn_var_bits);
+        transition accept;
+    }
+    */
+    state parse_mqttsn_publish {
+        packet.extract(hdr.mqttsn_flags_publish);
+        packet.extract(hdr.mqttsn_publish);
+        // O data é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_publish_h + publish_h)
+        // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_publish_h (1 byte) + MQTTSN_publish_h (4 bytes) = 7 bytes
+        verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
+        packet.extract(hdr.mqttsn_variable_publish);
         transition accept;
     }
 
@@ -839,9 +836,10 @@ control MyIngress(inout headers hdr,
         auth_hash = h & 0xFFFFFFFF;
         auth_calc = (bit<16>)(auth_hash & 0xFFFF); 
         
-        if (auth_calc != pkt_hdr.secsn.authChecksum) { 
+        if (auth_calc != pkt_hdr.secsn.authX) { 
             meta.drop_flag = 1;
         }
+
     }
 
     //////////////////////////////////////////////////////////////////
@@ -1002,6 +1000,7 @@ control MyIngress(inout headers hdr,
 
             else if (hdr.udp.dstPort == UDP_PORT_SVC_GW) {    // porta 1884
 
+                /*AuthX*/
                 validate_authX(hdr);
 
                 if (meta.drop_flag == 1) {
@@ -1025,7 +1024,7 @@ control MyIngress(inout headers hdr,
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH &&
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid() &&
-                    hdr.mqttsn_variable_field.isValid()) {
+                    hdr.mqttsn_variable_publish.isValid()) {
                         // QoS -1
                         if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
                             static_forwarding.apply();
@@ -1269,30 +1268,42 @@ control MyEgress(inout headers hdr,
         h = (h + SECRET_KEY_SECSN);
 
         auth_hash = h & 0xFFFFFFFF;
-        pkt_hdr.secsn.authChecksum = (bit<16>)(auth_hash & 0xFFFF); 
+        pkt_hdr.secsn.authX = (bit<16>)(auth_hash & 0xFFFF);
+
+        // Criptografar
+        hdr.mqttsn_variable_publish.data = hdr.mqttsn_variable_publish.data ^ SECRET_MASK_DATA_SECSN;
+
     } 
 
     apply {
 
-        ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
+        ///// Mensagens dos clientes com destino ao Gateway MQTT-SN //////
 
         if (hdr.udp.dstPort == UDP_PORT_SVC_GW) { // porta 1884
             hdr.secsn.setInvalid();
-            hdr.udp.length = hdr.udp.length - SECSN_HEADER_SIZE;
+
+            // Descriptografar
+            hdr.mqttsn_variable_publish.data = hdr.mqttsn_variable_publish.data ^ SECRET_MASK_DATA_SECSN;
+
+            hdr.udp.length = hdr.udp.length - HEADER_SIZE_SECSN;
             hdr.udp.checksum = 0;
-            hdr.ipv4.totalLen = hdr.ipv4.totalLen - SECSN_HEADER_SIZE;
+
+            hdr.ipv4.totalLen = hdr.ipv4.totalLen - HEADER_SIZE_SECSN;
             hdr.ipv4.hdrChecksum = 0;
         } 
 
-        ///// Mensagens dos clientes com destino ao Gateway MQTT-SN //////
+        ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
 
         else if (hdr.udp.srcPort == UDP_PORT_SVC_GW) { // porta 1884
             hdr.secsn.setValid();
             hdr.secsn.msgSecType = TYPE_SECSN;
+
+            /*AuthX*/
             generate_authX(hdr);
-            hdr.udp.length = hdr.udp.length + SECSN_HEADER_SIZE;
+
+            hdr.udp.length = hdr.udp.length + HEADER_SIZE_SECSN;
             hdr.udp.checksum = 0;
-            hdr.ipv4.totalLen = hdr.ipv4.totalLen + SECSN_HEADER_SIZE;
+            hdr.ipv4.totalLen = hdr.ipv4.totalLen + HEADER_SIZE_SECSN;
             hdr.ipv4.hdrChecksum = 0;
         }
     }
@@ -1370,6 +1381,7 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.mqttsn_willtopicresp);
         packet.emit(hdr.mqttsn_willmsgresp);
         packet.emit(hdr.mqttsn_variable_field);
+        packet.emit(hdr.mqttsn_variable_publish);
     }
 }
 
