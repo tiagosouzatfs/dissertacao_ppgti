@@ -20,7 +20,8 @@ MQTTSN_DISCONNECT = 0x18
 
 # Constantes SECSN (do código P4)
 TYPE_SECSN = 0x3F7A
-SECRET_KEY_SECSN = 0xA5C3F27B # 0xA5C3F27B
+SECRET_KEY_SECSN = 0xA5C3F27B
+SECRET_MASK_DATA_SECSN = 0xB37A94C4E18F2761A5F9C0B48D37ACD2E0B3C4D15A7F823BE6A2FDFE41C967A0F2E37B5C1DA4EF092B8D5C67A93F04D1B7E2C8A59431DE0A87B1F2C49E03D56A
 
 # QoS Levels
 QOS_M1 = 0b11 # -1
@@ -32,7 +33,6 @@ QOS_2 = 0b10
 TOPICIDTYPE_TOPICNAME = 0b00
 TOPICIDTYPE_PREDEFINEDTOPIC = 0b01
 TOPICIDTYPE_SHORTTOPICNAME = 0b10
-TOPICIDTYPE_RESERVED = 0b11
 
 # Endereços de Rede (Fornecidos pelo Usuário)
 GW_IP = "10.0.0.2"
@@ -53,12 +53,10 @@ GW_IP_INT = ip_to_int(GW_IP)
 # 2. Funções Auxiliares
 # =============================================================================
 
-SECRET_KEY_SECSN = 0xA5C3F27B
-
 # ======================================================
-# === SECSN AUTH CHECKSUM (compatível com P4) ==========
+# === SECSN AUTHX (compatível com P4) ==========
 # ======================================================
-def generate_auth_checksum(src_ip, dst_ip, src_port, dst_port, msg_type, secret_key=SECRET_KEY_SECSN):
+def generate_auth_authX(src_ip, dst_ip, src_port, dst_port, msg_type, secret_key=SECRET_KEY_SECSN):
     def ip_to_int(ip):
         # Esta função interna é redundante se chamada aqui, mas mantida para clareza
         return struct.unpack("!I", bytes(map(int, ip.split('.'))))[0]
@@ -92,10 +90,10 @@ def build_secsn_packet(mqttsn_payload):
     
     msg_type = mqttsn_payload[1] # O segundo byte é o MsgType
     
-    checksum = generate_auth_checksum(CLIENT_IP, GW_IP, CLIENT_PORT, GW_PORT, msg_type)
+    authX = generate_auth_authX(CLIENT_IP, GW_IP, CLIENT_PORT, GW_PORT, msg_type)
     
-    # Monta o Header SECSN: msgSecType (H) + authChecksum (H)
-    secsn_header = struct.pack('>HH', TYPE_SECSN, checksum)
+    # Monta o Header SECSN: msgSecType (H) + authX (H)
+    secsn_header = struct.pack('>HH', TYPE_SECSN, authX)
     
     return secsn_header + mqttsn_payload
 
@@ -113,7 +111,7 @@ def send_and_receive(sock, packet, expected_msg_type=None, timeout=5):
             return None
             
         # Desempacota o Header SECSN
-        msgSecType, authChecksum = struct.unpack('>HH', data[:4])
+        msgSecType, authx = struct.unpack('>HH', data[:4])
         
         if msgSecType != TYPE_SECSN:
             print(f"<- ERRO: Tipo de segurança inesperado: {hex(msgSecType)}. Esperado: {hex(TYPE_SECSN)}")
@@ -146,6 +144,12 @@ def send_and_receive(sock, packet, expected_msg_type=None, timeout=5):
 # 3. Funções de Construção de Pacotes MQTT-SN (Sem alterações)
 # =============================================================================
 
+def xor_data(data_str, mask_int):
+    data_bytes = data_str.encode("utf-8")
+    mask_bytes = mask_int.to_bytes(64, 'big')  # 512 bits = 64 bytes
+    masked = bytes([b ^ mask_bytes[i % len(mask_bytes)] for i, b in enumerate(data_bytes)])
+    return masked
+
 def build_connect(client_id="struct_client", duration=60):
     flags = 0x02
     protocol_id = 0x01
@@ -162,37 +166,37 @@ def build_register(topic_name, msg_id):
     return build_secsn_packet(mqttsn_packet)
 
 def build_publish(qos_level, topic_identifier, msg_id, data):
-    topic_id_type = None
-    topic_id_payload = b''
-    topic_name_payload = b''
-    
+    # Determina tipo de Topic e payload
     if isinstance(topic_identifier, str):
         if len(topic_identifier) == 2:
             topic_id_type = TOPICIDTYPE_SHORTTOPICNAME
             topic_id_payload = topic_identifier.encode('utf-8')
-            if len(topic_id_payload) != 2:
-                raise ValueError("Short Topic Name deve ter exatamente 2 bytes após a codificação.")
-            
+            topic_name_payload = b''
         else:
             topic_id_type = TOPICIDTYPE_TOPICNAME
-            topic_id_payload = struct.pack('>H', 0x0000)
+            topic_id_payload = struct.pack('>H', 0x0000)  # Topic ID será 0, mas o name vem no payload
             topic_name_payload = topic_identifier.encode('utf-8')
-            
     elif isinstance(topic_identifier, int):
         topic_id_type = TOPICIDTYPE_PREDEFINEDTOPIC
         topic_id_payload = struct.pack('>H', topic_identifier)
-        
+        topic_name_payload = b''
     else:
-        raise TypeError("topic_identifier deve ser uma string (Topic Name/Short Topic Name) ou um inteiro (Topic ID).")
+        raise TypeError("topic_identifier deve ser string ou inteiro")
 
     flags = (qos_level << 5) | (topic_id_type << 2)
-    msg_id_to_use = msg_id if qos_level != QOS_M1 else 0x0000
     
-    fixed_payload = struct.pack('>B', flags) + topic_id_payload + struct.pack('>H', msg_id_to_use)
-    variable_payload = data.encode('utf-8') + topic_name_payload
-    payload = fixed_payload + variable_payload
+    # Msg ID só existe se QoS != -1
+    fixed_header = struct.pack('>B', flags) + topic_id_payload
+    if qos_level != QOS_M1:
+        fixed_header += struct.pack('>H', msg_id)
     
-    length = len(payload) + 2
+    # Payload variável
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    variable_payload = data + topic_name_payload
+    
+    payload = fixed_header + variable_payload
+    length = len(payload) + 2  # Incluindo Length + MsgType
     mqttsn_packet = struct.pack('>BB', length, MQTTSN_PUBLISH) + payload
     
     return build_secsn_packet(mqttsn_packet)
@@ -216,6 +220,8 @@ def build_disconnect():
 def sequence_qos_minus1(sock, topic_identifier="sh", msg_id=0x0001, data="QoS -1 Message"):
     print("\n--- Sequência QoS -1 (Apenas PUBLISH - Short Topic Name) ---")
     
+    data = xor_data(data, SECRET_MASK_DATA_SECSN)
+
     publish_packet = build_publish(QOS_M1, topic_identifier, msg_id, data)
     
     print(f"-> Enviando: PUBLISH (QoS -1) para tópico '{topic_identifier}'")
@@ -225,6 +231,8 @@ def sequence_qos_minus1(sock, topic_identifier="sh", msg_id=0x0001, data="QoS -1
 def sequence_qos_0(sock, topic_name="test/qos0/topic", msg_id=0x0001, data="QoS 0 Message"):
     print("\n--- Sequência QoS 0 (Topic ID - REGISTER/PUBLISH) ---")
     
+    data = xor_data(data, SECRET_MASK_DATA_SECSN)
+
     # 1. CONNECT
     connect_packet = build_connect()
     connack_response = send_and_receive(sock, connect_packet, expected_msg_type=MQTTSN_CONNACK)
@@ -252,6 +260,8 @@ def sequence_qos_0(sock, topic_name="test/qos0/topic", msg_id=0x0001, data="QoS 
 def sequence_qos_1(sock, topic_name="test/qos1/topic", msg_id=0x0002, data="QoS 1 Message"):
     print("\n--- Sequência QoS 1 (Topic Name - PUBLISH) ---")
     
+    data = xor_data(data, SECRET_MASK_DATA_SECSN)
+
     # 1. CONNECT
     connect_packet = build_connect()
     connack_response = send_and_receive(sock, connect_packet, expected_msg_type=MQTTSN_CONNACK)
@@ -279,6 +289,8 @@ def sequence_qos_1(sock, topic_name="test/qos1/topic", msg_id=0x0002, data="QoS 
 def sequence_qos_2(sock, topic_name="test/qos2/topic", msg_id=0x0003, data="QoS 2 Message"):
     print("\n--- Sequência QoS 2 (Topic ID - REGISTER/PUBLISH) ---")
     
+    data = xor_data(data, SECRET_MASK_DATA_SECSN)
+
     # 1. CONNECT
     connect_packet = build_connect()
     connack_response = send_and_receive(sock, connect_packet, expected_msg_type=MQTTSN_CONNACK)
@@ -332,7 +344,6 @@ if __name__ == "__main__":
     print(f"Gateway MQTT-SN em {GW_IP}:{GW_PORT}")
     
     # --- Lógica de seleção por QoS ---
-    
     sequences = {
         "-1": sequence_qos_minus1,
         "0": sequence_qos_0,
@@ -342,16 +353,31 @@ if __name__ == "__main__":
     
     print("\n--- Escolha a sequência MQTT-SN a ser executada ---")
     qos_choice = input("Digite o nível de QoS (-1, 0, 1, 2): ")
-    
     selected_sequence = sequences.get(qos_choice)
 
-    if selected_sequence:
-        print(f"\n--- Iniciando sequência para QoS {qos_choice} ---")
-        selected_sequence(sock)
-    else:
+    if not selected_sequence:
         print("\nERRO: Escolha de QoS inválida. Por favor, digite -1, 0, 1 ou 2.")
-    
-    # --- Fim da lógica de seleção ---
+        sock.close()
+        exit(1)
+
+    # --- Entrada e validação do campo 'data' ---
+    while True:
+        data_msg = input("Digite o conteúdo da mensagem PUBLISH (máx 64 bytes): ")
+        data_len = len(data_msg.encode("utf-8"))
+
+        if data_len > 64:
+            print(f"ERRO: A mensagem tem {data_len} bytes ({data_len - 64} bytes acima do limite). Redigite.")
+            continue
+        elif data_msg.endswith("."):
+            print("ERRO: O último caractere não pode ser '.', pois é um limitador de mensagem no P4SSN. Redigite.")
+            continue
+        elif data_len < 64:
+            data_msg = data_msg.ljust(64, ".")
+            #print(f"A mensagem foi completada com '.' até 64 bytes.")
+        break
+
+    print(f"\n--- Iniciando sequência para QoS {qos_choice} ---")
+    selected_sequence(sock, data=data_msg)
 
     sock.close()
     print("\n--- Fim da execução do cliente Struct ---")
