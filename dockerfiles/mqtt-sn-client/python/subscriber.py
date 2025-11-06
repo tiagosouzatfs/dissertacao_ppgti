@@ -114,7 +114,7 @@ def build_subscribe(topic_name, msg_id, qos_level, src_port):
     return build_secsn_packet(mqttsn_packet, src_port)
 
 def build_unsubscribe_by_topicid(topic_id, msg_id, src_port):
-    # TopicId variant (bit7=0 and include topicId)
+    # TopicId
     # For UNSUBSCRIBE with TopicId, payload is: Flags(1), MsgId(2), TopicId(2)
     flags = 0x00  # TopicId type = 00
     payload = struct.pack(">BHH", flags, msg_id, topic_id)
@@ -154,8 +154,8 @@ def mqttsn_subscriber():
     sock.bind((CLIENT_IP, local_port))
     sock.settimeout(1)
 
-    print(f"[+] Subscriber iniciado em {CLIENT_IP}:{local_port}")
-    print(f"[+] Gateway em {GW_IP}:{GW_PORT}\n")
+    print(f"Subscriber iniciado em {CLIENT_IP}:{local_port}")
+    print(f"Gateway em {GW_IP}:{GW_PORT}\n")
 
     topic = input("Digite o tópico para inscrever: ").strip()
     qos_choice = input("Digite o nível de QoS (0, 1, 2): ").strip()
@@ -252,9 +252,6 @@ def mqttsn_subscriber():
 
             # PUBREL (broker -> subscriber, QoS 2 flow)
             elif msgType == MQTTSN_PUBREL:
-                # PUBREL payload: MsgId(2) at mqttsn[2..3] or [2:4]? Standard here: mqttsn[2:4] contains msgId
-                # But given mqttsn layout we're using, PUBREL typically has payload starting at index 2
-                # We'll unpack safely:
                 if len(mqttsn) >= 4:
                     msg_id = struct.unpack(">H", mqttsn[2:4])[0]
                 else:
@@ -262,7 +259,7 @@ def mqttsn_subscriber():
                 sock.sendto(build_pubcomp(msg_id, local_port), (GW_IP, GW_PORT))
                 print(f"-> PUBCOMP (SECSN) enviado (MsgID={msg_id})\n")
 
-            # UNSUBACK (ignore in loop)
+            # UNSUBACK
             elif msgType == MQTTSN_UNSUBACK:
                 print("<- UNSUBACK recebido")
 
@@ -276,7 +273,7 @@ def mqttsn_subscriber():
                 break
 
     except KeyboardInterrupt:
-        print("\n[!] Encerrando subscriber...")
+        print("\nEncerrando subscriber...")
 
         # --- UNSUBSCRIBE usando topic_id obtido do SUBACK ---
         if topic_id is not None:
@@ -297,8 +294,7 @@ def mqttsn_subscriber():
                 except socket.timeout:
                     continue
         else:
-            print("⚠️ Topic ID desconhecido — enviando UNSUBSCRIBE por nome (fallback).")
-            # fallback: send name-based unsubscribe (less preferred)
+            print("Topic ID desconhecido — enviando UNSUBSCRIBE por nome (fallback).")
             sock.sendto(build_subscribe(topic, random.randint(3001,4000), qos_level, local_port), (GW_IP, GW_PORT))
 
         # --- DISCONNECT ---

@@ -34,8 +34,6 @@ GW_IP = "10.0.0.2"
 GW_PORT = 1884
 CLIENT_IP = "10.0.0.3"
 
-# NOTE: CLIENT_PORT constant is no longer used to bind; socket will use ephemeral port.
-# keep SERVER_ADDRESS for sending
 SERVER_ADDRESS = (GW_IP, GW_PORT)
 
 # dynamic source port (set after bind)
@@ -75,7 +73,7 @@ def build_secsn_packet(mqttsn_payload):
     """Constroi header SECSN usando a porta de origem real (SRC_PORT)."""
     global SRC_PORT
     if SRC_PORT is None:
-        # fallback (não esperado) — use porta 0
+        # fallback (não esperado)
         src_port = 0
     else:
         src_port = SRC_PORT
