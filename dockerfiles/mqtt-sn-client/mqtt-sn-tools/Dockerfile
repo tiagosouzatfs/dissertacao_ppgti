@@ -1,8 +1,3 @@
-#FROM alpine:3.22.0
-
-#RUN apk update && \
-#    apk add --no-cache bash git make build-base ethtool net-tools
-
 FROM ubuntu:22.04
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
