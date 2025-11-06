@@ -1,0 +1,43 @@
+
+cd ~/dissertacao_ppgti
+
+# Iniciar o compilador e compilar o p4ssn
+docker run -dit --name=p4c --rm ramonfontes/bmv2:latest
+docker cp mqtt-sn-p4-architecture/p4src/ p4c:/tmp/
+docker exec -it p4c bash
+cd /tmp/p4src
+p4c --target bmv2 --arch v1model p4ssn.p4
+exit
+docker cp p4c:/tmp/p4src/p4ssn.json mqtt-sn-p4-architecture/
+
+# Iniciar topologia containernet
+sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
+
+# Experimento 1 - cliente mqtt-sn tools
+mqtt-sn-pub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "teste" -m "teste"      => 7 msgs
+mqtt-sn-sub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "teste" -v &            => 4 msgs
+mqtt-sn-sub -dddddddddd -q 1 -h 10.0.0.2 -p 1884 -t "teste" -v &            => 4 msgs
+
+# Experimento 2 - cliente mqtt-sn tools
+mqtt-sn-pub -dddddddddd -q 1 -h 10.0.0.2 -p 1884 -t "teste" -m "teste"      => 8 msgs
+mqtt-sn-sub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "teste" -v &            => 4 msgs
+mqtt-sn-sub -dddddddddd -q 1 -h 10.0.0.2 -p 1884 -t "teste" -v &            => 4 + 1 msgs
+
+# Experimento 3 - cliente mqtt-sn tools
+mqtt-sn-sub -dddddddddd -q 0 -h 10.0.0.2 -p 1884 -t "ta" -v &               => 4 msgs
+mqtt-sn-sub -dddddddddd -q 1 -h 10.0.0.2 -p 1884 -t "ta" -v &               => 4 msgs
+mqtt-sn-pub -dddddddddd -q -1 -h 10.0.0.2 -p 1884 -t "ta" -m "teste"        => 1 msgs
+
+# Esperimento 4 - clientes python
+python3 publisher.py
+python3 subscriber.py
+
+# Encerrar o compilador
+docker stop p4c
+
+# Encerrar a rede containernet
+exit
+
+# Se houver alguma falha ao encerrar a rede containernet!
+docker stop mn.s1 mn.ss1 mn.pb1 mn.gw mn.bk
+docker rm mn.s1 mn.ss1 mn.pb1 mn.gw mn.bk

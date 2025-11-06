@@ -52,7 +52,7 @@ def topology():
     )
 
     path = os.path.dirname(os.path.abspath(__file__))
-    json_file = '/root/gw_agg_mqtt_sn.json' # container directory
+    json_file = '/root/p4ssn.json'
     config = path + '/rules/static_forwarding.txt'
     args = {'json': json_file, 'switch_config': config}
 
