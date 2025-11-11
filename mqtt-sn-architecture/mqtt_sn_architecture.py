@@ -15,32 +15,25 @@ net.addController('c0')
 info('Adicionando switch\n')
 s1 = net.addSwitch('s1')
 
-info('Adicionando Broker MQTT\n')
-bk = net.addDocker('bk', ip='10.0.0.1', dimage='mqtt-broker')
-
-info('Adicionando Gateway MQTT-SN\n')
-gw = net.addDocker('gw', ip='10.0.0.2', dimage='mqtt-sn-gw')
+info('Adicionando Gateway-Broker MQTT-SN\n')
+gw_bk = net.addDocker('gw_bk', ip='10.0.0.1', dimage='mqtt-sn-gw')
 
 info("Adicionando sensores publishers\n")
-pb1 = net.addDocker('pb1', ip='10.0.0.3', dimage="mqtt-sn-client")
+pb1 = net.addDocker('pb1', ip='10.0.0.2', dimage="mqtt-sn-client")
 
 info("Adicionando subscriber\n")
-ss1 = net.addDocker('ss1', ip='10.0.0.4', dimage="mqtt-sn-client")
+ss1 = net.addDocker('ss1', ip='10.0.0.3', dimage="mqtt-sn-client")
 
 info('Adicionando links\n')
-net.addLink(bk, s1)
-net.addLink(gw, s1)
+net.addLink(gw_bk, s1)
 net.addLink(pb1, s1)
 net.addLink(ss1, s1)
 
 info("Iniciando rede\n")
 net.start()
 
-info("Iniciando broker\n")
-makeTerm(bk)
-
-info("Iniciando gateway\n")
-makeTerm(gw)
+info("Iniciando gateway-broker\n")
+makeTerm(gw_bk)
 
 info("Iniciando publisher\n")
 makeTerm(pb1)

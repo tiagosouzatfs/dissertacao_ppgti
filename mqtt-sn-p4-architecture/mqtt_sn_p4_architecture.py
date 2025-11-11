@@ -7,7 +7,7 @@ from containernet.node import DockerP4Switch
 from containernet.cli import CLI
 from containernet.term import makeTerm
 
-from mininet.log import debug, info, setLogLevel
+from mininet.log import debug, setLogLevel
 
 
 def topology():
@@ -18,14 +18,11 @@ def topology():
 
     net = Containernet()
 
-    debug('Adicionando Broker MQTT\n')
-    bk = net.addDocker('bk', ip='10.0.0.1/8', mac="00:00:00:00:00:01", dimage='mqtt-broker')
-
-    debug('Adicionando Gateway MQTT-SN\n')
-    gw = net.addDocker(
-        'gw', 
-        ip='10.0.0.2/8', 
-        mac="00:00:00:00:00:02", 
+    debug('Adicionando Gateway/broker MQTT-SN\n')
+    gw_bk = net.addDocker(
+        'gw_bk', 
+        ip='10.0.0.1/8', 
+        mac="00:00:00:00:00:01", 
         dimage='mqtt-sn-gw',
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
@@ -34,8 +31,8 @@ def topology():
     debug("Adicionando sensores publishers\n")
     pb1 = net.addDocker(
         'pb1', 
-        ip='10.0.0.3/8', 
-        mac="00:00:00:00:00:03", 
+        ip='10.0.0.2/8', 
+        mac="00:00:00:00:00:02", 
         dimage="mqtt-sn-client", 
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
@@ -44,8 +41,8 @@ def topology():
     debug("Adicionando subscriber\n")
     ss1 = net.addDocker(
         'ss1', 
-        ip='10.0.0.4/8', 
-        mac="00:00:00:00:00:04", 
+        ip='10.0.0.3/8', 
+        mac="00:00:00:00:00:03", 
         dimage="mqtt-sn-client", 
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
@@ -72,8 +69,7 @@ def topology():
     )
     
     debug('Adicionando links\n')
-    net.addLink(bk, s1, txo=False, rxo=False)
-    net.addLink(gw, s1, txo=False, rxo=False)
+    net.addLink(gw_bk, s1, txo=False, rxo=False)
     net.addLink(pb1, s1, txo=False, rxo=False)
     net.addLink(ss1, s1, txo=False, rxo=False)
 
@@ -82,11 +78,8 @@ def topology():
     s1.start([])
     net.staticArp()
 
-    debug("Iniciando broker mqtt\n")
-    #makeTerm(bk)
-
-    debug("Iniciando gateway\n")
-    makeTerm(gw)
+    debug("Iniciando gateway/broker\n")
+    makeTerm(gw_bk)
 
     debug("Iniciando publisher\n")
     makeTerm(pb1)
