@@ -145,15 +145,17 @@ def run_single_client(client_idx, gw_ip, gw_port, client_ip, qos_level, topic_na
         return result
 
     # CONNECT
+    conn_start = time.perf_counter()
     pkt_connect = build_connect(client_id)
     send_packet(sock, pkt_connect, server_addr)
     connack_payload = recv_mqttsn(sock, timeout=timeout_settings.get("connect", CONNECT_TIMEOUT))
+    conn_end = time.perf_counter()
     if connack_payload is None:
         print(f"[client {client_idx}] CONNACK timeout")
         sock.close()
         result["t_total_ms"] = (time.perf_counter() - start_total) * 1000
         return result
-    result["t_connect_ms"] = 0.0
+    result["t_connect_ms"] = (conn_end - conn_start) * 1000
 
     # REGISTER → REGACK
     reg_start = time.perf_counter()
