@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 """
 Benchmark runner for MQTT-SN
-
-- Mede tempos de execução detalhados por cliente (1..100) para QoS -1,0,1,2
-- Suporta modos paralelo (100 publishers simultâneos) e serial (1 por vez)
-- Gera CSV: results/mqttsn.csv
-
-Uso:
-  python3 benchmark_mqttsn.py --gw 10.0.0.1 --port 1884 --mode parallel
-  python3 benchmark_mqttsn.py --gw 10.0.0.1 --port 1884 --mode serial --qos 1
 """
 
 import socket, struct, time, random, argparse, csv, os
@@ -91,18 +83,15 @@ def recv_mqttsn(sock, timeout=RECV_TIMEOUT):
 # --------------------------
 def run_single_client(client_idx, gw_ip, gw_port, client_ip, qos_level, topic_name_param, mode_label, timeout_settings):
     result = {
-        "cenario": "mqttsn_puro",
+        "cenario": "mqttsn",
         "qos": qos_level,
         "modo": mode_label,
         "cliente_id": client_idx,
-        "t_connect_ms": None,
-        "t_register_ms": None,
-        "t_publish_ms": None,
-        "t_puback_ms": None,
-        "t_pubrec_ms": None,
-        "t_relcomp_ms": None,
-        "t_disconnect_ms": None,
-        "t_total_ms": None,
+        "t_fluxo_connect_ms": 0,
+        "t_fluxo_register_ms": 0,
+        "t_fluxo_publish_ms": 0,
+        "t_fluxo_disconnect_ms": 0,
+        "t_fluxo_total_ms": 0,
         "sucesso": 0
     }
 
@@ -115,7 +104,6 @@ def run_single_client(client_idx, gw_ip, gw_port, client_ip, qos_level, topic_na
         return result
     server_addr = (gw_ip, gw_port)
 
-    # tópicos por QoS
     if qos_level == QOS_M1:
         topic_name = "tt"
     elif qos_level == QOS_0:
@@ -127,105 +115,77 @@ def run_single_client(client_idx, gw_ip, gw_port, client_ip, qos_level, topic_na
 
     client_id = f"bench_client_{client_idx}_{random.randint(1000,9999)}"
     msg_id = 0x0001
-    data_msg = ("payload_for_client_%d" % client_idx)
+    data_msg = f"payload_for_client_{client_idx}"
 
     start_total = time.perf_counter()
 
-    # QoS -1 → só publish
+    # QoS -1 → apenas Publish
     if qos_level == QOS_M1:
-        pub_start = time.perf_counter()
-        mqtt_publish = build_publish(qos_level, 1, msg_id, data_msg)
-        send_packet(sock, mqtt_publish, server_addr)
-        time.sleep(0.01)
-        pub_end = time.perf_counter()
-        result["t_publish_ms"] = (pub_end - pub_start) * 1000
-        result["t_total_ms"] = (pub_end - start_total) * 1000
+        t0 = time.perf_counter()
+        send_packet(sock, build_publish(qos_level, 1, msg_id, data_msg), server_addr)
+        t1 = time.perf_counter()
+        result["t_fluxo_publish_ms"] = (t1 - t0) * 1000
+        result["t_fluxo_total_ms"] = result["t_fluxo_publish_ms"]
         result["sucesso"] = 1
         sock.close()
         return result
 
     # CONNECT
-    pkt_connect = build_connect(client_id)
-    send_packet(sock, pkt_connect, server_addr)
-    connack_payload = recv_mqttsn(sock, timeout=timeout_settings.get("connect", CONNECT_TIMEOUT))
-    if connack_payload is None:
-        print(f"[client {client_idx}] CONNACK timeout")
+    t0 = time.perf_counter()
+    send_packet(sock, build_connect(client_id), server_addr)
+    connack = recv_mqttsn(sock, timeout=timeout_settings.get("connect", CONNECT_TIMEOUT))
+    t1 = time.perf_counter()
+    if connack is None:
         sock.close()
-        result["t_total_ms"] = (time.perf_counter() - start_total) * 1000
         return result
-    result["t_connect_ms"] = 0.0
+    result["t_fluxo_connect_ms"] = (t1 - t0) * 1000
 
-    # REGISTER → REGACK
-    reg_start = time.perf_counter()
-    pkt_register = build_register(topic_name, msg_id)
-    send_packet(sock, pkt_register, server_addr)
-    regack_payload = recv_mqttsn(sock, timeout=timeout_settings.get("register", REGISTER_TIMEOUT))
-    reg_end = time.perf_counter()
-    if regack_payload is None:
-        print(f"[client {client_idx}] REGACK timeout")
+    # REGISTER / REGACK
+    t0 = time.perf_counter()
+    send_packet(sock, build_register(topic_name, msg_id), server_addr)
+    regack = recv_mqttsn(sock, timeout=timeout_settings.get("register", REGISTER_TIMEOUT))
+    t1 = time.perf_counter()
+    if regack is None:
         sock.close()
-        result["t_total_ms"] = (time.perf_counter() - start_total) * 1000
         return result
-    try:
-        topic_id = struct.unpack('>H', regack_payload[2:4])[0]
-    except Exception:
-        topic_id = 0x0001
-    result["t_register_ms"] = (reg_end - reg_start) * 1000
+    result["t_fluxo_register_ms"] = (t1 - t0) * 1000
+    topic_id = struct.unpack('>H', regack[2:4])[0] if len(regack) >= 4 else 1
 
     # PUBLISH
-    pub_start = time.perf_counter()
-    mqtt_publish = build_publish(qos_level, topic_id, msg_id, data_msg)
-    send_packet(sock, mqtt_publish, server_addr)
+    t0 = time.perf_counter()
+    send_packet(sock, build_publish(qos_level, topic_id, msg_id, data_msg), server_addr)
 
     if qos_level == QOS_0:
-        pub_end = time.perf_counter()
-        result["t_publish_ms"] = (pub_end - pub_start) * 1000
-        pkt_disconnect = build_disconnect()
-        send_packet(sock, pkt_disconnect, server_addr)
-        result["t_total_ms"] = (time.perf_counter() - start_total) * 1000
-        result["sucesso"] = 1
-        sock.close()
-        return result
+        t1 = time.perf_counter()
+        result["t_fluxo_publish_ms"] = (t1 - t0) * 1000
 
-    if qos_level == QOS_1:
-        puback_payload = recv_mqttsn(sock, timeout=timeout_settings.get("publish", PUBLISH_TIMEOUT))
-        puback_time = time.perf_counter()
-        if puback_payload is None:
-            print(f"[client {client_idx}] PUBACK timeout")
-        else:
-            result["t_puback_ms"] = (puback_time - pub_start) * 1000
-        result["t_publish_ms"] = (puback_time - pub_start) * 1000 if result["t_puback_ms"] else None
-        pkt_disconnect = build_disconnect()
-        send_packet(sock, pkt_disconnect, server_addr)
-        result["t_total_ms"] = (time.perf_counter() - start_total) * 1000
-        result["sucesso"] = 1 if result["t_puback_ms"] else 0
-        sock.close()
-        return result
+    elif qos_level == QOS_1:
+        puback = recv_mqttsn(sock, timeout=timeout_settings.get("publish", PUBLISH_TIMEOUT))
+        t1 = time.perf_counter()
+        result["t_fluxo_publish_ms"] = (t1 - t0) * 1000 if puback else 0
 
-    if qos_level == QOS_2:
-        pubrec_payload = recv_mqttsn(sock, timeout=timeout_settings.get("publish", PUBLISH_TIMEOUT))
-        pubrec_time = time.perf_counter()
-        if pubrec_payload is None:
-            print(f"[client {client_idx}] PUBREC timeout")
-            sock.close()
-            return result
-        result["t_pubrec_ms"] = (pubrec_time - pub_start) * 1000
-        pkt_pubrel = build_pubrel(msg_id)
-        send_packet(sock, pkt_pubrel, server_addr)
-        pubcomp_payload = recv_mqttsn(sock, timeout=timeout_settings.get("pubrel", PUBREL_TIMEOUT))
-        rel_end = time.perf_counter()
-        if pubcomp_payload is None:
-            print(f"[client {client_idx}] PUBCOMP timeout")
-        else:
-            result["t_relcomp_ms"] = (rel_end - pubrec_time) * 1000
-        result["t_publish_ms"] = (rel_end - pub_start) * 1000
-        pkt_disconnect = build_disconnect()
-        send_packet(sock, pkt_disconnect, server_addr)
-        result["t_total_ms"] = (time.perf_counter() - start_total) * 1000
-        result["sucesso"] = 1 if result["t_relcomp_ms"] else 0
-        sock.close()
-        return result
+    elif qos_level == QOS_2:
+        pubrec = recv_mqttsn(sock, timeout=timeout_settings.get("publish", PUBLISH_TIMEOUT))
+        if pubrec:
+            send_packet(sock, build_pubrel(msg_id), server_addr)
+            pubcomp = recv_mqttsn(sock, timeout=timeout_settings.get("pubrel", PUBREL_TIMEOUT))
+        t1 = time.perf_counter()
+        result["t_fluxo_publish_ms"] = (t1 - t0) * 1000 if pubrec else 0
 
+    # DISCONNECT
+    t0 = time.perf_counter()
+    send_packet(sock, build_disconnect(), server_addr)
+    t1 = time.perf_counter()
+    result["t_fluxo_disconnect_ms"] = (t1 - t0) * 1000
+
+    result["t_fluxo_total_ms"] = (
+        result["t_fluxo_connect_ms"] +
+        result["t_fluxo_register_ms"] +
+        result["t_fluxo_publish_ms"] +
+        result["t_fluxo_disconnect_ms"]
+    )
+
+    result["sucesso"] = 1 if result["t_fluxo_publish_ms"] > 0 else 0
     sock.close()
     return result
 
@@ -234,8 +194,8 @@ def run_single_client(client_idx, gw_ip, gw_port, client_ip, qos_level, topic_na
 # --------------------------
 CSV_FIELDS = [
     "cenario","qos","modo","cliente_id",
-    "t_connect_ms","t_register_ms","t_publish_ms","t_puback_ms","t_pubrec_ms","t_relcomp_ms","t_disconnect_ms",
-    "t_total_ms","sucesso"
+    "t_fluxo_connect_ms","t_fluxo_register_ms","t_fluxo_publish_ms","t_fluxo_disconnect_ms",
+    "t_fluxo_total_ms","sucesso"
 ]
 
 def append_results_to_csv(filename, rows):
@@ -244,28 +204,21 @@ def append_results_to_csv(filename, rows):
         writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
         if first:
             writer.writeheader()
-        for r in rows:
-            writer.writerow({k: r.get(k, "") for k in CSV_FIELDS})
+        writer.writerows(rows)
 
 def run_benchmark_for_qos(gw_ip, gw_port, client_ip, qos_level, mode, repetitions=100, topic_name=None, timeout_settings=None):
     results = []
     mode_label = "paralelo" if mode == "parallel" else "serial"
-    if timeout_settings is None:
-        timeout_settings = {}
+    timeout_settings = timeout_settings or {}
 
     if mode == "parallel":
         with ThreadPoolExecutor(max_workers=min(200, repetitions)) as ex:
-            futures = {ex.submit(run_single_client, i+1, gw_ip, gw_port, client_ip, qos_level, topic_name, mode_label, timeout_settings): i+1 for i in range(repetitions)}
+            futures = [ex.submit(run_single_client, i+1, gw_ip, gw_port, client_ip, qos_level, topic_name, mode_label, timeout_settings) for i in range(repetitions)]
             for fut in as_completed(futures):
-                try:
-                    r = fut.result()
-                    results.append(r)
-                except Exception as e:
-                    print("Exception:", e)
+                results.append(fut.result())
     else:
         for i in range(repetitions):
-            r = run_single_client(i+1, gw_ip, gw_port, client_ip, qos_level, topic_name, mode_label, timeout_settings)
-            results.append(r)
+            results.append(run_single_client(i+1, gw_ip, gw_port, client_ip, qos_level, topic_name, mode_label, timeout_settings))
     return results
 
 # --------------------------
@@ -273,41 +226,26 @@ def run_benchmark_for_qos(gw_ip, gw_port, client_ip, qos_level, mode, repetition
 # --------------------------
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--gw", required=True, help="IP do gateway MQTT-SN")
-    parser.add_argument("--port", type=int, required=True, help="Porta UDP do gateway")
-    parser.add_argument("--client-ip", default="10.0.0.2", help="IP local do cliente")
-    parser.add_argument("--mode", choices=["parallel","serial"], default="parallel", help="Modo de execução")
-    parser.add_argument("--reps", type=int, default=100, help="Número de clientes publishers (padrão 100)")
-    parser.add_argument("--qos", type=int, choices=[-1,0,1,2], help="Executar somente este QoS")
-    parser.add_argument("--out", default="results/mqttsn.csv", help="Arquivo CSV de saída")
+    parser.add_argument("--gw", required=True)
+    parser.add_argument("--port-gw", type=int, required=True)
+    parser.add_argument("--client-ip", default="10.0.0.2")
+    parser.add_argument("--mode", choices=["parallel","serial"], default="parallel")
+    parser.add_argument("--reps", type=int, default=100)
+    parser.add_argument("--qos", type=int, choices=[-1,0,1,2])
+    parser.add_argument("--out", default="results/mqttsn.csv")
     args = parser.parse_args()
 
-    gw_ip, gw_port, client_ip = args.gw, args.port, args.client_ip
-    mode, repetitions, outfile = args.mode, args.reps, args.out
-
-    os.makedirs(os.path.dirname(outfile), exist_ok=True)
+    os.makedirs(os.path.dirname(args.out), exist_ok=True)
     qos_list = [-1,0,1,2] if args.qos is None else [args.qos]
 
-    print("=== Benchmark MQTT-SN ===")
-    print(f"GW: {gw_ip}:{gw_port} | Cliente: {client_ip} | Modo: {mode} | Repetições: {repetitions}")
-    print("QoS:", qos_list)
-
     for qos in qos_list:
-        topic_name = {
-            -1: "tt",
-            0: "topic/teste/qos0",
-            1: "topic/teste/qos1",
-            2: "topic/teste/qos2"
-        }[qos]
-        print(f"\n--- Executando QoS {qos} ({mode}) topic={topic_name} ---")
-        qlevel = QOS_M1 if qos==-1 else (QOS_0 if qos==0 else (QOS_1 if qos==1 else QOS_2))
-        res = run_benchmark_for_qos(gw_ip, gw_port, client_ip, qlevel, mode, repetitions=repetitions, topic_name=topic_name)
-        append_results_to_csv(outfile, res)
-        times = [r["t_total_ms"] for r in res if r["t_total_ms"]]
-        succ = sum(1 for r in res if r["sucesso"])
-        print(f"Sucesso={succ}/{len(res)} | média tempo total={sum(times)/len(times):.2f} ms" if times else "Sem tempos válidos")
-
-    print("\nFinalizado. Resultados em", outfile)
+        topic = { -1:"tt", 0:"topic/teste/qos0", 1:"topic/teste/qos1", 2:"topic/teste/qos2" }[qos]
+        qlevel = { -1:QOS_M1, 0:QOS_0, 1:QOS_1, 2:QOS_2 }[qos]
+        print(f"\n--- Executando QoS {qos} ---")
+        res = run_benchmark_for_qos(args.gw, args.port_gw, args.client_ip, qlevel, args.mode, args.reps, topic)
+        append_results_to_csv(args.out, res)
+        valid = [r["t_fluxo_total_ms"] for r in res if r["t_fluxo_total_ms"]]
+        print(f"Sucesso={sum(r['sucesso'] for r in res)}/{len(res)} | Média total={sum(valid)/len(valid):.2f} ms" if valid else "Sem dados válidos")
 
 if __name__ == "__main__":
     main()
