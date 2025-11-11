@@ -175,6 +175,7 @@ def run_single_client(client_idx, gw_ip, gw_port, client_ip, qos_level, topic_na
     # DISCONNECT
     t0 = time.perf_counter()
     send_packet(sock, build_disconnect(), server_addr)
+    disconnect_ack = recv_mqttsn(sock, timeout=timeout_settings.get("disconnect", DISCONNECT_TIMEOUT))
     t1 = time.perf_counter()
     result["t_fluxo_disconnect_ms"] = (t1 - t0) * 1000
 
