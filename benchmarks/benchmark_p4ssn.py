@@ -190,8 +190,6 @@ def run_single_client(client_idx, gw_ip, gw_port, client_ip, qos_level, topic_na
         mqtt_publish = build_publish(qos_level, 1, msg_id, data_masked)
         pkt_publish = build_secsn_packet(mqtt_publish, client_ip, src_port, gw_ip, gw_port)
         send_packet(sock, pkt_publish, server_addr)
-        # give a tiny time for NIC to send
-        time.sleep(0.01)
         pub_end = time.perf_counter()
         result["t_fluxo_publish_ms"] = (pub_end - pub_start) * 1000
         result["t_fluxo_total_ms"] = result["t_fluxo_publish_ms"]
