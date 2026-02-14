@@ -2,3 +2,4 @@ table_set_default static_forwarding drop
 table_add MyIngress.static_forwarding forwarding 10.0.0.1 => 00:00:00:00:00:01 1
 table_add MyIngress.static_forwarding forwarding 10.0.0.2 => 00:00:00:00:00:02 2
 table_add MyIngress.static_forwarding forwarding 10.0.0.3 => 00:00:00:00:00:03 3
+table_add MyIngress.static_forwarding forwarding 10.0.0.4 => 00:00:00:00:00:04 4

@@ -43,7 +43,7 @@ SECRET_MASK_DATA_SECSN = int(
 # Endereços
 GW_IP = "10.0.0.2"
 GW_PORT = 1884
-CLIENT_IP = "10.0.0.4"
+CLIENT_IP = "10.0.0.3"
 
 # =============================================================================
 # 2. Funções SECSN
