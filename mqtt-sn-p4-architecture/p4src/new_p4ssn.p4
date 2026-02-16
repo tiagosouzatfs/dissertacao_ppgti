@@ -73,6 +73,10 @@ const bit<16> UDP_PORT_SVC_GW = 1884;
 /*Packet IP*/
 const bit<16> TYPE_IPV4 = 0x800; // 2048
 
+/*Secrets Publish*/
+const bit<16> SECRET_TOPIC_ID = 0xB7A3;
+const bit<512> SECRET_DATA_PUBLISH = 0xA3F19C7E4B2D8F0165E7C9A4B3D2F18C9E7A6B5C4D3F21987A1C2D3E4F5061728394A5B6C7D8E9F01A2B3C4D5E6F708192A3B4C5D6E7F809ABCDEF0123456789FEDCBA9876543210;
+
 /*************************************************************************
 *********************** T Y P E D E F S  *********************************
 *************************************************************************/
@@ -227,7 +231,7 @@ header MQTTSN_pingresp_h {
 /*Message MQTT-SN variable header SUBSCRIBE*/
 header MQTTSN_subscribe_h {
     bit<16> msgId;
-    bit<16> topicId;
+    bit<16> topicId; // or TopicName
     // bit<n> topicName; // Será extraído dinamicamente.
 }
 
@@ -241,7 +245,7 @@ header MQTTSN_suback_h {
 /*Message MQTT-SN variable header UNSUBSCRIBE*/
 header MQTTSN_unsubscribe_h {
     bit<16> msgId;
-    bit<16> topicId;
+    bit<16> topicId; // or TopicName
     // bit<n> topicName; // Será extraído dinamicamente.
 }
 
@@ -356,9 +360,9 @@ header MQTTSN_variable_field_h {
     varbit<1736> data;
 }
 
-// 100(P4SSN) - 20 - 8 - 2 - 8 = 62 bytes = 512 bits
+// 102(P4SSN) - 20 - 8 - 2 - 8 = 62 bytes = 512 bits
 header MQTTSN_variable_publish_h {
-    bit<496> data;
+    bit<512> data;
 }
 
 
@@ -801,6 +805,26 @@ control MyIngress(inout headers hdr,
     }
 
     //////////////////////////////////////////////////////
+    /////////// ACTION: ENCAMINHAMENTO ACELERADO //////////
+    //////////////////////////////////////////////////////
+
+    action acelerate(macAddr_t dstAddr, egressSpec_t port) {
+        /* 
+        O pacote que chega ao subscriber recebe os valores dos campos como se a mensagem viesse do gateway
+        com ip 10.0.0.1 e mac 00:00:00:00:00:01.
+        */
+        hdr.ethernet.srcAddr = "00:00:00:00:00:01";
+        hdr.ipv4.srcAddr = "10.0.0.1";
+        hdr.udp.srcPort = 1884;
+        // o novo mac de destino recebe o mac do próximo dispositivo (tabela de encaminhamento)
+        hdr.ethernet.dstAddr = dstAddr;
+        // define a porta de do switch para qual o pacote deve ser encaminhado (tabela de encaminhamento)
+        standard_metadata.egress_spec = port;
+        // decrementar o ttl em 1
+        hdr.ipv4.ttl = hdr.ipv4.ttl-1;
+    }
+
+    //////////////////////////////////////////////////////
     /////// TABELA DE ENCAMINHAMENTO ACELERADO ////////////
     //////////////////////////////////////////////////////
 
@@ -809,7 +833,7 @@ control MyIngress(inout headers hdr,
             hdr.mqttsn_publish.topicId: exact;
         }
         actions = {
-            forwarding;
+            acelerate;
             drop;
             NoAction;
         }
@@ -822,6 +846,10 @@ control MyIngress(inout headers hdr,
     //////////////////////////////////////////////////////
 
     apply {
+
+        //if (meta.drop_flag == 1) {
+        //    drop();
+        //}
 
         ///////////////////////////////////////////////////////////////////
         /////////// Proteção contra loop interno (recirculação) ///////////
@@ -837,40 +865,14 @@ control MyIngress(inout headers hdr,
 
         if (hdr.mqttsn_fixed.isValid()) {
 
-            ///////////////////////// BROADCAST //////////////////////////////
-
-            // Trabalhos futuros //
-            
-            // ADVERTISE
-            if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE &&
-                hdr.mqttsn_advertise.isValid()) {
-                    broadcast();
-            }
-            // SEARCHGW
-            else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW &&
-                hdr.mqttsn_searchgw.isValid()) {
-                    broadcast();
-            }
-            // GWINFO
-            else if (hdr.mqttsn_fixed.msgType == MQTTSN_GWINFO &&
-                hdr.mqttsn_gwinfo.isValid() &&
-                hdr.mqttsn_variable_field.isValid())  {
-                    broadcast();
-            }
-            
             ////// Mensagens dos clientes com destino ao Gateway MQTT-SN //////
 
-            else if (hdr.udp.dstPort == UDP_PORT_SVC_GW) {    // porta 1884
-
-                //if (meta.drop_flag == 1) {
-                //    drop();
-                //}
+            if (hdr.udp.dstPort == UDP_PORT_SVC_GW) {    // porta 1884
 
                 /// CONNECT
                 if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT &&
                     hdr.mqttsn_flags_connect.isValid() &&
-                    hdr.mqttsn_connect.isValid() &&
-                    hdr.mqttsn_connect.protocolId == 0x01) { // corresponds to the “Protocol Name” and “Protocol Version” of the MQTT CONNECT message.
+                    hdr.mqttsn_connect.isValid()) {
                         static_forwarding.apply();
                 }
                 // REGISTER
@@ -884,43 +886,40 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid() &&
                     hdr.mqttsn_variable_publish.isValid()) {
-                        // QoS -1 ou 0
-                        if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1 ||
-                            (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0 &&
-                            hdr.mqttsn_flags_publish.retain == 0)) {
+                        // QoS -1
+                        if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
                             acelerate_forwarding.apply();
-                        }
-                        else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0 &&
-                            hdr.mqttsn_flags_publish.retain == 1) {
-                            static_forwarding.apply();
+                        } 
+                        // QoS 0 && flag retain = 0 (do not need remember last message, so não should to pass gateway)
+                        else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
+                            if (hdr.mqttsn_flags_publish.retain == 0) {
+                                acelerate_forwarding.apply();
+                            }
+                            // QoS 0 && flag retain = 1 (remember last message, so should to pass gateway)
+                            // Normal static forwarding
+                            else {
+                                static_forwarding.apply();
+                            }
                         }
                         // QoS 1 ou 2
-                        else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_1 ||
-                                hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_2) {
-                                    static_forwarding.apply();
+                        // Normal static forwarding
+                        else {
+                            static_forwarding.apply();
                         }
                 }
                 // SUBSCRIBE
-                else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE && // qos = -1 not implemented
+                else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE &&
                     hdr.mqttsn_flags_subscribe.isValid() &&
                     hdr.mqttsn_subscribe.isValid() &&
                     hdr.mqttsn_variable_field.isValid()) {
-                    if (hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_0 || // QoS 0
-                        hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_1 || // QoS 1
-                        hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_2) { // QoS 2
-                            static_forwarding.apply();
-                    }
+                        static_forwarding.apply();
                 }
                 // UNSUBSCRIBE
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE &&
                     hdr.mqttsn_flags_unsubscribe.isValid() && 
                     hdr.mqttsn_unsubscribe.isValid() &&
                     hdr.mqttsn_variable_field.isValid()) {
-                    if (hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_0 || // QoS 0
-                        hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_1 || // QoS 1
-                        hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_2) { // QoS 2
                             static_forwarding.apply();
-                    }
                 }
                 // WILLTOPIC Will=1
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPIC &&
@@ -969,11 +968,8 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid() &&
                     hdr.mqttsn_variable_publish.isValid()) {
-                        if (hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_1 || // QoS 1
-                            hdr.mqttsn_flags_subscribe.qos == FLAGS_QOS_LEVEL_2){ // QoS 2
-                                // Encaminhar sempre, já que o gateway tratou o QoS ao receber a mensagem
-                                static_forwarding.apply();
-                        }
+                        // Encaminhar sempre, já que o gateway tratou o QoS ao receber a mensagem
+                        static_forwarding.apply();
                 }
                 // SUBACK
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBACK &&
@@ -1006,50 +1002,78 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_willmsgresp.isValid()) {
                         static_forwarding.apply();
                 }
+                // REGISTER (Iniciado pelo Gateway)
+                // O Gateway envia isso para informar ao cliente um TopicName <-> TopicId
+                else if (hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER &&
+                    hdr.mqttsn_register.isValid() &&
+                    hdr.mqttsn_variable_field.isValid()) {
+                        static_forwarding.apply();
+                }
             }
-        }
 
-        ////// Mensagens que podem vir de qualquer cliente pub/sub ou do Gateway MQTT-SN //////
+            ////// Mensagens que podem vir de qualquer cliente pub/sub ou do Gateway MQTT-SN //////
 
-        // PUBACK
-        else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // QoS 1
-            hdr.mqttsn_puback.isValid()) {
-                static_forwarding.apply();
-        }
-        // PUBREC
-        else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && // QoS 2
-            hdr.mqttsn_pubrec.isValid()) {
-                static_forwarding.apply();
-        }
-        // PUBREL
-        else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && // QoS 2
-            hdr.mqttsn_pubrel.isValid()) {
-                static_forwarding.apply();
-        }
-        // PUBCOMP
-        else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && // QoS 2
-            hdr.mqttsn_pubcomp.isValid()) {
-                static_forwarding.apply();
-        }
-        // PINGREQ
-        else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ &&
-            hdr.mqttsn_pingreq.isValid()) {
-                static_forwarding.apply(); 
-        }
-        // PINGRESP
-        else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP &&
-            hdr.mqttsn_pingresp.isValid()) {
-                static_forwarding.apply(); 
-        }
-        // DISCONNECT
-        else if (hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT &&
-            hdr.mqttsn_disconnect.isValid()) {
-                static_forwarding.apply();
+            // PINGREQ
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ &&
+                hdr.mqttsn_pingreq.isValid()) {
+                    static_forwarding.apply(); 
+            }
+            // PINGRESP
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP &&
+                hdr.mqttsn_pingresp.isValid()) {
+                    static_forwarding.apply(); 
+            }
+            // DISCONNECT
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT &&
+                hdr.mqttsn_disconnect.isValid()) {
+                    static_forwarding.apply();
+            }
+            // PUBACK
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // QoS 1
+                hdr.mqttsn_puback.isValid()) {
+                    static_forwarding.apply();
+            }
+            // PUBREC
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && // QoS 2
+                hdr.mqttsn_pubrec.isValid()) {
+                    static_forwarding.apply();
+            }
+            // PUBREL
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && // QoS 2
+                hdr.mqttsn_pubrel.isValid()) {
+                    static_forwarding.apply();
+            }
+            // PUBCOMP
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && // QoS 2
+                hdr.mqttsn_pubcomp.isValid()) {
+                    static_forwarding.apply();
+            }
+
+            ///////////////////////// BROADCAST //////////////////////////////
+
+            // Trabalhos futuros //
+            
+            // ADVERTISE
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE &&
+                hdr.mqttsn_advertise.isValid()) {
+                    broadcast();
+            }
+            // SEARCHGW
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW &&
+                hdr.mqttsn_searchgw.isValid()) {
+                    broadcast();
+            }
+            // GWINFO
+            else if (hdr.mqttsn_fixed.msgType == MQTTSN_GWINFO &&
+                hdr.mqttsn_gwinfo.isValid() &&
+                hdr.mqttsn_variable_field.isValid())  {
+                    broadcast();
+            }
+
         }
 
         // Se a parte fixa da mensagem mqttsn não for válida, ou
-        // Se não for uma mensagem conhecida ao MQTT-SN ////
-
+        // Se não for uma mensagem conhecida ao MQTT-SN
         else {
             drop();
         }
@@ -1064,19 +1088,27 @@ control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
 
+    action criptoDecripto() {
+        
+        // Criptografar x Descriptografar
+        hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID;
+        hdr.mqttsn_variable_publish.data = hdr.mqttsn_variable_publish.data ^ SECRET_DATA_PUBLISH;
+
+        hdr.udp.checksum = 0;
+        hdr.ipv4.hdrChecksum = 0;
+    }
+
     apply {
 
-        // PUBLISH
-        if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
-            // Criptografar
-            hdr.mqttsn_variable_publish.data = hdr.mqttsn_variable_publish.data ^ SECRET_MASK_DATA_SECSN;
-
-            //hdr.udp.length = hdr.udp.length + HEADER_SIZE_SECSN;
-            hdr.udp.checksum = 0;
-
-            //hdr.ipv4.totalLen = hdr.ipv4.totalLen + HEADER_SIZE_SECSN;
-            hdr.ipv4.hdrChecksum = 0;
+        // PUBLISH // QoS 0, 1 e 2
+        if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH &&
+            (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0 && 
+            hdr.mqttsn_flags_publish.retain == 0) ||
+            hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_1 ||
+            hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_2) {
+                criptoDecripto();
         }
+
     }
 }
 
