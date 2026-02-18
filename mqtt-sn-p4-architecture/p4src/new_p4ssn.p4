@@ -360,8 +360,8 @@ header MQTTSN_variable_field_h {
     varbit<1736> data;
 }
 
-// 102(P4SSN) - 20 - 8 - 2 - 8 = 62 bytes = 512 bits
-header MQTTSN_variable_publish_h {
+// 102(P4SSN) - 20 - 8 - 2 - 8 = 64 bytes = 512 bits
+header mqttsn_fixed_data_publish_h {
     bit<512> data;
 }
 
@@ -372,7 +372,6 @@ struct headers {
     Ethernet_h ethernet;
     IPv4_h ipv4;
     UDP_h udp;
-    SECSN_h secsn;
     MQTTSN_fixed_h mqttsn_fixed;
     MQTTSN_advertise_h mqttsn_advertise;
     MQTTSN_searchgw_h mqttsn_searchgw;
@@ -409,7 +408,7 @@ struct headers {
     MQTTSN_willtopicresp_h mqttsn_willtopicresp;
     MQTTSN_willmsgresp_h mqttsn_willmsgresp;
     MQTTSN_variable_field_h mqttsn_variable_field;
-    MQTTSN_variable_publish_h mqttsn_variable_publish;
+    mqttsn_fixed_data_publish_h mqttsn_fixed_data_publish;
 }
 
 // Metadados
@@ -574,7 +573,7 @@ parser MyParser(packet_in packet,
         // O data é um campo variável. Comprimento = hdr.mqttsn_fixed.length - (fixed_h + flags_publish_h + publish_h)
         // MQTTSN_fixed_h (2 bytes) + MQTTSN_flags_publish_h (1 byte) + MQTTSN_publish_h (4 bytes) = 7 bytes
         verify(hdr.mqttsn_fixed.length >= 7, error.MQTT_SN_InvalidLength);
-        packet.extract(hdr.mqttsn_variable_publish);
+        packet.extract(hdr.mqttsn_fixed_data_publish);
         transition accept;
     }
 
@@ -885,7 +884,7 @@ control MyIngress(inout headers hdr,
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH &&
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid() &&
-                    hdr.mqttsn_variable_publish.isValid()) {
+                    hdr.mqttsn_fixed_data_publish.isValid()) {
                         // QoS -1
                         if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
                             acelerate_forwarding.apply();
@@ -967,7 +966,7 @@ control MyIngress(inout headers hdr,
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH &&
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid() &&
-                    hdr.mqttsn_variable_publish.isValid()) {
+                    hdr.mqttsn_fixed_data_publish.isValid()) {
                         // Encaminhar sempre, já que o gateway tratou o QoS ao receber a mensagem
                         static_forwarding.apply();
                 }
@@ -1092,7 +1091,7 @@ control MyEgress(inout headers hdr,
         
         // Criptografar x Descriptografar
         hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID;
-        hdr.mqttsn_variable_publish.data = hdr.mqttsn_variable_publish.data ^ SECRET_DATA_PUBLISH;
+        hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH;
 
         hdr.udp.checksum = 0;
         hdr.ipv4.hdrChecksum = 0;
@@ -1101,7 +1100,7 @@ control MyEgress(inout headers hdr,
     apply {
 
         // PUBLISH // QoS 0, 1 e 2
-        if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH &&
+        if ((hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) &&
             (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0 && 
             hdr.mqttsn_flags_publish.retain == 0) ||
             hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_1 ||
@@ -1183,7 +1182,7 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.mqttsn_willtopicresp);
         packet.emit(hdr.mqttsn_willmsgresp);
         packet.emit(hdr.mqttsn_variable_field);
-        packet.emit(hdr.mqttsn_variable_publish);
+        packet.emit(hdr.mqttsn_fixed_data_publish);
     }
 }
 

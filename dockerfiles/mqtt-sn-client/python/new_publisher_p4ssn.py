@@ -28,14 +28,18 @@ QOS_1  = 0b01
 QOS_2  = 0b10
 
 TOPICIDTYPE_TOPICNAME = 0b00
-#TOPICIDTYPE_PREDEFINEDTOPIC = 0b01
-#TOPICIDTYPE_SHORTTOPICNAME = 0b10
+TOPICIDTYPE_PREDEFINEDTOPIC = 0b01
+TOPICIDTYPE_SHORTTOPICNAME = 0b10
 
 GW_IP = "10.0.0.1"
 GW_PORT = 1884
 CLIENT_IP = "10.0.0.2"
 
 SERVER_ADDRESS = (GW_IP, GW_PORT)
+
+# Novas variáveis globais para seleção dinâmica
+selected_topic_type = TOPICIDTYPE_TOPICNAME
+retain_flag = 0
 
 # =============================================================================
 # Funções auxiliares
@@ -103,9 +107,10 @@ def build_register(topic_name, msg_id):
 
 def build_publish(qos_level, topic_id, msg_id, data):
     """Monta publish garantindo topicId(2) + msgId(2). msgId=0 se QoS -1."""
-    flags = ((qos_level & 0x03) << 5) | (TOPICIDTYPE_TOPICNAME & 0x03)
+    flags = ((qos_level & 0x03) << 5) | ((selected_topic_type & 0x03)) | ((retain_flag & 0x01) << 4)
+    topic_id_enc = topic_id ^ SECRET_TOPIC_ID
     msg_id_to_send = msg_id if qos_level != QOS_M1 else 0x0000
-    header = struct.pack('>BHH', flags, topic_id, msg_id_to_send)
+    header = struct.pack('>BHH', flags, topic_id_enc, msg_id_to_send)
     payload = data if isinstance(data, (bytes, bytearray)) else data.encode('utf-8')
     length = len(header) + len(payload) + 2
     mqttsn_packet = struct.pack('>BB', length, MQTTSN_PUBLISH) + header + payload
@@ -134,7 +139,7 @@ def build_disconnect():
 # =============================================================================
 
 def sequence_common(sock, qos_level, msg_id, topic_name, data, client_id):
-    data_bytes = xor_data(data, SECRET_DATA)
+    data_bytes = xor_data(data, SECRET_DATA_PUBLISH)
 
     # CONNECT
     print(f"-> Enviando: CONNECT (client_id={client_id})")
@@ -222,6 +227,18 @@ if __name__ == "__main__":
         print("QoS inválido.")
         sock.close()
         exit(1)
+
+    topic_types = {
+        "0": TOPICIDTYPE_TOPICNAME,
+        "1": TOPICIDTYPE_PREDEFINEDTOPIC,
+        "2": TOPICIDTYPE_SHORTTOPICNAME
+    }
+
+    topic_type_choice = input("Digite o TopicIdType (0=TOPICNAME, 1=PREDEFINED, 2=SHORT): ")
+    selected_topic_type = topic_types.get(topic_type_choice, TOPICIDTYPE_TOPICNAME)
+
+    retain_choice = input("Usar retain? (0=Não, 1=Sim): ")
+    retain_flag = 1 if retain_choice == "1" else 0
 
     topic_name = input("Digite o tópico: ")
 
