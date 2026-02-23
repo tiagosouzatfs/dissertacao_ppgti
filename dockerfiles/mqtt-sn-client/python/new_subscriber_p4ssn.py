@@ -31,7 +31,7 @@ QOS_1 = 0b01
 QOS_2 = 0b10
 
 SECRET_TOPIC_ID = 0xB7A3
-SECRET_DATA_PUBLISH = 0xA3F19C7E4B2D8F0165E7C9A4B3D2F18C9E7A6B5C4D3F21987A1C2D3E4F5061728394A5B6C7D8E9F01A2B3C4D5E6F708192A3B4C5D6E7F809ABCDEF0123456789FEDCBA9876543210
+SECRET_DATA_PUBLISH = 0x8D93D01BEE9B416847B69D483BDFB0D6D4D329D98B278AD866E6B17076638B6F7BA810790B07C638825AE5F9B05FABCF7EC35360992DB924F0ECFEEDA972170B
 
 GW_IP = "10.0.0.1"
 GW_PORT = 1884
@@ -49,7 +49,7 @@ def xor_data(data_bytes, mask_int):
 # 3. Funções MQTT-SN básicas
 # =============================================================================
 
-def build_connect(client_id=None, duration=60):
+def build_connect(client_id=None, duration=30):
     flags = 0x02
     protocol_id = 0x01
     if client_id is None:
@@ -87,6 +87,9 @@ def build_pubrel(msg_id):
 def build_pubcomp(msg_id):
     return struct.pack(">BBH", 4, MQTTSN_PUBCOMP, msg_id)
 
+def build_pingreq():
+    return struct.pack(">BB", 2, MQTTSN_PINGREQ)
+
 # =============================================================================
 # 4. Subscriber MQTT-SN
 # =============================================================================
@@ -97,6 +100,11 @@ def mqttsn_subscriber():
     sock.bind((CLIENT_IP, local_port))
     sock.settimeout(1)
 
+    keep_alive = 30
+    last_tx_time = time.time()
+    awaiting_pingresp = False
+    ping_sent_time = 0
+
     print(f"Subscriber iniciado em {CLIENT_IP}:{local_port}")
     print(f"Gateway em {GW_IP}:{GW_PORT}\n")
 
@@ -106,6 +114,7 @@ def mqttsn_subscriber():
 
     # CONNECT
     sock.sendto(build_connect(), (GW_IP, GW_PORT))
+    last_tx_time = time.time()
     print("-> CONNECT enviado")
 
     while True:
@@ -123,6 +132,7 @@ def mqttsn_subscriber():
     # SUBSCRIBE
     msg_id = random.randint(1, 2000)
     sock.sendto(build_subscribe(topic, msg_id, qos_level), (GW_IP, GW_PORT))
+    last_tx_time = time.time()
     print(f"-> SUBSCRIBE enviado ({topic}, QoS={qos_choice})")
 
     topic_id = None
@@ -141,6 +151,23 @@ def mqttsn_subscriber():
 
     try:
         while True:
+
+            current_time = time.time()
+
+            if not awaiting_pingresp and (current_time - last_tx_time >= keep_alive):
+                sock.sendto(build_pingreq(), (GW_IP, GW_PORT))
+                print("-> PINGREQ enviado")
+                last_tx_time = current_time
+                awaiting_pingresp = True
+                ping_sent_time = current_time
+
+            if awaiting_pingresp and (current_time - ping_sent_time >= keep_alive):
+                print("Gateway não respondeu PINGRESP. Encerrando conexão.")
+                print("-> DISCONNECT enviado")
+                sock.sendto(build_disconnect(), (GW_IP, GW_PORT))
+                sock.close()
+                sys.exit(1)
+
             try:
                 data, _ = sock.recvfrom(8192)
             except socket.timeout:
@@ -168,15 +195,18 @@ def mqttsn_subscriber():
 
                 if qos_bits == QOS_1:
                     sock.sendto(build_puback(topic_id_rcv, msg_id_rcv), (GW_IP, GW_PORT))
+                    last_tx_time = time.time()
                     print("-> PUBACK enviado\n")
 
                 elif qos_bits == QOS_2:
                     sock.sendto(build_pubrec(msg_id_rcv), (GW_IP, GW_PORT))
+                    last_tx_time = time.time()
                     print("-> PUBREC enviado\n")
 
             elif msgType == MQTTSN_PUBREL:
                 msg_id = struct.unpack(">H", data[2:4])[0]
                 sock.sendto(build_pubcomp(msg_id), (GW_IP, GW_PORT))
+                last_tx_time = time.time()
                 print(f"-> PUBCOMP enviado (MsgID={msg_id})\n")
 
             elif msgType == MQTTSN_UNSUBACK:
@@ -184,6 +214,7 @@ def mqttsn_subscriber():
 
             elif msgType == MQTTSN_PINGRESP:
                 print("<- PINGRESP recebido")
+                awaiting_pingresp = False
 
             elif msgType == MQTTSN_DISCONNECT:
                 print("<- DISCONNECT recebido do gateway")
@@ -195,9 +226,11 @@ def mqttsn_subscriber():
         if topic_id is not None:
             unsub_msgid = random.randint(2001, 3000)
             sock.sendto(build_unsubscribe_by_topicid(topic_id, unsub_msgid), (GW_IP, GW_PORT))
+            last_tx_time = time.time()
             print("-> UNSUBSCRIBE enviado")
 
         sock.sendto(build_disconnect(), (GW_IP, GW_PORT))
+        last_tx_time = time.time()
         print("-> DISCONNECT enviado")
 
         sock.close()
