@@ -49,7 +49,7 @@ def topology():
     )
 
     path = os.path.dirname(os.path.abspath(__file__))
-    json_file = '/root/p4ssn.json'
+    json_file = '/root/new_p4ssn.json'
     config = path + '/rules/static_forwarding.txt'
     args = {'json': json_file, 'switch_config': config}
 
