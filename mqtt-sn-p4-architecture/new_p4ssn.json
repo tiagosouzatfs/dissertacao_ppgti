@@ -4028,7 +4028,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "new_p4ssn.p4",
-        "line" : 1140,
+        "line" : 1138,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -4045,7 +4045,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "new_p4ssn.p4",
-        "line" : 1118,
+        "line" : 1116,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },
@@ -4329,6 +4329,10 @@
         {
           "name" : "IpDstAddr",
           "bitwidth" : 32
+        },
+        {
+          "name" : "UdpDstPort",
+          "bitwidth" : 16
         }
       ],
       "primitives" : [
@@ -4337,56 +4341,18 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["ethernet", "srcAddr"]
+              "value" : ["standard_metadata", "egress_spec"]
             },
             {
-              "type" : "hexstr",
-              "value" : "0x000000000001"
+              "type" : "runtime_data",
+              "value" : 1
             }
           ],
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 814,
+            "line" : 818,
             "column" : 8,
-            "source_fragment" : "hdr.ethernet.srcAddr = 0x000000000001"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["ipv4", "srcAddr"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x0a000001"
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 815,
-            "column" : 8,
-            "source_fragment" : "hdr.ipv4.srcAddr = 0x0A000001"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["udp", "srcPort"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x075c"
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 816,
-            "column" : 8,
-            "source_fragment" : "hdr.udp.srcPort = 1884"
+            "source_fragment" : "standard_metadata.egress_spec = port"
           }
         },
         {
@@ -4403,28 +4369,9 @@
           ],
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 818,
-            "column" : 8,
-            "source_fragment" : "hdr.ethernet.dstAddr = macDstAddr"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["standard_metadata", "egress_spec"]
-            },
-            {
-              "type" : "runtime_data",
-              "value" : 1
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
             "line" : 819,
             "column" : 8,
-            "source_fragment" : "standard_metadata.egress_spec = port"
+            "source_fragment" : "hdr.ethernet.dstAddr = macDstAddr"
           }
         },
         {
@@ -4483,15 +4430,72 @@
           ],
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 822,
+            "line" : 821,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl - 1"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "dstPort"]
+            },
+            {
+              "type" : "runtime_data",
+              "value" : 3
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 822,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.dstPort = UdpDstPort"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "hdrChecksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 824,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "checksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 825,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.checksum = 0"
           }
         }
       ]
     },
     {
-      "name" : "MyEgress.criptoDecripto",
+      "name" : "MyIngress.criptoDecripto",
       "id" : 11,
       "runtime_data" : [],
       "primitives" : [
@@ -4522,7 +4526,7 @@
           ],
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1091,
+            "line" : 848,
             "column" : 8,
             "source_fragment" : "hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID"
           }
@@ -4554,7 +4558,7 @@
           ],
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1092,
+            "line" : 849,
             "column" : 8,
             "source_fragment" : "hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH"
           }
@@ -4573,7 +4577,7 @@
           ],
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1094,
+            "line" : 851,
             "column" : 8,
             "source_fragment" : "hdr.udp.checksum = 0"
           }
@@ -4592,7 +4596,225 @@
           ],
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1095,
+            "line" : 852,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.criptoDecripto",
+      "id" : 12,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_publish", "topicId"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "^",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_publish", "topicId"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xb7a3"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 848,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_fixed_data_publish", "data"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "^",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed_data_publish", "data"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x8d93d01bee9b416847b69d483bdfb0d6d4d329d98b278ad866e6b17076638b6f7ba810790b07c638825ae5f9b05fabcf7ec35360992db924f0ecfeeda972170b"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 849,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "checksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 851,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.checksum = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "hdrChecksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 852,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.criptoDecripto",
+      "id" : 13,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_publish", "topicId"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "^",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_publish", "topicId"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xb7a3"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 848,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["mqttsn_fixed_data_publish", "data"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "^",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed_data_publish", "data"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x8d93d01bee9b416847b69d483bdfb0d6d4d329d98b278ad866e6b17076638b6f7ba810790b07c638825ae5f9b05fabcf7ec35360992db924f0ecfeeda972170b"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 849,
+            "column" : 8,
+            "source_fragment" : "hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "checksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 851,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.checksum = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "hdrChecksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 852,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
           }
@@ -4617,7 +4839,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 858,
+            "line" : 871,
             "column" : 12,
             "source_fragment" : "drop()"
           },
@@ -4646,7 +4868,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 874,
+            "line" : 887,
             "column" : 20,
             "source_fragment" : "broadcast()"
           },
@@ -4675,7 +4897,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 879,
+            "line" : 892,
             "column" : 20,
             "source_fragment" : "broadcast()"
           },
@@ -4704,7 +4926,7 @@
           "id" : 3,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 885,
+            "line" : 898,
             "column" : 20,
             "source_fragment" : "broadcast()"
           },
@@ -4771,7 +4993,7 @@
           "id" : 5,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 829,
+            "line" : 832,
             "column" : 10,
             "source_fragment" : "acelerate_forwarding"
           },
@@ -4805,11 +5027,98 @@
           }
         },
         {
-          "name" : "tbl_drop_0",
+          "name" : "tbl_criptoDecripto",
           "id" : 6,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1075,
+            "line" : 971,
+            "column" : 32,
+            "source_fragment" : "criptoDecripto()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [11],
+          "actions" : ["MyIngress.criptoDecripto"],
+          "base_default_next" : "MyIngress.static_forwarding",
+          "next_tables" : {
+            "MyIngress.criptoDecripto" : "MyIngress.static_forwarding"
+          },
+          "default_entry" : {
+            "action_id" : 11,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_criptoDecripto_0",
+          "id" : 7,
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 978,
+            "column" : 28,
+            "source_fragment" : "criptoDecripto()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [12],
+          "actions" : ["MyIngress.criptoDecripto"],
+          "base_default_next" : "MyIngress.static_forwarding",
+          "next_tables" : {
+            "MyIngress.criptoDecripto" : "MyIngress.static_forwarding"
+          },
+          "default_entry" : {
+            "action_id" : 12,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_criptoDecripto_1",
+          "id" : 8,
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 1043,
+            "column" : 24,
+            "source_fragment" : "criptoDecripto()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [13],
+          "actions" : ["MyIngress.criptoDecripto"],
+          "base_default_next" : "MyIngress.static_forwarding",
+          "next_tables" : {
+            "MyIngress.criptoDecripto" : "MyIngress.static_forwarding"
+          },
+          "default_entry" : {
+            "action_id" : 13,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_drop_0",
+          "id" : 9,
+          "source_info" : {
+            "filename" : "new_p4ssn.p4",
+            "line" : 1091,
             "column" : 12,
             "source_fragment" : "drop()"
           },
@@ -4841,7 +5150,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 857,
+            "line" : 870,
             "column" : 12,
             "source_fragment" : "standard_metadata.instance_type == 4"
           },
@@ -4867,7 +5176,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 865,
+            "line" : 878,
             "column" : 12,
             "source_fragment" : "hdr.mqttsn_fixed.isValid()"
           },
@@ -4890,7 +5199,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 872,
+            "line" : 885,
             "column" : 16,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE && ..."
           },
@@ -4933,7 +5242,7 @@
           "id" : 3,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 877,
+            "line" : 890,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW && ..."
           },
@@ -4976,7 +5285,7 @@
           "id" : 4,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 882,
+            "line" : 895,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_GWINFO && ..."
           },
@@ -5036,7 +5345,7 @@
           "id" : 5,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 891,
+            "line" : 904,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ && ..."
           },
@@ -5079,7 +5388,7 @@
           "id" : 6,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 896,
+            "line" : 909,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP && ..."
           },
@@ -5122,7 +5431,7 @@
           "id" : 7,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 901,
+            "line" : 914,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT && ..."
           },
@@ -5165,7 +5474,7 @@
           "id" : 8,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 906,
+            "line" : 919,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // QoS 1 ..."
           },
@@ -5208,7 +5517,7 @@
           "id" : 9,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 911,
+            "line" : 924,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && // QoS 2 ..."
           },
@@ -5251,7 +5560,7 @@
           "id" : 10,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 916,
+            "line" : 929,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && // QoS 2 ..."
           },
@@ -5294,7 +5603,7 @@
           "id" : 11,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 921,
+            "line" : 934,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && // QoS 2 ..."
           },
@@ -5337,7 +5646,7 @@
           "id" : 12,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 927,
+            "line" : 940,
             "column" : 21,
             "source_fragment" : "hdr.udp.dstPort == UDP_PORT_SVC_GW"
           },
@@ -5356,14 +5665,14 @@
             }
           },
           "true_next" : "node_26",
-          "false_next" : "node_50"
+          "false_next" : "node_52"
         },
         {
           "name" : "node_26",
           "id" : 13,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 930,
+            "line" : 943,
             "column" : 20,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT && ..."
           },
@@ -5423,7 +5732,7 @@
           "id" : 14,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 936,
+            "line" : 949,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER && ..."
           },
@@ -5483,7 +5792,7 @@
           "id" : 15,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 942,
+            "line" : 955,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH && ..."
           },
@@ -5553,14 +5862,14 @@
             }
           },
           "true_next" : "node_31",
-          "false_next" : "node_38"
+          "false_next" : "node_40"
         },
         {
           "name" : "node_31",
           "id" : 16,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 947,
+            "line" : 960,
             "column" : 28,
             "source_fragment" : "hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1"
           },
@@ -5586,7 +5895,7 @@
           "id" : 17,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 951,
+            "line" : 964,
             "column" : 33,
             "source_fragment" : "hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0"
           },
@@ -5605,14 +5914,14 @@
             }
           },
           "true_next" : "node_34",
-          "false_next" : "MyIngress.static_forwarding"
+          "false_next" : "tbl_criptoDecripto_0"
         },
         {
           "name" : "node_34",
           "id" : 18,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 952,
+            "line" : 965,
             "column" : 32,
             "source_fragment" : "hdr.mqttsn_flags_publish.retain == 0"
           },
@@ -5631,14 +5940,14 @@
             }
           },
           "true_next" : "MyIngress.acelerate_forwarding",
-          "false_next" : "MyIngress.static_forwarding"
+          "false_next" : "tbl_criptoDecripto"
         },
         {
-          "name" : "node_38",
+          "name" : "node_40",
           "id" : 19,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 968,
+            "line" : 983,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE && ..."
           },
@@ -5708,14 +6017,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_40"
+          "false_next" : "node_42"
         },
         {
-          "name" : "node_40",
+          "name" : "node_42",
           "id" : 20,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 975,
+            "line" : 990,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE && ..."
           },
@@ -5785,14 +6094,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_42"
+          "false_next" : "node_44"
         },
         {
-          "name" : "node_42",
+          "name" : "node_44",
           "id" : 21,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 982,
+            "line" : 997,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPIC && ..."
           },
@@ -5862,14 +6171,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_44"
+          "false_next" : "node_46"
         },
         {
-          "name" : "node_44",
+          "name" : "node_46",
           "id" : 22,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 989,
+            "line" : 1004,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSG && ..."
           },
@@ -5922,14 +6231,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_46"
+          "false_next" : "node_48"
         },
         {
-          "name" : "node_46",
+          "name" : "node_48",
           "id" : 23,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 995,
+            "line" : 1010,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICUPD && ..."
           },
@@ -5999,14 +6308,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_48"
+          "false_next" : "node_50"
         },
         {
-          "name" : "node_48",
+          "name" : "node_50",
           "id" : 24,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1002,
+            "line" : 1017,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGUPD && ..."
           },
@@ -6062,11 +6371,11 @@
           "true_next" : "MyIngress.static_forwarding"
         },
         {
-          "name" : "node_50",
+          "name" : "node_52",
           "id" : 25,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1011,
+            "line" : 1026,
             "column" : 21,
             "source_fragment" : "hdr.udp.srcPort == UDP_PORT_SVC_GW"
           },
@@ -6085,14 +6394,14 @@
             }
           },
           "false_next" : null,
-          "true_next" : "node_51"
+          "true_next" : "node_53"
         },
         {
-          "name" : "node_51",
+          "name" : "node_53",
           "id" : 26,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1014,
+            "line" : 1029,
             "column" : 20,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK && ..."
           },
@@ -6128,14 +6437,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_53"
+          "false_next" : "node_55"
         },
         {
-          "name" : "node_53",
+          "name" : "node_55",
           "id" : 27,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1019,
+            "line" : 1034,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGACK && ..."
           },
@@ -6171,14 +6480,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_55"
+          "false_next" : "node_57"
         },
         {
-          "name" : "node_55",
+          "name" : "node_57",
           "id" : 28,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1024,
+            "line" : 1039,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH && ..."
           },
@@ -6247,15 +6556,15 @@
               }
             }
           },
-          "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_57"
+          "true_next" : "tbl_criptoDecripto_1",
+          "false_next" : "node_60"
         },
         {
-          "name" : "node_57",
+          "name" : "node_60",
           "id" : 29,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1032,
+            "line" : 1048,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SUBACK && ..."
           },
@@ -6308,14 +6617,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_59"
+          "false_next" : "node_62"
         },
         {
-          "name" : "node_59",
+          "name" : "node_62",
           "id" : 30,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1038,
+            "line" : 1054,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBACK && ..."
           },
@@ -6351,14 +6660,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_61"
+          "false_next" : "node_64"
         },
         {
-          "name" : "node_61",
+          "name" : "node_64",
           "id" : 31,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1043,
+            "line" : 1059,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICREQ && ..."
           },
@@ -6394,14 +6703,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_63"
+          "false_next" : "node_66"
         },
         {
-          "name" : "node_63",
+          "name" : "node_66",
           "id" : 32,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1048,
+            "line" : 1064,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGREQ && ..."
           },
@@ -6437,14 +6746,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_65"
+          "false_next" : "node_68"
         },
         {
-          "name" : "node_65",
+          "name" : "node_68",
           "id" : 33,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1053,
+            "line" : 1069,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICRESP && ..."
           },
@@ -6480,14 +6789,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_67"
+          "false_next" : "node_70"
         },
         {
-          "name" : "node_67",
+          "name" : "node_70",
           "id" : 34,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1058,
+            "line" : 1074,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGRESP && ..."
           },
@@ -6523,14 +6832,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_69"
+          "false_next" : "node_72"
         },
         {
-          "name" : "node_69",
+          "name" : "node_72",
           "id" : 35,
           "source_info" : {
             "filename" : "new_p4ssn.p4",
-            "line" : 1064,
+            "line" : 1080,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER && ..."
           },
@@ -6592,157 +6901,14 @@
       "id" : 1,
       "source_info" : {
         "filename" : "new_p4ssn.p4",
-        "line" : 1084,
+        "line" : 1100,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
-      "init_table" : "node_74",
-      "tables" : [
-        {
-          "name" : "tbl_criptoDecripto",
-          "id" : 7,
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1105,
-            "column" : 20,
-            "source_fragment" : "criptoDecripto()"
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [11],
-          "actions" : ["MyEgress.criptoDecripto"],
-          "base_default_next" : null,
-          "next_tables" : {
-            "MyEgress.criptoDecripto" : null
-          },
-          "default_entry" : {
-            "action_id" : 11,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        }
-      ],
+      "init_table" : null,
+      "tables" : [],
       "action_profiles" : [],
-      "conditionals" : [
-        {
-          "name" : "node_74",
-          "id" : 36,
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1101,
-            "column" : 12,
-            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH"
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "==",
-              "left" : {
-                "type" : "field",
-                "value" : ["mqttsn_fixed", "msgType"]
-              },
-              "right" : {
-                "type" : "hexstr",
-                "value" : "0x0c"
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "node_75"
-        },
-        {
-          "name" : "node_75",
-          "id" : 37,
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1102,
-            "column" : 16,
-            "source_fragment" : "(hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0 && hdr.mqttsn_flags_publish.retain == 1) || ..."
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "or",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "or",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "and",
-                      "left" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "==",
-                          "left" : {
-                            "type" : "field",
-                            "value" : ["mqttsn_flags_publish", "qos"]
-                          },
-                          "right" : {
-                            "type" : "hexstr",
-                            "value" : "0x00"
-                          }
-                        }
-                      },
-                      "right" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "==",
-                          "left" : {
-                            "type" : "field",
-                            "value" : ["mqttsn_flags_publish", "retain"]
-                          },
-                          "right" : {
-                            "type" : "hexstr",
-                            "value" : "0x01"
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["mqttsn_flags_publish", "qos"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x01"
-                      }
-                    }
-                  }
-                }
-              },
-              "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "==",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_flags_publish", "qos"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x02"
-                  }
-                }
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "tbl_criptoDecripto"
-        }
-      ]
+      "conditionals" : []
     }
   ],
   "checksums" : [
@@ -6751,7 +6917,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "new_p4ssn.p4",
-        "line" : 1118,
+        "line" : 1116,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },
