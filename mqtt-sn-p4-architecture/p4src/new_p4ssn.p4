@@ -88,7 +88,7 @@ typedef bit<32> ipv4Addr_t;
 typedef bit<48> macAddr_t;
 
 /*Generic Port*/
-typedef bit<9>  egressSpec_t; // representa a porta de saída do switch com 9 bits
+typedef bit<9> egressSpec_t; // representa a porta de saída do switch com 9 bits
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
@@ -807,19 +807,16 @@ control MyIngress(inout headers hdr,
     /////////// ACTION: ENCAMINHAMENTO ACELERADO //////////
     //////////////////////////////////////////////////////
 
-    action acelerate(macAddr_t macDstAddr, egressSpec_t port, ipv4Addr_t IpDstAddr) {
-        /* 
-        O pacote que chega ao subscriber recebe os valores dos campos como se a mensagem viesse do gateway.
-        */
-        hdr.ethernet.srcAddr = 0x000000000001; // 00:00:00:00:00:01
-        hdr.ipv4.srcAddr = 0x0A000001;         // 10.0.0.1
-        hdr.udp.srcPort = 1884;
+    action acelerate(macAddr_t macDstAddr, egressSpec_t port, ipv4Addr_t IpDstAddr, bit<16> UdpDstPort) {
 
-        hdr.ethernet.dstAddr = macDstAddr;
         standard_metadata.egress_spec = port;
+        hdr.ethernet.dstAddr = macDstAddr;
         hdr.ipv4.dstAddr = IpDstAddr;
-
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+        hdr.udp.dstPort = UdpDstPort;
+
+        hdr.ipv4.hdrChecksum = 0;
+        hdr.udp.checksum = 0;
     }
 
     //////////////////////////////////////////////////////
@@ -837,6 +834,16 @@ control MyIngress(inout headers hdr,
         }
         size = 1024;
         default_action = NoAction();
+    }
+
+    action criptoDecripto() {
+        
+        // Criptografar x Descriptografar
+        hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID;
+        hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH;
+
+        hdr.udp.checksum = 0;
+        hdr.ipv4.hdrChecksum = 0;
     }
 
     //////////////////////////////////////////////////////
@@ -955,12 +962,14 @@ control MyIngress(inout headers hdr,
                             // QoS 0 && flag retain = 1 (remember last message, so should to pass gateway)
                             // Normal static forwarding
                             else {
+                                criptoDecripto();
                                 static_forwarding.apply();
                             }
                         }
                         // QoS 1 ou 2
                         // Normal static forwarding
                         else {
+                            criptoDecripto();
                             static_forwarding.apply();
                         }
                 }
@@ -1025,6 +1034,7 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid() &&
                     hdr.mqttsn_fixed_data_publish.isValid()) {
+                        criptoDecripto();
                         // Encaminhar sempre, já que o gateway tratou o QoS ao receber a mensagem
                         static_forwarding.apply();
                 }
@@ -1085,26 +1095,8 @@ control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
 
-    action criptoDecripto() {
-        
-        // Criptografar x Descriptografar
-        hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID;
-        hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH;
-
-        hdr.udp.checksum = 0;
-        hdr.ipv4.hdrChecksum = 0;
-    }
-
     apply {
 
-        // PUBLISH // QoS 0, 1 e 2
-        if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
-            if ((hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0 && hdr.mqttsn_flags_publish.retain == 1) ||
-                hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_1 ||
-                hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_2) {
-                    criptoDecripto();
-            }
-        }
     }
 }
 
