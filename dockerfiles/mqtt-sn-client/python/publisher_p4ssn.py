@@ -2,7 +2,6 @@
 import socket
 import struct
 import random
-import time
 
 # =============================================================================
 # Constantes MQTT-SN
@@ -38,66 +37,76 @@ CLIENT_PORT = 55000
 
 SERVER_ADDRESS = (GW_IP, GW_PORT)
 
+TIMEOUT = 5
+MAX_RETRIES = 3
+
 selected_topic_type = TOPICIDTYPE_TOPICNAME
 retain_flag = 0
 
 
 # =============================================================================
-# Funções auxiliares
+# Comunicação robusta
 # =============================================================================
 
-def send_and_receive(sock, packet, timeout=3):
-    sock.sendto(packet, SERVER_ADDRESS)
-    sock.settimeout(timeout)
+def recv_packet(sock, expected_type=None, expected_msg_id=None):
+    sock.settimeout(TIMEOUT)
     try:
         data, _ = sock.recvfrom(4096)
         if len(data) < 2:
             print("<- ERRO: payload MQTT-SN muito curto")
             return None
+
         length, msgType = struct.unpack('>BB', data[:2])
         print(f"<- Recebido: Tipo {hex(msgType)} (len={length})")
-        return data
-    except socket.timeout:
-        print("<- ERRO: Timeout")
-        return None
 
-
-def recv_only(sock, timeout=3):
-    sock.settimeout(timeout)
-    try:
-        data, _ = sock.recvfrom(4096)
-        if len(data) < 2:
-            print("Recebido payload MQTT-SN muito curto")
+        if expected_type and msgType != expected_type:
+            print("   ERRO: Tipo inesperado")
             return None
-        length, msgType = struct.unpack('>BB', data[:2])
-        print(f"<- Recebido: Tipo {hex(msgType)} (len={length})")
+
+        if expected_msg_id and len(data) >= 6:
+            recv_msg_id = struct.unpack('>H', data[4:6])[0]
+            if recv_msg_id != expected_msg_id:
+                print("   ERRO: msgId incorreto")
+                return None
+
         return data
+
     except socket.timeout:
         print("<- ERRO: Timeout")
         return None
 
 
-def xor_data(data_str, mask_int):
-    data_bytes = data_str.encode("utf-8")
-    mask_bytes = mask_int.to_bytes(64, 'big')
-    return bytes([b ^ mask_bytes[i % len(mask_bytes)] for i, b in enumerate(data_bytes)])
+def send_and_wait(sock, packet, expected_type=None, expected_msg_id=None):
+    for attempt in range(1, MAX_RETRIES + 1):
+        sock.sendto(packet, SERVER_ADDRESS)
+        resp = recv_packet(sock, expected_type, expected_msg_id)
+        if resp:
+            return resp
+        print(f"   Tentativa {attempt}/{MAX_RETRIES} falhou")
+    return None
+
+
+def drain_socket(sock):
+    sock.settimeout(1)
+    try:
+        while True:
+            sock.recvfrom(4096)
+    except socket.timeout:
+        pass
 
 
 # =============================================================================
-# Construção de pacotes MQTT-SN
+# Construção de pacotes
 # =============================================================================
 
 def build_connect(client_id, duration=30):
-    flags = 0x04
-    protocol_id = 0x01
-    payload = struct.pack('>BBH', flags, protocol_id, duration) + client_id.encode('utf-8')
-    return struct.pack('>BB', len(payload) + 2, MQTTSN_CONNECT) + payload
+    payload = struct.pack('>BBH', 0x04, 0x01, duration) + client_id.encode()
+    return struct.pack('>BB', len(payload)+2, MQTTSN_CONNECT) + payload
 
 
 def build_register(topic_name, msg_id):
-    topic_id = 0x0000
-    payload = struct.pack('>HH', topic_id, msg_id) + topic_name.encode('utf-8')
-    return struct.pack('>BB', len(payload) + 2, MQTTSN_REGISTER) + payload
+    payload = struct.pack('>HH', 0x0000, msg_id) + topic_name.encode()
+    return struct.pack('>BB', len(payload)+2, MQTTSN_REGISTER) + payload
 
 
 def build_publish(qos_level, topic_id, msg_id, data):
@@ -108,19 +117,24 @@ def build_publish(qos_level, topic_id, msg_id, data):
     msg_id_to_send = msg_id if qos_level != QOS_M1 else 0x0000
 
     header = struct.pack('>BHH', flags, topic_id_enc, msg_id_to_send)
-    payload = data if isinstance(data, (bytes, bytearray)) else data.encode('utf-8')
-    length = len(header) + len(payload) + 2
+    length = len(header) + len(data) + 2
 
-    return struct.pack('>BB', length, MQTTSN_PUBLISH) + header + payload
+    return struct.pack('>BB', length, MQTTSN_PUBLISH) + header + data
 
 
 def build_pubrel(msg_id):
     payload = struct.pack('>H', msg_id)
-    return struct.pack('>BB', len(payload) + 2, MQTTSN_PUBREL) + payload
+    return struct.pack('>BB', len(payload)+2, MQTTSN_PUBREL) + payload
 
 
 def build_disconnect():
     return struct.pack('>BB', 2, MQTTSN_DISCONNECT)
+
+
+def xor_data(data_str):
+    data_bytes = data_str.encode()
+    mask_bytes = SECRET_DATA_PUBLISH.to_bytes(64, 'big')
+    return bytes([b ^ mask_bytes[i % 64] for i, b in enumerate(data_bytes)])
 
 
 # =============================================================================
@@ -129,49 +143,57 @@ def build_disconnect():
 
 def sequence_common(sock, qos_level, msg_id, topic_name, data, client_id):
 
-    data_bytes = xor_data(data, SECRET_DATA_PUBLISH)
+    data_bytes = xor_data(data)
 
+    # ---------------- QoS -1 ----------------
     if qos_level == QOS_M1:
-        publish_packet = build_publish(qos_level, topic_name, 0x0000, data_bytes)
         print("-> Enviando: PUBLISH (QoS -1)")
-        sock.sendto(publish_packet, SERVER_ADDRESS)
+        sock.sendto(build_publish(qos_level, topic_name, 0, data_bytes), SERVER_ADDRESS)
         return
 
+    # ---------------- CONNECT ----------------
     print(f"-> Enviando: CONNECT ({client_id})")
-    if not send_and_receive(sock, build_connect(client_id)):
+    if not send_and_wait(sock, build_connect(client_id), MQTTSN_CONNACK):
         return
 
+    # ---------------- REGISTER ----------------
     if selected_topic_type == TOPICIDTYPE_TOPICNAME:
         print("-> Enviando: REGISTER")
-        regack = send_and_receive(sock, build_register(topic_name, msg_id))
+        regack = send_and_wait(sock, build_register(topic_name, msg_id), MQTTSN_REGACK, msg_id)
         if not regack:
             return
         topic_id = struct.unpack('>H', regack[2:4])[0]
     else:
         topic_id = topic_name
 
+    # ---------------- PUBLISH ----------------
     print("-> Enviando: PUBLISH")
     sock.sendto(build_publish(qos_level, topic_id, msg_id, data_bytes), SERVER_ADDRESS)
 
     if qos_level == QOS_0:
         sock.sendto(build_disconnect(), SERVER_ADDRESS)
+        drain_socket(sock)
         return
 
     if qos_level == QOS_1:
-        recv_only(sock)
+        if not recv_packet(sock, MQTTSN_PUBACK, msg_id):
+            return
         sock.sendto(build_disconnect(), SERVER_ADDRESS)
+        drain_socket(sock)
         return
 
     if qos_level == QOS_2:
-        pubrec = recv_only(sock)
-        if pubrec:
-            sock.sendto(build_pubrel(msg_id), SERVER_ADDRESS)
-            recv_only(sock)
+        if not recv_packet(sock, MQTTSN_PUBREC, msg_id):
+            return
+        sock.sendto(build_pubrel(msg_id), SERVER_ADDRESS)
+        if not recv_packet(sock, MQTTSN_PUBCOMP, msg_id):
+            return
         sock.sendto(build_disconnect(), SERVER_ADDRESS)
+        drain_socket(sock)
 
 
 # =============================================================================
-# Execução principal
+# MAIN
 # =============================================================================
 
 if __name__ == "__main__":
@@ -182,8 +204,7 @@ if __name__ == "__main__":
     client_id = f"struct_client_{random.randint(1000,9999)}"
 
     qos_map = {"-1": QOS_M1, "0": QOS_0, "1": QOS_1, "2": QOS_2}
-    qos_choice = input("QoS (-1,0,1,2): ")
-    qos_level = qos_map.get(qos_choice)
+    qos_level = qos_map.get(input("QoS (-1,0,1,2): "))
 
     if qos_level is None:
         print("QoS inválido")
@@ -195,19 +216,31 @@ if __name__ == "__main__":
         "2": TOPICIDTYPE_SHORTTOPICNAME
     }
 
-    topic_type_choice = input("TopicIdType (0=Name,1=Predefined,2=Short): ")
-    selected_topic_type = topic_type_map.get(topic_type_choice, TOPICIDTYPE_TOPICNAME)
+    # QoS -1 restrições
+    if qos_level == QOS_M1:
+        print("QoS -1: apenas Predefined ou Short Topic permitido.")
+        topic_type_choice = input("TopicIdType (1=Predefined,2=Short): ")
+        if topic_type_choice == "0":
+            print("Topic Name não permitido para QoS -1")
+            exit(1)
+    else:
+        topic_type_choice = input("TopicIdType (0=Name,1=Predefined,2=Short): ")
+
+    selected_topic_type = topic_type_map.get(topic_type_choice)
+
+    if selected_topic_type is None:
+        print("Tipo de tópico inválido")
+        exit(1)
 
     if qos_level != QOS_M1:
         retain_flag = 1 if input("Retain? (0/1): ") == "1" else 0
 
-    # ===== Entrada do tópico correta =====
-
+    # Entrada de tópico
     if selected_topic_type == TOPICIDTYPE_TOPICNAME:
         topic_name = input("Digite o Topic Name: ")
 
     elif selected_topic_type == TOPICIDTYPE_PREDEFINEDTOPIC:
-        topic_name = int(input("Digite o Predefined Topic ID (0-65535): "))
+        topic_name = int(input("Digite o Predefined Topic ID: "))
 
     elif selected_topic_type == TOPICIDTYPE_SHORTTOPICNAME:
         while True:
@@ -218,16 +251,13 @@ if __name__ == "__main__":
             else:
                 print("Deve ter exatamente 2 caracteres.")
 
-    # ===== Entrada da mensagem =====
-
+    # Mensagem
     while True:
         data_msg = input("Mensagem (máx 64 bytes): ")
-        data_len = len(data_msg.encode("utf-8"))
-        if data_len > 64:
-            print("Mensagem excede 64 bytes.")
-        else:
+        if len(data_msg.encode()) <= 64:
             data_msg = data_msg.ljust(64, "*")
             break
+        print("Mensagem excede 64 bytes.")
 
     sequence_common(sock, qos_level, 0x0001, topic_name, data_msg, client_id)
 
