@@ -43,8 +43,7 @@
         ["tmp_35", 32, false],
         ["tmp_36", 1, false],
         ["tmp_37", 1, false],
-        ["metadata.drop_flag", 1, false],
-        ["_padding_0", 1, false]
+        ["_padding_0", 2, false]
       ]
     },
     {
@@ -4027,8 +4026,8 @@
       "name" : "deparser",
       "id" : 0,
       "source_info" : {
-        "filename" : "new_p4ssn.p4",
-        "line" : 1132,
+        "filename" : "p4ssn.p4",
+        "line" : 1166,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -4044,8 +4043,8 @@
       "name" : "calc",
       "id" : 0,
       "source_info" : {
-        "filename" : "new_p4ssn.p4",
-        "line" : 1110,
+        "filename" : "p4ssn.p4",
+        "line" : 1144,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },
@@ -4126,8 +4125,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 761,
+            "filename" : "p4ssn.p4",
+            "line" : 760,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -4148,8 +4147,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 761,
+            "filename" : "p4ssn.p4",
+            "line" : 760,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -4170,8 +4169,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 761,
+            "filename" : "p4ssn.p4",
+            "line" : 760,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -4192,8 +4191,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 761,
+            "filename" : "p4ssn.p4",
+            "line" : 760,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -4245,8 +4244,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 782,
+            "filename" : "p4ssn.p4",
+            "line" : 781,
             "column" : 8,
             "source_fragment" : "hdr.ethernet.dstAddr = dstAddr"
           }
@@ -4264,8 +4263,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 784,
+            "filename" : "p4ssn.p4",
+            "line" : 783,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
           }
@@ -4306,10 +4305,48 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 786,
+            "filename" : "p4ssn.p4",
+            "line" : 785,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl-1"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "hdrChecksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 787,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["udp", "checksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 788,
+            "column" : 8,
+            "source_fragment" : "hdr.udp.checksum = 0"
           }
         }
       ]
@@ -4349,8 +4386,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 812,
+            "filename" : "p4ssn.p4",
+            "line" : 814,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
           }
@@ -4368,8 +4405,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 813,
+            "filename" : "p4ssn.p4",
+            "line" : 815,
             "column" : 8,
             "source_fragment" : "hdr.ethernet.dstAddr = macDstAddr"
           }
@@ -4387,8 +4424,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 814,
+            "filename" : "p4ssn.p4",
+            "line" : 816,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.dstAddr = IpDstAddr"
           }
@@ -4429,8 +4466,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 815,
+            "filename" : "p4ssn.p4",
+            "line" : 817,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl - 1"
           }
@@ -4448,8 +4485,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 816,
+            "filename" : "p4ssn.p4",
+            "line" : 818,
             "column" : 8,
             "source_fragment" : "hdr.udp.dstPort = UdpDstPort"
           }
@@ -4467,8 +4504,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 818,
+            "filename" : "p4ssn.p4",
+            "line" : 820,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
           }
@@ -4486,8 +4523,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 819,
+            "filename" : "p4ssn.p4",
+            "line" : 821,
             "column" : 8,
             "source_fragment" : "hdr.udp.checksum = 0"
           }
@@ -4495,7 +4532,7 @@
       ]
     },
     {
-      "name" : "MyIngress.criptoDecripto",
+      "name" : "MyIngress.otp_decrypt",
       "id" : 11,
       "runtime_data" : [],
       "primitives" : [
@@ -4513,8 +4550,238 @@
                 "value" : {
                   "op" : "^",
                   "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_publish", "topicId"]
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "^",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "|",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : ">>",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["mqttsn_publish", "topicId"]
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0x4"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffff"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "<<",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["mqttsn_publish", "topicId"]
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xc"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffff"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "|",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "<<",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "^",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "^",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "&",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "<<",
+                                                  "left" : {
+                                                    "type" : "field",
+                                                    "value" : ["mqttsn_publish", "msgId"]
+                                                  },
+                                                  "right" : {
+                                                    "type" : "hexstr",
+                                                    "value" : "0x7"
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xffff"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "&",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : ">>",
+                                                  "left" : {
+                                                    "type" : "field",
+                                                    "value" : ["mqttsn_publish", "msgId"]
+                                                  },
+                                                  "right" : {
+                                                    "type" : "hexstr",
+                                                    "value" : "0x9"
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xffff"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xa5a5"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0x3"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffff"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "&",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : ">>",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "^",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "^",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "&",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "<<",
+                                                  "left" : {
+                                                    "type" : "field",
+                                                    "value" : ["mqttsn_publish", "msgId"]
+                                                  },
+                                                  "right" : {
+                                                    "type" : "hexstr",
+                                                    "value" : "0x7"
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xffff"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "&",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : ">>",
+                                                  "left" : {
+                                                    "type" : "field",
+                                                    "value" : ["mqttsn_publish", "msgId"]
+                                                  },
+                                                  "right" : {
+                                                    "type" : "hexstr",
+                                                    "value" : "0x9"
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xffff"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xa5a5"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xd"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0xffff"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
                   },
                   "right" : {
                     "type" : "hexstr",
@@ -4525,86 +4792,16 @@
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 842,
+            "filename" : "p4ssn.p4",
+            "line" : 857,
             "column" : 8,
-            "source_fragment" : "hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["mqttsn_fixed_data_publish", "data"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "^",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_fixed_data_publish", "data"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x8d93d01bee9b416847b69d483bdfb0d6d4d329d98b278ad866e6b17076638b6f7ba810790b07c638825ae5f9b05fabcf7ec35360992db924f0ecfeeda972170b"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 843,
-            "column" : 8,
-            "source_fragment" : "hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["udp", "checksum"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x0000"
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 845,
-            "column" : 8,
-            "source_fragment" : "hdr.udp.checksum = 0"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["ipv4", "hdrChecksum"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x0000"
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 846,
-            "column" : 8,
-            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+            "source_fragment" : "hdr.mqttsn_publish.topicId = val ^ otp ^ SECRET_TOPIC_ID"
           }
         }
       ]
     },
     {
-      "name" : "MyIngress.criptoDecripto",
+      "name" : "MyEgress.otp_encrypt",
       "id" : 12,
       "runtime_data" : [],
       "primitives" : [
@@ -4620,100 +4817,450 @@
               "value" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "^",
+                  "op" : "|",
                   "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_publish", "topicId"]
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "<<",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "^",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "^",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["mqttsn_publish", "topicId"]
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xb7a3"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "|",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "<<",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0x3"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : ">>",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0xd"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x4"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffff"
+                      }
+                    }
                   },
                   "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xb7a3"
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : ">>",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "^",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "^",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["mqttsn_publish", "topicId"]
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xb7a3"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "|",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "<<",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0x3"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : ">>",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0xd"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0xc"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffff"
+                      }
+                    }
                   }
                 }
               }
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 842,
+            "filename" : "p4ssn.p4",
+            "line" : 1113,
             "column" : 8,
-            "source_fragment" : "hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["mqttsn_fixed_data_publish", "data"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "^",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_fixed_data_publish", "data"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x8d93d01bee9b416847b69d483bdfb0d6d4d329d98b278ad866e6b17076638b6f7ba810790b07c638825ae5f9b05fabcf7ec35360992db924f0ecfeeda972170b"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 843,
-            "column" : 8,
-            "source_fragment" : "hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["udp", "checksum"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x0000"
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 845,
-            "column" : 8,
-            "source_fragment" : "hdr.udp.checksum = 0"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["ipv4", "hdrChecksum"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x0000"
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 846,
-            "column" : 8,
-            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+            "source_fragment" : "hdr.mqttsn_publish.topicId = (val << 4) | (val >> 12)"
           }
         }
       ]
     },
     {
-      "name" : "MyIngress.criptoDecripto",
+      "name" : "MyEgress.otp_encrypt",
       "id" : 13,
       "runtime_data" : [],
       "primitives" : [
@@ -4729,94 +5276,903 @@
               "value" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "^",
+                  "op" : "|",
                   "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_publish", "topicId"]
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "<<",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "^",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "^",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["mqttsn_publish", "topicId"]
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xb7a3"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "|",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "<<",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0x3"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : ">>",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0xd"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x4"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffff"
+                      }
+                    }
                   },
                   "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xb7a3"
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : ">>",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "^",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "^",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["mqttsn_publish", "topicId"]
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xb7a3"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "|",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "<<",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0x3"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : ">>",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0xd"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0xc"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffff"
+                      }
+                    }
                   }
                 }
               }
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 842,
+            "filename" : "p4ssn.p4",
+            "line" : 1113,
             "column" : 8,
-            "source_fragment" : "hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID"
+            "source_fragment" : "hdr.mqttsn_publish.topicId = (val << 4) | (val >> 12)"
           }
-        },
+        }
+      ]
+    },
+    {
+      "name" : "MyEgress.otp_encrypt",
+      "id" : 14,
+      "runtime_data" : [],
+      "primitives" : [
         {
           "op" : "assign",
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["mqttsn_fixed_data_publish", "data"]
+              "value" : ["mqttsn_publish", "topicId"]
             },
             {
               "type" : "expression",
               "value" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "^",
+                  "op" : "|",
                   "left" : {
-                    "type" : "field",
-                    "value" : ["mqttsn_fixed_data_publish", "data"]
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "<<",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "^",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "^",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["mqttsn_publish", "topicId"]
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xb7a3"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "|",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "<<",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0x3"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : ">>",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0xd"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0x4"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffff"
+                      }
+                    }
                   },
                   "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x8d93d01bee9b416847b69d483bdfb0d6d4d329d98b278ad866e6b17076638b6f7ba810790b07c638825ae5f9b05fabcf7ec35360992db924f0ecfeeda972170b"
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : ">>",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "^",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "^",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["mqttsn_publish", "topicId"]
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xb7a3"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "|",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "<<",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0x3"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "&",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : ">>",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "^",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "^",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "<<",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x7"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "&",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : ">>",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["mqttsn_publish", "msgId"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0x9"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0xffff"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0xa5a5"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0xd"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0xffff"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0xc"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xffff"
+                      }
+                    }
                   }
                 }
               }
             }
           ],
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 843,
+            "filename" : "p4ssn.p4",
+            "line" : 1113,
             "column" : 8,
-            "source_fragment" : "hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["udp", "checksum"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x0000"
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 845,
-            "column" : 8,
-            "source_fragment" : "hdr.udp.checksum = 0"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["ipv4", "hdrChecksum"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x0000"
-            }
-          ],
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 846,
-            "column" : 8,
-            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+            "source_fragment" : "hdr.mqttsn_publish.topicId = (val << 4) | (val >> 12)"
           }
         }
       ]
@@ -4827,8 +6183,8 @@
       "name" : "ingress",
       "id" : 0,
       "source_info" : {
-        "filename" : "new_p4ssn.p4",
-        "line" : 752,
+        "filename" : "p4ssn.p4",
+        "line" : 751,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
@@ -4838,8 +6194,8 @@
           "name" : "tbl_drop",
           "id" : 0,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 865,
+            "filename" : "p4ssn.p4",
+            "line" : 871,
             "column" : 12,
             "source_fragment" : "drop()"
           },
@@ -4867,8 +6223,8 @@
           "name" : "tbl_broadcast",
           "id" : 1,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 881,
+            "filename" : "p4ssn.p4",
+            "line" : 887,
             "column" : 20,
             "source_fragment" : "broadcast()"
           },
@@ -4896,8 +6252,8 @@
           "name" : "tbl_broadcast_0",
           "id" : 2,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 886,
+            "filename" : "p4ssn.p4",
+            "line" : 892,
             "column" : 20,
             "source_fragment" : "broadcast()"
           },
@@ -4925,8 +6281,8 @@
           "name" : "tbl_broadcast_1",
           "id" : 3,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 892,
+            "filename" : "p4ssn.p4",
+            "line" : 898,
             "column" : 20,
             "source_fragment" : "broadcast()"
           },
@@ -4954,8 +6310,8 @@
           "name" : "MyIngress.static_forwarding",
           "id" : 4,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 793,
+            "filename" : "p4ssn.p4",
+            "line" : 795,
             "column" : 10,
             "source_fragment" : "static_forwarding"
           },
@@ -4989,11 +6345,40 @@
           }
         },
         {
-          "name" : "MyIngress.acelerate_forwarding",
+          "name" : "tbl_otp_decrypt",
           "id" : 5,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 826,
+            "filename" : "p4ssn.p4",
+            "line" : 960,
+            "column" : 24,
+            "source_fragment" : "otp_decrypt()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [11],
+          "actions" : ["MyIngress.otp_decrypt"],
+          "base_default_next" : "node_32",
+          "next_tables" : {
+            "MyIngress.otp_decrypt" : "node_32"
+          },
+          "default_entry" : {
+            "action_id" : 11,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "MyIngress.acelerate_forwarding",
+          "id" : 6,
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 828,
             "column" : 10,
             "source_fragment" : "acelerate_forwarding"
           },
@@ -5027,98 +6412,11 @@
           }
         },
         {
-          "name" : "tbl_criptoDecripto",
-          "id" : 6,
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 965,
-            "column" : 32,
-            "source_fragment" : "criptoDecripto()"
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [11],
-          "actions" : ["MyIngress.criptoDecripto"],
-          "base_default_next" : "MyIngress.static_forwarding",
-          "next_tables" : {
-            "MyIngress.criptoDecripto" : "MyIngress.static_forwarding"
-          },
-          "default_entry" : {
-            "action_id" : 11,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "tbl_criptoDecripto_0",
+          "name" : "tbl_drop_0",
           "id" : 7,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 972,
-            "column" : 28,
-            "source_fragment" : "criptoDecripto()"
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [12],
-          "actions" : ["MyIngress.criptoDecripto"],
-          "base_default_next" : "MyIngress.static_forwarding",
-          "next_tables" : {
-            "MyIngress.criptoDecripto" : "MyIngress.static_forwarding"
-          },
-          "default_entry" : {
-            "action_id" : 12,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "tbl_criptoDecripto_1",
-          "id" : 8,
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1037,
-            "column" : 24,
-            "source_fragment" : "criptoDecripto()"
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [13],
-          "actions" : ["MyIngress.criptoDecripto"],
-          "base_default_next" : "MyIngress.static_forwarding",
-          "next_tables" : {
-            "MyIngress.criptoDecripto" : "MyIngress.static_forwarding"
-          },
-          "default_entry" : {
-            "action_id" : 13,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "tbl_drop_0",
-          "id" : 9,
-          "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1085,
+            "filename" : "p4ssn.p4",
+            "line" : 1092,
             "column" : 12,
             "source_fragment" : "drop()"
           },
@@ -5149,8 +6447,8 @@
           "name" : "node_2",
           "id" : 0,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 864,
+            "filename" : "p4ssn.p4",
+            "line" : 870,
             "column" : 12,
             "source_fragment" : "standard_metadata.instance_type == 4"
           },
@@ -5175,8 +6473,8 @@
           "name" : "node_4",
           "id" : 1,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 872,
+            "filename" : "p4ssn.p4",
+            "line" : 878,
             "column" : 12,
             "source_fragment" : "hdr.mqttsn_fixed.isValid()"
           },
@@ -5198,8 +6496,8 @@
           "name" : "node_5",
           "id" : 2,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 879,
+            "filename" : "p4ssn.p4",
+            "line" : 885,
             "column" : 16,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE && ..."
           },
@@ -5241,8 +6539,8 @@
           "name" : "node_7",
           "id" : 3,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 884,
+            "filename" : "p4ssn.p4",
+            "line" : 890,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW && ..."
           },
@@ -5284,8 +6582,8 @@
           "name" : "node_9",
           "id" : 4,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 889,
+            "filename" : "p4ssn.p4",
+            "line" : 895,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_GWINFO && ..."
           },
@@ -5344,8 +6642,8 @@
           "name" : "node_11",
           "id" : 5,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 898,
+            "filename" : "p4ssn.p4",
+            "line" : 904,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ && ..."
           },
@@ -5387,8 +6685,8 @@
           "name" : "node_13",
           "id" : 6,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 903,
+            "filename" : "p4ssn.p4",
+            "line" : 909,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP && ..."
           },
@@ -5430,8 +6728,8 @@
           "name" : "node_15",
           "id" : 7,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 908,
+            "filename" : "p4ssn.p4",
+            "line" : 914,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT && ..."
           },
@@ -5473,8 +6771,8 @@
           "name" : "node_17",
           "id" : 8,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 913,
+            "filename" : "p4ssn.p4",
+            "line" : 919,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // QoS 1 ..."
           },
@@ -5516,8 +6814,8 @@
           "name" : "node_19",
           "id" : 9,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 918,
+            "filename" : "p4ssn.p4",
+            "line" : 924,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && // QoS 2 ..."
           },
@@ -5559,8 +6857,8 @@
           "name" : "node_21",
           "id" : 10,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 923,
+            "filename" : "p4ssn.p4",
+            "line" : 929,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && // QoS 2 ..."
           },
@@ -5602,8 +6900,8 @@
           "name" : "node_23",
           "id" : 11,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 928,
+            "filename" : "p4ssn.p4",
+            "line" : 934,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && // QoS 2 ..."
           },
@@ -5645,8 +6943,8 @@
           "name" : "node_25",
           "id" : 12,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 934,
+            "filename" : "p4ssn.p4",
+            "line" : 940,
             "column" : 21,
             "source_fragment" : "hdr.udp.dstPort == UDP_PORT_SVC_GW"
           },
@@ -5665,14 +6963,14 @@
             }
           },
           "true_next" : "node_26",
-          "false_next" : "node_52"
+          "false_next" : "node_51"
         },
         {
           "name" : "node_26",
           "id" : 13,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 937,
+            "filename" : "p4ssn.p4",
+            "line" : 943,
             "column" : 20,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT && ..."
           },
@@ -5731,8 +7029,8 @@
           "name" : "node_28",
           "id" : 14,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 943,
+            "filename" : "p4ssn.p4",
+            "line" : 949,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER && ..."
           },
@@ -5791,8 +7089,8 @@
           "name" : "node_30",
           "id" : 15,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 949,
+            "filename" : "p4ssn.p4",
+            "line" : 955,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH && ..."
           },
@@ -5861,15 +7159,15 @@
               }
             }
           },
-          "true_next" : "node_31",
-          "false_next" : "node_40"
+          "true_next" : "tbl_otp_decrypt",
+          "false_next" : "node_39"
         },
         {
-          "name" : "node_31",
+          "name" : "node_32",
           "id" : 16,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 954,
+            "filename" : "p4ssn.p4",
+            "line" : 963,
             "column" : 28,
             "source_fragment" : "hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1"
           },
@@ -5888,14 +7186,14 @@
             }
           },
           "true_next" : "MyIngress.acelerate_forwarding",
-          "false_next" : "node_33"
+          "false_next" : "node_34"
         },
         {
-          "name" : "node_33",
+          "name" : "node_34",
           "id" : 17,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 958,
+            "filename" : "p4ssn.p4",
+            "line" : 967,
             "column" : 33,
             "source_fragment" : "hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0"
           },
@@ -5913,15 +7211,15 @@
               }
             }
           },
-          "true_next" : "node_34",
-          "false_next" : "tbl_criptoDecripto_0"
+          "true_next" : "node_35",
+          "false_next" : "MyIngress.static_forwarding"
         },
         {
-          "name" : "node_34",
+          "name" : "node_35",
           "id" : 18,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 959,
+            "filename" : "p4ssn.p4",
+            "line" : 968,
             "column" : 32,
             "source_fragment" : "hdr.mqttsn_flags_publish.retain == 0"
           },
@@ -5940,14 +7238,14 @@
             }
           },
           "true_next" : "MyIngress.acelerate_forwarding",
-          "false_next" : "tbl_criptoDecripto"
+          "false_next" : "MyIngress.static_forwarding"
         },
         {
-          "name" : "node_40",
+          "name" : "node_39",
           "id" : 19,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 977,
+            "filename" : "p4ssn.p4",
+            "line" : 984,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE && ..."
           },
@@ -6017,14 +7315,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_42"
+          "false_next" : "node_41"
         },
         {
-          "name" : "node_42",
+          "name" : "node_41",
           "id" : 20,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 984,
+            "filename" : "p4ssn.p4",
+            "line" : 991,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE && ..."
           },
@@ -6094,14 +7392,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_44"
+          "false_next" : "node_43"
         },
         {
-          "name" : "node_44",
+          "name" : "node_43",
           "id" : 21,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 991,
+            "filename" : "p4ssn.p4",
+            "line" : 998,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPIC && ..."
           },
@@ -6171,14 +7469,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_46"
+          "false_next" : "node_45"
         },
         {
-          "name" : "node_46",
+          "name" : "node_45",
           "id" : 22,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 998,
+            "filename" : "p4ssn.p4",
+            "line" : 1005,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSG && ..."
           },
@@ -6231,14 +7529,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_48"
+          "false_next" : "node_47"
         },
         {
-          "name" : "node_48",
+          "name" : "node_47",
           "id" : 23,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1004,
+            "filename" : "p4ssn.p4",
+            "line" : 1011,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICUPD && ..."
           },
@@ -6308,14 +7606,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_50"
+          "false_next" : "node_49"
         },
         {
-          "name" : "node_50",
+          "name" : "node_49",
           "id" : 24,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1011,
+            "filename" : "p4ssn.p4",
+            "line" : 1018,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGUPD && ..."
           },
@@ -6371,11 +7669,11 @@
           "true_next" : "MyIngress.static_forwarding"
         },
         {
-          "name" : "node_52",
+          "name" : "node_51",
           "id" : 25,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1020,
+            "filename" : "p4ssn.p4",
+            "line" : 1027,
             "column" : 21,
             "source_fragment" : "hdr.udp.srcPort == UDP_PORT_SVC_GW"
           },
@@ -6394,14 +7692,14 @@
             }
           },
           "false_next" : null,
-          "true_next" : "node_53"
+          "true_next" : "node_52"
         },
         {
-          "name" : "node_53",
+          "name" : "node_52",
           "id" : 26,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1023,
+            "filename" : "p4ssn.p4",
+            "line" : 1030,
             "column" : 20,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK && ..."
           },
@@ -6437,14 +7735,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_55"
+          "false_next" : "node_54"
         },
         {
-          "name" : "node_55",
+          "name" : "node_54",
           "id" : 27,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1028,
+            "filename" : "p4ssn.p4",
+            "line" : 1035,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGACK && ..."
           },
@@ -6480,14 +7778,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_57"
+          "false_next" : "node_56"
         },
         {
-          "name" : "node_57",
+          "name" : "node_56",
           "id" : 28,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1033,
+            "filename" : "p4ssn.p4",
+            "line" : 1040,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH && ..."
           },
@@ -6556,15 +7854,15 @@
               }
             }
           },
-          "true_next" : "tbl_criptoDecripto_1",
-          "false_next" : "node_60"
+          "true_next" : "MyIngress.static_forwarding",
+          "false_next" : "node_58"
         },
         {
-          "name" : "node_60",
+          "name" : "node_58",
           "id" : 29,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1042,
+            "filename" : "p4ssn.p4",
+            "line" : 1049,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SUBACK && ..."
           },
@@ -6617,14 +7915,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_62"
+          "false_next" : "node_60"
         },
         {
-          "name" : "node_62",
+          "name" : "node_60",
           "id" : 30,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1048,
+            "filename" : "p4ssn.p4",
+            "line" : 1055,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBACK && ..."
           },
@@ -6660,14 +7958,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_64"
+          "false_next" : "node_62"
         },
         {
-          "name" : "node_64",
+          "name" : "node_62",
           "id" : 31,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1053,
+            "filename" : "p4ssn.p4",
+            "line" : 1060,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICREQ && ..."
           },
@@ -6703,14 +8001,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_66"
+          "false_next" : "node_64"
         },
         {
-          "name" : "node_66",
+          "name" : "node_64",
           "id" : 32,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1058,
+            "filename" : "p4ssn.p4",
+            "line" : 1065,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGREQ && ..."
           },
@@ -6746,14 +8044,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_68"
+          "false_next" : "node_66"
         },
         {
-          "name" : "node_68",
+          "name" : "node_66",
           "id" : 33,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1063,
+            "filename" : "p4ssn.p4",
+            "line" : 1070,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICRESP && ..."
           },
@@ -6789,14 +8087,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_70"
+          "false_next" : "node_68"
         },
         {
-          "name" : "node_70",
+          "name" : "node_68",
           "id" : 34,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1068,
+            "filename" : "p4ssn.p4",
+            "line" : 1075,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGRESP && ..."
           },
@@ -6832,14 +8130,14 @@
             }
           },
           "true_next" : "MyIngress.static_forwarding",
-          "false_next" : "node_72"
+          "false_next" : "node_70"
         },
         {
-          "name" : "node_72",
+          "name" : "node_70",
           "id" : 35,
           "source_info" : {
-            "filename" : "new_p4ssn.p4",
-            "line" : 1074,
+            "filename" : "p4ssn.p4",
+            "line" : 1081,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER && ..."
           },
@@ -6900,15 +8198,234 @@
       "name" : "egress",
       "id" : 1,
       "source_info" : {
-        "filename" : "new_p4ssn.p4",
-        "line" : 1094,
+        "filename" : "p4ssn.p4",
+        "line" : 1101,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
-      "init_table" : null,
-      "tables" : [],
+      "init_table" : "node_75",
+      "tables" : [
+        {
+          "name" : "tbl_otp_encrypt",
+          "id" : 8,
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 1121,
+            "column" : 16,
+            "source_fragment" : "otp_encrypt()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [12],
+          "actions" : ["MyEgress.otp_encrypt"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "MyEgress.otp_encrypt" : null
+          },
+          "default_entry" : {
+            "action_id" : 12,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_otp_encrypt_0",
+          "id" : 9,
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 1126,
+            "column" : 20,
+            "source_fragment" : "otp_encrypt()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [13],
+          "actions" : ["MyEgress.otp_encrypt"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "MyEgress.otp_encrypt" : null
+          },
+          "default_entry" : {
+            "action_id" : 13,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_otp_encrypt_1",
+          "id" : 10,
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 1131,
+            "column" : 16,
+            "source_fragment" : "otp_encrypt()"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [14],
+          "actions" : ["MyEgress.otp_encrypt"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "MyEgress.otp_encrypt" : null
+          },
+          "default_entry" : {
+            "action_id" : 14,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        }
+      ],
       "action_profiles" : [],
-      "conditionals" : []
+      "conditionals" : [
+        {
+          "name" : "node_75",
+          "id" : 36,
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 1118,
+            "column" : 12,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["mqttsn_fixed", "msgType"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x0c"
+              }
+            }
+          },
+          "false_next" : null,
+          "true_next" : "node_76"
+        },
+        {
+          "name" : "node_76",
+          "id" : 37,
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 1120,
+            "column" : 16,
+            "source_fragment" : "hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["mqttsn_flags_publish", "qos"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x03"
+              }
+            }
+          },
+          "true_next" : "tbl_otp_encrypt",
+          "false_next" : "node_78"
+        },
+        {
+          "name" : "node_78",
+          "id" : 38,
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 1124,
+            "column" : 21,
+            "source_fragment" : "hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["mqttsn_flags_publish", "qos"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x00"
+              }
+            }
+          },
+          "true_next" : "node_79",
+          "false_next" : "node_81"
+        },
+        {
+          "name" : "node_79",
+          "id" : 39,
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 1125,
+            "column" : 20,
+            "source_fragment" : "hdr.mqttsn_flags_publish.retain == 0"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["mqttsn_flags_publish", "retain"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x00"
+              }
+            }
+          },
+          "false_next" : null,
+          "true_next" : "tbl_otp_encrypt_0"
+        },
+        {
+          "name" : "node_81",
+          "id" : 40,
+          "source_info" : {
+            "filename" : "p4ssn.p4",
+            "line" : 1130,
+            "column" : 21,
+            "source_fragment" : "hdr.udp.srcPort == UDP_PORT_SVC_GW"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["udp", "srcPort"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x075c"
+              }
+            }
+          },
+          "false_next" : null,
+          "true_next" : "tbl_otp_encrypt_1"
+        }
+      ]
     }
   ],
   "checksums" : [
@@ -6916,8 +8433,8 @@
       "name" : "cksum",
       "id" : 0,
       "source_info" : {
-        "filename" : "new_p4ssn.p4",
-        "line" : 1110,
+        "filename" : "p4ssn.p4",
+        "line" : 1144,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },
@@ -6979,7 +8496,7 @@
       ["standard_metadata", "priority"]
     ]
   ],
-  "program" : "./new_p4ssn.p4i",
+  "program" : "./p4ssn.p4i",
   "__meta__" : {
     "version" : [2, 23],
     "compiler" : "https://github.com/p4lang/p4c"

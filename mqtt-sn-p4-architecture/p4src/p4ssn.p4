@@ -75,7 +75,6 @@ const bit<16> TYPE_IPV4 = 0x800; // 2048
 
 /*Secrets Publish*/
 const bit<16> SECRET_TOPIC_ID = 0xB7A3;
-const bit<512> SECRET_DATA_PUBLISH = 0x8D93D01BEE9B416847B69D483BDFB0D6D4D329D98B278AD866E6B17076638B6F7BA810790B07C638825AE5F9B05FABCF7EC35360992DB924F0ECFEEDA972170B;
 
 /*************************************************************************
 *********************** T Y P E D E F S  *********************************
@@ -413,7 +412,7 @@ struct headers {
 
 // Metadados
 struct metadata {
-    bit<1> drop_flag;
+    //
 }
 
 // Erros customizados para validação dos headers
@@ -784,6 +783,9 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = port;
         // decrementar o ttl em 1
         hdr.ipv4.ttl = hdr.ipv4.ttl-1;
+
+        hdr.ipv4.hdrChecksum = 0;
+        hdr.udp.checksum = 0;
     }
 
     //////////////////////////////////////////////////////
@@ -836,14 +838,23 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
-    action criptoDecripto() {
-        
-        // Criptografar x Descriptografar
-        hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID;
-        hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH;
+    //////////////////////////////////////////////////////
+    /////// ACTIONS DE CRIPTOGRAFIA REFORÇADA (OTP) //////
+    //////////////////////////////////////////////////////
 
-        hdr.udp.checksum = 0;
-        hdr.ipv4.hdrChecksum = 0;
+    action otp_decrypt() {
+        // O salt é o msgId (que no QoS -1 é um Nonce aleatório do Pub)
+        bit<16> salt = hdr.mqttsn_publish.msgId;
+        
+        // Gerador de OTP dinâmico
+        bit<16> otp = (salt << 7) ^ (salt >> 9) ^ 0xA5A5;
+        otp = (otp << 3) | (otp >> 13); 
+
+        // 1. Reverte a rotação (Shift para a DIREITA)
+        bit<16> val = (hdr.mqttsn_publish.topicId >> 4) | (hdr.mqttsn_publish.topicId << 12);
+        
+        // 2. Reverte OTP e Segredo Estático
+        hdr.mqttsn_publish.topicId = val ^ otp ^ SECRET_TOPIC_ID;
     }
 
     //////////////////////////////////////////////////////
@@ -851,11 +862,6 @@ control MyIngress(inout headers hdr,
     //////////////////////////////////////////////////////
 
     apply {
-
-        //if (meta.drop_flag == 1) {
-        //    drop();
-        //}
-
 
         ///////////////////////////////////////////////////////////////////
         /////////// Proteção contra loop interno (recirculação) ///////////
@@ -950,6 +956,9 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid() &&
                     hdr.mqttsn_fixed_data_publish.isValid()) {
+
+                        otp_decrypt();
+
                         // QoS -1
                         if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
                             acelerate_forwarding.apply();
@@ -962,14 +971,12 @@ control MyIngress(inout headers hdr,
                             // QoS 0 && flag retain = 1 (remember last message, so should to pass gateway)
                             // Normal static forwarding
                             else {
-                                criptoDecripto();
                                 static_forwarding.apply();
                             }
                         }
                         // QoS 1 ou 2
                         // Normal static forwarding
                         else {
-                            criptoDecripto();
                             static_forwarding.apply();
                         }
                 }
@@ -1034,8 +1041,8 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid() &&
                     hdr.mqttsn_fixed_data_publish.isValid()) {
-                        criptoDecripto();
                         // Encaminhar sempre, já que o gateway tratou o QoS ao receber a mensagem
+                        // Egress cuidará da re-criptografia do PUBLISH
                         static_forwarding.apply();
                 }
                 // SUBACK
@@ -1095,8 +1102,35 @@ control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
 
+    action otp_encrypt() {
+        bit<16> salt = hdr.mqttsn_publish.msgId;
+        bit<16> otp = (salt << 7) ^ (salt >> 9) ^ 0xA5A5;
+        otp = (otp << 3) | (otp >> 13); 
+
+        // 1. Aplica Segredo Estático e OTP
+        bit<16> val = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID ^ otp;
+        // 2. Aplica Rotação (Shift para a ESQUERDA)
+        hdr.mqttsn_publish.topicId = (val << 4) | (val >> 12);
+    }
+
     apply {
 
+        if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
+            // QoS -1
+            if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
+                otp_encrypt();
+            } 
+            // QoS 0 && flag retain = 0 (do not need remember last message, so não should to pass gateway)
+            else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
+                if (hdr.mqttsn_flags_publish.retain == 0) {
+                    otp_encrypt();
+                }
+            }
+            ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
+            else if (hdr.udp.srcPort == UDP_PORT_SVC_GW) {    // porta 1884
+                otp_encrypt();
+            }
+        }
     }
 }
 
