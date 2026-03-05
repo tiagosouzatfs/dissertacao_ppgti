@@ -213,13 +213,13 @@ header MQTTSN_pubcomp_h {
 /*Message MQTT-SN variable header DISCONNECT*/
 // Veja a seção 6.14 Support of sleeping clients
 header MQTTSN_disconnect_h {
-    //bit<16> duration; // (opcional) ficará para implementações futuras e deverá ser extraído dinamicamente.
+    //bit<16> duration; // (opcional) ficará para implementações futuras.
 }
 
 /*Message MQTT-SN variable header PINGREQ*/
 // Veja a seção 6.14 Support of sleeping clients
 header MQTTSN_pingreq_h {
-    // bit<184> clientId; // (opcional) ficará para implementações futuras e deverá ser extraído dinamicamente.
+    // bit<184> clientId; // (opcional) ficará para implementações futuras.
 }
 
 /*Message MQTT-SN variable header PINGRESP*/
@@ -230,7 +230,7 @@ header MQTTSN_pingresp_h {
 /*Message MQTT-SN variable header SUBSCRIBE*/
 header MQTTSN_subscribe_h {
     bit<16> msgId;
-    bit<16> topicId; // or TopicName
+    bit<16> topicId;
     // bit<n> topicName; // Será extraído dinamicamente.
 }
 
@@ -350,8 +350,6 @@ header MQTTSN_flags_willtopicupd_h {
     bit<5> reserved;
 }
 
-// !!!!!!!!!!!!!!!!!!!!! Verificar o tamanho correto !!!!!!!!!!!!!!!!!!!!!!!!!
-
 /*Default header to fields variables*/
 // Max payload size for Ethernet/IPv4/UDP/MQTT-SN(parte fixa)/MQTT-SN(parte variável da maior mensagem que tem tamanho fixo -> SUBACK)
 // 255(Tamanho total da mensagem mqt-sn / 5.2.1 Length MQTT-SN_spec_v1.2) - 20 - 8 - 2 - 8 = 217 bytes = 1736 bits
@@ -453,8 +451,6 @@ parser MyParser(packet_in packet,
             default: accept;
         }
     }
-
-// !!!!!!!!!!!!! Verificar se está correto ou se tem como melhorar !!!!!!!!!!!!!!
 
     state parse_udp {
         packet.extract(hdr.udp);
@@ -746,6 +742,8 @@ control MyVerifyChecksum(inout headers hdr,
 /*
 /////////////// LIMITAÇÕES: ////////////////
 1 - Veja a seção 6.14 Support of sleeping clients.
+2 - Mensagens em Broadcast não foram totalmente implementadas neste código e não foram nos clientes python.
+3 - Mensagens do tipo WILL não foram totalmente implementadas neste código e não foram nos clientes python.
 */
 
 control MyIngress(inout headers hdr,
@@ -965,17 +963,18 @@ control MyIngress(inout headers hdr,
                         } 
                         // QoS 0 && flag retain = 0 (do not need remember last message, so não should to pass gateway)
                         else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
-                            if (hdr.mqttsn_flags_publish.retain == 0) {
+                            if (hdr.mqttsn_flags_publish.retain == 0 &&
+                               (hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC || 
+                                hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_SHORTTOPICNAME)) {
                                 acelerate_forwarding.apply();
                             }
+                            // QoS 0 && flag retain = 0, but topicIdType == TOPICIDTYPE_TOPICNAME
                             // QoS 0 && flag retain = 1 (remember last message, so should to pass gateway)
-                            // Normal static forwarding
                             else {
                                 static_forwarding.apply();
                             }
                         }
                         // QoS 1 ou 2
-                        // Normal static forwarding
                         else {
                             static_forwarding.apply();
                         }
@@ -1104,11 +1103,14 @@ control MyEgress(inout headers hdr,
 
     action otp_encrypt() {
         bit<16> salt = hdr.mqttsn_publish.msgId;
+
         bit<16> otp = (salt << 7) ^ (salt >> 9) ^ 0xA5A5;
+        
         otp = (otp << 3) | (otp >> 13); 
 
         // 1. Aplica Segredo Estático e OTP
         bit<16> val = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID ^ otp;
+
         // 2. Aplica Rotação (Shift para a ESQUERDA)
         hdr.mqttsn_publish.topicId = (val << 4) | (val >> 12);
     }
@@ -1122,7 +1124,9 @@ control MyEgress(inout headers hdr,
             } 
             // QoS 0 && flag retain = 0 (do not need remember last message, so não should to pass gateway)
             else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
-                if (hdr.mqttsn_flags_publish.retain == 0) {
+                if (hdr.mqttsn_flags_publish.retain == 0 &&
+                    (hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC || 
+                     hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_SHORTTOPICNAME)) {
                     otp_encrypt();
                 }
             }
