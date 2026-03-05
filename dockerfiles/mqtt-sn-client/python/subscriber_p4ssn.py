@@ -9,20 +9,18 @@ import sys
 # Constantes MQTT-SN
 # =============================================================================
 
-MQTTSN_CONNECT     = 0x04
-MQTTSN_CONNACK     = 0x05
-MQTTSN_SUBSCRIBE   = 0x12
-MQTTSN_SUBACK      = 0x13
-MQTTSN_UNSUBSCRIBE = 0x14
-MQTTSN_UNSUBACK    = 0x15
-MQTTSN_PUBLISH     = 0x0C
-MQTTSN_DISCONNECT  = 0x18
-MQTTSN_PINGREQ     = 0x16
-MQTTSN_PINGRESP    = 0x17
-MQTTSN_PUBACK      = 0x0D
-MQTTSN_PUBREC      = 0x0F
-MQTTSN_PUBREL      = 0x10
-MQTTSN_PUBCOMP     = 0x0E
+MQTTSN_CONNECT      = 0x04
+MQTTSN_CONNACK      = 0x05
+MQTTSN_SUBSCRIBE    = 0x12
+MQTTSN_SUBACK       = 0x13
+MQTTSN_PUBLISH      = 0x0C
+MQTTSN_DISCONNECT   = 0x18
+MQTTSN_PINGREQ      = 0x16
+MQTTSN_PINGRESP     = 0x17
+MQTTSN_PUBACK       = 0x0D
+MQTTSN_PUBREC       = 0x0F
+MQTTSN_PUBREL       = 0x10
+MQTTSN_PUBCOMP      = 0x0E
 
 QOS_0 = 0b00
 QOS_1 = 0b01
@@ -43,9 +41,36 @@ CLIENT_PORT = 1893
 TIMEOUT = 5
 KEEPALIVE = 30
 
+# =============================================================================
+# Lógica OTP (One-Time Pad) - Sincronizada com P4
+# =============================================================================
+
+def generate_otp(salt):
+    otp = ((salt << 7) & 0xFFFF) ^ (salt >> 9) ^ 0xA5A5
+    otp = ((otp << 3) & 0xFFFF) | (otp >> 13)
+    return otp & 0xFFFF
+
+def otp_decrypt_topic(encrypted_topic, salt):
+    otp = generate_otp(salt)
+    # Reverte Rotação (Direita)
+    val = ((encrypted_topic >> 4) | (encrypted_topic << 12)) & 0xFFFF
+    return val ^ otp ^ SECRET_TOPIC_ID
+
+def otp_process_data(payload_raw, salt_ignored):
+    # Extrai o salt de 2 bytes do início do payload recebido
+    payload_salt = struct.unpack('>H', payload_raw[:2])[0]
+    encrypted_data = payload_raw[2:]
+    
+    otp = generate_otp(payload_salt)
+    mask_bytes = SECRET_DATA_PUBLISH.to_bytes(64, "big")
+    output = []
+    for i, b in enumerate(encrypted_data):
+        dynamic_mask = mask_bytes[i % 64] ^ (otp & 0xFF if i % 2 == 0 else (otp >> 8) & 0xFF)
+        output.append(b ^ dynamic_mask)
+    return bytes(output)
 
 # =============================================================================
-# Comunicação robusta
+# Comunicação e Builders (Originais)
 # =============================================================================
 
 def recv_packet(sock):
@@ -59,154 +84,90 @@ def recv_packet(sock):
     except socket.timeout:
         return None
 
-
-def xor_data(data_bytes):
-    mask_bytes = SECRET_DATA_PUBLISH.to_bytes(64, "big")
-    return bytes([b ^ mask_bytes[i % 64] for i, b in enumerate(data_bytes)])
-
-
-# =============================================================================
-# Builders MQTT-SN
-# =============================================================================
-
 def build_connect(client_id, duration=KEEPALIVE):
-    flags = 0x04
-    protocol_id = 0x01
-    payload = struct.pack(">BBH", flags, protocol_id, duration) + client_id.encode()
+    payload = struct.pack(">BBH", 0x04, 0x01, duration) + client_id.encode()
     return struct.pack(">BB", len(payload)+2, MQTTSN_CONNECT) + payload
 
-
 def build_subscribe(topic_input, msg_id, qos_level, topic_type):
-
     flags = (qos_level << 5) | topic_type
-
     if topic_type == TOPICIDTYPE_TOPICNAME:
         payload = struct.pack(">BH", flags, msg_id) + topic_input.encode()
-
     elif topic_type == TOPICIDTYPE_PREDEFINED:
         payload = struct.pack(">BHH", flags, msg_id, int(topic_input))
-
-    elif topic_type == TOPICIDTYPE_SHORT:
-        if len(topic_input) != 2:
-            print("Short topic deve ter 2 caracteres.")
-            sys.exit(1)
-        payload = struct.pack(">BH", flags, msg_id) + topic_input.encode()
-
+    else: # Short
+        payload = struct.pack(">BH", flags, msg_id) + topic_input[:2].encode()
     return struct.pack(">BB", len(payload)+2, MQTTSN_SUBSCRIBE) + payload
 
-
 def build_puback(topic_id, msg_id):
-    payload = struct.pack(">HHB", topic_id ^ SECRET_TOPIC_ID, msg_id, 0x00)
+    # Envia o ID real (o Switch no Egress tratará se necessário)
+    payload = struct.pack(">HHB", topic_id, msg_id, 0x00)
     return struct.pack(">BB", len(payload)+2, MQTTSN_PUBACK) + payload
 
-
-def build_pubrec(msg_id):
-    return struct.pack(">BBH", 4, MQTTSN_PUBREC, msg_id)
-
-
-def build_pubcomp(msg_id):
-    return struct.pack(">BBH", 4, MQTTSN_PUBCOMP, msg_id)
-
-
-def build_pingreq():
-    return struct.pack(">BB", 2, MQTTSN_PINGREQ)
-
-
-def build_disconnect():
-    return struct.pack(">BB", 2, MQTTSN_DISCONNECT)
-
-
 # =============================================================================
-# Subscriber Principal
+# Subscriber Principal (Original)
 # =============================================================================
 
 def mqttsn_subscriber():
-
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((CLIENT_IP, CLIENT_PORT))
-
     client_id = f"struct_sub_{random.randint(1000,9999)}"
-
-    print(f"Subscriber iniciado em {CLIENT_IP}:{CLIENT_PORT}")
-    print(f"Gateway em {GW_IP}:{GW_PORT}\n")
 
     topic_input = input("Digite o tópico ou ID: ").strip()
     topic_type = int(input("Tipo (0=Name,1=Predefined,2=Short): ").strip())
     qos_level = int(input("QoS (0,1,2): ").strip())
 
-    msg_id = random.randint(1, 2000)
-
     # CONNECT
-    print("-> CONNECT")
     sock.sendto(build_connect(client_id), (GW_IP, GW_PORT))
-
     while True:
         pkt = recv_packet(sock)
         if pkt and pkt[0] == MQTTSN_CONNACK:
-            print("<- CONNACK")
             break
 
     # SUBSCRIBE
-    print("-> SUBSCRIBE")
+    msg_id = random.randint(1, 2000)
     sock.sendto(build_subscribe(topic_input, msg_id, qos_level, topic_type), (GW_IP, GW_PORT))
-
     while True:
         pkt = recv_packet(sock)
         if pkt and pkt[0] == MQTTSN_SUBACK:
-            topic_id = struct.unpack(">H", pkt[1][3:5])[0]
-            print(f"<- SUBACK (TopicID={topic_id})\n")
             break
 
     print("Aguardando mensagens...\n")
-
     last_ping = time.time()
 
     while True:
-
         pkt = recv_packet(sock)
-
         if pkt is None:
             if time.time() - last_ping > KEEPALIVE:
-                print("-> PINGREQ")
-                sock.sendto(build_pingreq(), (GW_IP, GW_PORT))
+                sock.sendto(struct.pack(">BB", 2, MQTTSN_PINGREQ), (GW_IP, GW_PORT))
                 last_ping = time.time()
             continue
 
         msgType, data = pkt
-
         if msgType == MQTTSN_PUBLISH:
-
             flags = data[2]
             qos_bits = (flags >> 5) & 0x03
-            retain = (flags >> 4) & 0x01
-
-            topic_id_enc = struct.unpack(">H", data[3:5])[0]
-            msg_id_rcv = struct.unpack(">H", data[5:7])[0]
+            
+            # Decodificação OTP usando o msgId (Salt)
+            topic_enc = struct.unpack(">H", data[3:5])[0]
+            salt = struct.unpack(">H", data[5:7])[0]
             payload_raw = data[7:]
 
-            topic_id_rcv = topic_id_enc ^ SECRET_TOPIC_ID
-            decoded = xor_data(payload_raw).decode(errors="ignore").rstrip("*")
+            topic_id_rcv = otp_decrypt_topic(topic_enc, salt)
+            
+            # Altera apenas a chamada do data para usar a nova lógica de salt embutido
+            decoded = otp_process_data(payload_raw, salt).decode(errors="ignore").rstrip("*")
 
-            print(f"<- PUBLISH (TopicID={topic_id_rcv}, QoS={qos_bits}, Retain={retain})")
+            print(f"<- PUBLISH (ID Real={topic_id_rcv}, Salt={hex(salt)})")
             print(f"   Conteúdo: '{decoded}'\n")
 
             if qos_bits == QOS_1:
-                sock.sendto(build_puback(topic_id_rcv, msg_id_rcv), (GW_IP, GW_PORT))
-
+                sock.sendto(build_puback(topic_id_rcv, salt), (GW_IP, GW_PORT))
             elif qos_bits == QOS_2:
-                sock.sendto(build_pubrec(msg_id_rcv), (GW_IP, GW_PORT))
+                sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBREC, salt), (GW_IP, GW_PORT))
 
         elif msgType == MQTTSN_PUBREL:
             msg_id_rel = struct.unpack(">H", data[2:4])[0]
-            sock.sendto(build_pubcomp(msg_id_rel), (GW_IP, GW_PORT))
-
-        elif msgType == MQTTSN_PINGRESP:
-            print("<- PINGRESP")
-
-        elif msgType == MQTTSN_DISCONNECT:
-            print("Gateway encerrou conexão.")
-            break
-
+            sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBCOMP, msg_id_rel), (GW_IP, GW_PORT))
 
 if __name__ == "__main__":
     mqttsn_subscriber()

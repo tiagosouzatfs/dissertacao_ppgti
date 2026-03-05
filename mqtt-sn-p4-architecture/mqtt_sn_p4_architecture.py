@@ -33,7 +33,7 @@ def topology():
         'pb1', 
         ip='10.0.0.2/8', 
         mac="00:00:00:00:00:02", 
-        dimage="mqtt-sn-client", 
+        dimage="mqtt-sn-client-python", 
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
@@ -43,13 +43,13 @@ def topology():
         'ss1', 
         ip='10.0.0.3/8', 
         mac="00:00:00:00:00:03", 
-        dimage="mqtt-sn-client", 
+        dimage="mqtt-sn-client-python", 
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
     path = os.path.dirname(os.path.abspath(__file__))
-    json_file = '/root/new_p4ssn.json'
+    json_file = '/root/p4ssn.json'
     config = path + '/rules/forwarding.txt'
     args = {'json': json_file, 'switch_config': config}
 
