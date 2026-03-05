@@ -75,7 +75,6 @@ const bit<16> TYPE_IPV4 = 0x800; // 2048
 
 /*Secrets Publish*/
 const bit<16> SECRET_TOPIC_ID = 0xB7A3;
-const bit<512> SECRET_DATA_PUBLISH = 0x8D93D01BEE9B416847B69D483BDFB0D6D4D329D98B278AD866E6B17076638B6F7BA810790B07C638825AE5F9B05FABCF7EC35360992DB924F0ECFEEDA972170B;
 
 /*************************************************************************
 *********************** T Y P E D E F S  *********************************
@@ -214,13 +213,13 @@ header MQTTSN_pubcomp_h {
 /*Message MQTT-SN variable header DISCONNECT*/
 // Veja a seção 6.14 Support of sleeping clients
 header MQTTSN_disconnect_h {
-    //bit<16> duration; // (opcional) ficará para implementações futuras e deverá ser extraído dinamicamente.
+    //bit<16> duration; // (opcional) ficará para implementações futuras.
 }
 
 /*Message MQTT-SN variable header PINGREQ*/
 // Veja a seção 6.14 Support of sleeping clients
 header MQTTSN_pingreq_h {
-    // bit<184> clientId; // (opcional) ficará para implementações futuras e deverá ser extraído dinamicamente.
+    // bit<184> clientId; // (opcional) ficará para implementações futuras.
 }
 
 /*Message MQTT-SN variable header PINGRESP*/
@@ -231,7 +230,7 @@ header MQTTSN_pingresp_h {
 /*Message MQTT-SN variable header SUBSCRIBE*/
 header MQTTSN_subscribe_h {
     bit<16> msgId;
-    bit<16> topicId; // or TopicName
+    bit<16> topicId;
     // bit<n> topicName; // Será extraído dinamicamente.
 }
 
@@ -351,8 +350,6 @@ header MQTTSN_flags_willtopicupd_h {
     bit<5> reserved;
 }
 
-// !!!!!!!!!!!!!!!!!!!!! Verificar o tamanho correto !!!!!!!!!!!!!!!!!!!!!!!!!
-
 /*Default header to fields variables*/
 // Max payload size for Ethernet/IPv4/UDP/MQTT-SN(parte fixa)/MQTT-SN(parte variável da maior mensagem que tem tamanho fixo -> SUBACK)
 // 255(Tamanho total da mensagem mqt-sn / 5.2.1 Length MQTT-SN_spec_v1.2) - 20 - 8 - 2 - 8 = 217 bytes = 1736 bits
@@ -413,7 +410,7 @@ struct headers {
 
 // Metadados
 struct metadata {
-    bit<1> drop_flag;
+    //
 }
 
 // Erros customizados para validação dos headers
@@ -454,8 +451,6 @@ parser MyParser(packet_in packet,
             default: accept;
         }
     }
-
-// !!!!!!!!!!!!! Verificar se está correto ou se tem como melhorar !!!!!!!!!!!!!!
 
     state parse_udp {
         packet.extract(hdr.udp);
@@ -747,6 +742,8 @@ control MyVerifyChecksum(inout headers hdr,
 /*
 /////////////// LIMITAÇÕES: ////////////////
 1 - Veja a seção 6.14 Support of sleeping clients.
+2 - Mensagens em Broadcast não foram totalmente implementadas neste código e não foram nos clientes python.
+3 - Mensagens do tipo WILL não foram totalmente implementadas neste código e não foram nos clientes python.
 */
 
 control MyIngress(inout headers hdr,
@@ -784,6 +781,9 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = port;
         // decrementar o ttl em 1
         hdr.ipv4.ttl = hdr.ipv4.ttl-1;
+
+        hdr.ipv4.hdrChecksum = 0;
+        hdr.udp.checksum = 0;
     }
 
     //////////////////////////////////////////////////////
@@ -836,14 +836,23 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
-    action criptoDecripto() {
-        
-        // Criptografar x Descriptografar
-        hdr.mqttsn_publish.topicId = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID;
-        hdr.mqttsn_fixed_data_publish.data = hdr.mqttsn_fixed_data_publish.data ^ SECRET_DATA_PUBLISH;
+    //////////////////////////////////////////////////////
+    /////// ACTIONS DE CRIPTOGRAFIA REFORÇADA (OTP) //////
+    //////////////////////////////////////////////////////
 
-        hdr.udp.checksum = 0;
-        hdr.ipv4.hdrChecksum = 0;
+    action otp_decrypt() {
+        // O salt é o msgId (que no QoS -1 é um Nonce aleatório do Pub)
+        bit<16> salt = hdr.mqttsn_publish.msgId;
+        
+        // Gerador de OTP dinâmico
+        bit<16> otp = (salt << 7) ^ (salt >> 9) ^ 0xA5A5;
+        otp = (otp << 3) | (otp >> 13); 
+
+        // 1. Reverte a rotação (Shift para a DIREITA)
+        bit<16> val = (hdr.mqttsn_publish.topicId >> 4) | (hdr.mqttsn_publish.topicId << 12);
+        
+        // 2. Reverte OTP e Segredo Estático
+        hdr.mqttsn_publish.topicId = val ^ otp ^ SECRET_TOPIC_ID;
     }
 
     //////////////////////////////////////////////////////
@@ -851,11 +860,6 @@ control MyIngress(inout headers hdr,
     //////////////////////////////////////////////////////
 
     apply {
-
-        //if (meta.drop_flag == 1) {
-        //    drop();
-        //}
-
 
         ///////////////////////////////////////////////////////////////////
         /////////// Proteção contra loop interno (recirculação) ///////////
@@ -950,26 +954,28 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid() &&
                     hdr.mqttsn_fixed_data_publish.isValid()) {
+
+                        otp_decrypt();
+
                         // QoS -1
                         if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
                             acelerate_forwarding.apply();
                         } 
                         // QoS 0 && flag retain = 0 (do not need remember last message, so não should to pass gateway)
                         else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
-                            if (hdr.mqttsn_flags_publish.retain == 0) {
+                            if (hdr.mqttsn_flags_publish.retain == 0 &&
+                               (hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC || 
+                                hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_SHORTTOPICNAME)) {
                                 acelerate_forwarding.apply();
                             }
+                            // QoS 0 && flag retain = 0, but topicIdType == TOPICIDTYPE_TOPICNAME
                             // QoS 0 && flag retain = 1 (remember last message, so should to pass gateway)
-                            // Normal static forwarding
                             else {
-                                criptoDecripto();
                                 static_forwarding.apply();
                             }
                         }
                         // QoS 1 ou 2
-                        // Normal static forwarding
                         else {
-                            criptoDecripto();
                             static_forwarding.apply();
                         }
                 }
@@ -1034,8 +1040,8 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid() &&
                     hdr.mqttsn_fixed_data_publish.isValid()) {
-                        criptoDecripto();
                         // Encaminhar sempre, já que o gateway tratou o QoS ao receber a mensagem
+                        // Egress cuidará da re-criptografia do PUBLISH
                         static_forwarding.apply();
                 }
                 // SUBACK
@@ -1095,8 +1101,40 @@ control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
 
+    action otp_encrypt() {
+        bit<16> salt = hdr.mqttsn_publish.msgId;
+
+        bit<16> otp = (salt << 7) ^ (salt >> 9) ^ 0xA5A5;
+        
+        otp = (otp << 3) | (otp >> 13); 
+
+        // 1. Aplica Segredo Estático e OTP
+        bit<16> val = hdr.mqttsn_publish.topicId ^ SECRET_TOPIC_ID ^ otp;
+
+        // 2. Aplica Rotação (Shift para a ESQUERDA)
+        hdr.mqttsn_publish.topicId = (val << 4) | (val >> 12);
+    }
+
     apply {
 
+        if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
+            // QoS -1
+            if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
+                otp_encrypt();
+            } 
+            // QoS 0 && flag retain = 0 (do not need remember last message, so não should to pass gateway)
+            else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
+                if (hdr.mqttsn_flags_publish.retain == 0 &&
+                    (hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC || 
+                     hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_SHORTTOPICNAME)) {
+                    otp_encrypt();
+                }
+            }
+            ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
+            else if (hdr.udp.srcPort == UDP_PORT_SVC_GW) {    // porta 1884
+                otp_encrypt();
+            }
+        }
     }
 }
 

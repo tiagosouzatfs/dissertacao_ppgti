@@ -18,6 +18,17 @@ def topology():
 
     net = Containernet()
 
+    # Definindo variáveis no EMQX Broker para inicialização automática do EMQX Gateway
+    emqx_env = {
+        "DISPLAY": ":{}".format(DISPLAY_ID),
+        "EMQX_GATEWAY__MQTTSN__ENABLE": "true",
+        "EMQX_GATEWAY__MQTTSN__GATEWAY_ID": "1",
+        "EMQX_GATEWAY__MQTTSN__LISTENERS__UDP__DEFAULT__BIND": "1884",
+        # Note o uso de aspas duplas escapadas dentro da string para o JSON dos tópicos
+        # "EMQX_GATEWAY__MQTTSN__PREDEFINED": '[{"id": 1, "topic": "sensor/temperatura"}, {"id": 2, "topic": "sensor/umidade"}]'
+        "EMQX_GATEWAY__MQTTSN__PREDEFINED": '[{"id": 10, "topic": "temperatura"}, {"id": 20, "topic": "umidade"}]'
+    }
+
     debug('Adicionando Gateway/broker MQTT-SN\n')
     gw_bk = net.addDocker(
         'gw_bk', 
@@ -25,31 +36,41 @@ def topology():
         mac="00:00:00:00:00:01", 
         dimage='mqtt-sn-gw',
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
-        environment={'DISPLAY':":{}".format(DISPLAY_ID)}
+        dcmd="emqx foreground",
+        environment=emqx_env
     )
+
+    # Equivale a: /home/vboxuser/dissertacao_ppgti
+    project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    client_pub_path = "/dockerfiles/mqtt-sn-client/python/publisher_p4ssn.py"
+    pub_path = project_path + "/" + client_pub_path
 
     debug("Adicionando sensores publishers\n")
     pb1 = net.addDocker(
         'pb1', 
         ip='10.0.0.2/8', 
         mac="00:00:00:00:00:02", 
-        dimage="mqtt-sn-client", 
-        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
+        dimage="mqtt-sn-client-python", 
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', pub_path + ':/root/publisher_p4ssn.py'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
+
+    client_sub_path = "/dockerfiles/mqtt-sn-client/python/subscriber_p4ssn.py"
+    sub_path = project_path + "/" + client_sub_path
 
     debug("Adicionando subscriber\n")
     ss1 = net.addDocker(
         'ss1', 
         ip='10.0.0.3/8', 
         mac="00:00:00:00:00:03", 
-        dimage="mqtt-sn-client", 
-        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
+        dimage="mqtt-sn-client-python", 
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', sub_path + ':/root/subscriber_p4ssn.py'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
     path = os.path.dirname(os.path.abspath(__file__))
-    json_file = '/root/new_p4ssn.json'
+    json_file = '/root/p4ssn.json'
     config = path + '/rules/forwarding.txt'
     args = {'json': json_file, 'switch_config': config}
 
