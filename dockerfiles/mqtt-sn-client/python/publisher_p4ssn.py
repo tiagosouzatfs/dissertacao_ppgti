@@ -168,7 +168,10 @@ def sequence_common(sock, qos_level, msg_id, topic_input, data, client_id):
         regack = send_and_wait(sock, build_register(topic_input, msg_id), MQTTSN_REGACK, msg_id)
         if not regack:
             return
-        topic_id = struct.unpack('>H', regack[6:8])[0]
+        # CORREÇÃO: O TopicId no REGACK MQTT-SN padrão (7 bytes) está nos bytes 2 e 3
+        # [0]=Len, [1]=Type(0x0B), [2:4]=TopicId, [4:6]=MsgId, [6]=ReturnCode
+        topic_id = struct.unpack('>H', regack[2:4])[0]
+        print(f"<- REGACK recebido: topic_id = {topic_id}")
     else:
         topic_id = topic_input
 
@@ -230,7 +233,9 @@ if __name__ == "__main__":
     elif selected_topic_type == TOPICIDTYPE_PREDEFINEDTOPIC:
         topic_val = int(input("Digite o Predefined Topic ID: "))
     elif selected_topic_type == TOPICIDTYPE_SHORTTOPICNAME:
-        topic_val = int.from_bytes(input("Digite o Short Topic (2 caracteres): ")[:2].encode(), "big")
+        # Pega 2 caracteres e converte para int de 16 bits
+        t_str = input("Digite o Short Topic (2 caracteres): ")[:2].ljust(2, '_')
+        topic_val = struct.unpack('>H', t_str.encode())[0]
 
     data_msg = input("Mensagem (máx 64 bytes): ").ljust(64, "*")[:64]
 

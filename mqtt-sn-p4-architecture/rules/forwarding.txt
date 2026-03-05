@@ -1,7 +1,7 @@
 table_set_default acelerate_forwarding drop
 table_add MyIngress.acelerate_forwarding acelerate 10 => 00:00:00:00:00:03 3 10.0.0.3 1893
-table_add MyIngress.acelerate_forwarding acelerate 20 => 00:00:00:00:00:03 3 10.0.0.3 1893
-table_add MyIngress.acelerate_forwarding acelerate tt => 00:00:00:00:00:03 3 10.0.0.3 1893
+# 0x6162 é representação hexadecimal do shorttopicname "ab"
+table_add MyIngress.acelerate_forwarding acelerate 0x6162 => 00:00:00:00:00:03 3 10.0.0.3 1893
 
 table_set_default static_forwarding drop
 table_add MyIngress.static_forwarding forwarding 10.0.0.1 => 00:00:00:00:00:01 1
