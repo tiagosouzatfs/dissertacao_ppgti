@@ -56,16 +56,29 @@ def topology():
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    client_sub_path = "/dockerfiles/mqtt-sn-client/python/subscriber_p4ssn.py"
-    sub_path = project_path + "/" + client_sub_path
+    client_sub1_path = "/dockerfiles/mqtt-sn-client/python/subscriber_p4ssn1.py"
+    sub_path1 = project_path + "/" + client_sub1_path
 
-    debug("Adicionando subscriber\n")
+    debug("Adicionando subscriber 1\n")
     ss1 = net.addDocker(
         'ss1', 
         ip='10.0.0.3/8', 
         mac="00:00:00:00:00:03", 
         dimage="mqtt-sn-client-python", 
-        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', sub_path + ':/root/subscriber_p4ssn.py'],
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', sub_path1 + ':/root/subscriber_p4ssn1.py'],
+        environment={'DISPLAY':":{}".format(DISPLAY_ID)}
+    )
+
+    client_sub2_path = "/dockerfiles/mqtt-sn-client/python/subscriber_p4ssn2.py"
+    sub_path2 = project_path + "/" + client_sub2_path
+
+    debug("Adicionando subscriber 2\n")
+    ss2 = net.addDocker(
+        'ss2', 
+        ip='10.0.0.4/8', 
+        mac="00:00:00:00:00:04", 
+        dimage="mqtt-sn-client-python", 
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', sub_path2 + ':/root/subscriber_p4ssn2.py'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -93,6 +106,7 @@ def topology():
     net.addLink(gw_bk, s1, txo=False, rxo=False)
     net.addLink(pb1, s1, txo=False, rxo=False)
     net.addLink(ss1, s1, txo=False, rxo=False)
+    net.addLink(ss2, s1, txo=False, rxo=False)
 
     debug('*** Starting network\n')
     net.build()
@@ -105,8 +119,11 @@ def topology():
     debug("Iniciando publisher\n")
     makeTerm(pb1)
 
-    debug("Iniciando subscriber\n")
+    debug("Iniciando subscriber 1\n")
     makeTerm(ss1)
+
+    debug("Iniciando subscriber 2\n")
+    makeTerm(ss2)
 
     debug("CLI containernet\n")
     CLI(net)
