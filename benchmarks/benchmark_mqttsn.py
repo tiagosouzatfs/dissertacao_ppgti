@@ -114,7 +114,7 @@ class MQTTSNBenchmark:
         print(f"[{iteration:03}/100] QoS: {qos} | Retain: {retain} | {status} | {round(total_ms, 2)}ms")
 
         return {
-            "cenario": "pure_mqttsn", "qos": qos, "retain": retain,
+            "cenario": "mqttsn", "qos": qos, "retain": retain,
             "t_publish_ms": round((t_end_pub - t_start_pub)*1000, 4) if t_end_pub > 0 else 0,
             "t_total_ms": round(total_ms, 4)
         }

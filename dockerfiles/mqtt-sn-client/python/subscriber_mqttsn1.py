@@ -73,7 +73,7 @@ def build_puback(topic_id, msg_id):
     return struct.pack(">BB", len(payload)+2, MQTTSN_PUBACK) + payload
 
 # =============================================================================
-# Subscriber Principal (Puro)
+# Subscriber Principal 
 # =============================================================================
 
 def mqttsn_subscriber():
@@ -100,7 +100,7 @@ def mqttsn_subscriber():
         if pkt and pkt[0] == MQTTSN_SUBACK:
             break
 
-    print("Aguardando mensagens (Puro)...\n")
+    print("Aguardando mensagens ...\n")
     last_ping = time.time()
 
     while True:
@@ -120,7 +120,7 @@ def mqttsn_subscriber():
             topic_id_rcv = struct.unpack(">H", data[3:5])[0]
             msg_id_rcv = struct.unpack(">H", data[5:7])[0]
             
-            # No MQTT-SN puro, o payload começa no byte 7
+            # No MQTT-SN, o payload começa no byte 7
             decoded = data[7:].decode(errors="ignore")
 
             print(f"<- PUBLISH (TopicID={topic_id_rcv}, MsgID={msg_id_rcv})")
