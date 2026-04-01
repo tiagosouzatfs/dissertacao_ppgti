@@ -7,116 +7,94 @@ import os
 import csv
 
 # =============================================================================
-# Constantes MQTT-SN
+# Constantes MQTT-SN Padrão
 # =============================================================================
-MQTTSN_CONNECT      = 0x04
-MQTTSN_CONNACK      = 0x05
-MQTTSN_REGISTER     = 0x0A
-MQTTSN_REGACK       = 0x0B
-MQTTSN_PUBLISH      = 0x0C
-MQTTSN_PUBACK       = 0x0D
-MQTTSN_PUBREC       = 0x0F
-MQTTSN_PUBREL       = 0x10
-MQTTSN_PUBCOMP      = 0x0E
-MQTTSN_DISCONNECT   = 0x18
+MQTTSN_CONNECT, MQTTSN_CONNACK = 0x04, 0x05
+MQTTSN_PUBLISH, MQTTSN_PUBACK = 0x0C, 0x0D
+MQTTSN_PUBREC, MQTTSN_PUBREL = 0x0F, 0x10
+MQTTSN_PUBCOMP, MQTTSN_DISCONNECT = 0x0E, 0x18
 
-QOS_M1 = 0b11
-QOS_0  = 0b00
-QOS_1  = 0b01
-QOS_2  = 0b10
+QOS_M1, QOS_0, QOS_1, QOS_2 = 0b11, 0b00, 0b01, 0b10
+TOPICIDTYPE_PREDEFINED = 0b01
 
-TOPICIDTYPE_TOPICNAME       = 0b00
-TOPICIDTYPE_PREDEFINEDTOPIC = 0b01
-
-GW_IP = "10.0.0.1"
-GW_PORT = 1884
+GW_IP, GW_PORT = "10.0.0.1", 1884
 CLIENT_IP = "10.0.0.2"
-SERVER_ADDRESS = (GW_IP, GW_PORT)
 TIMEOUT = 5.0
+PREDEFINED_TOPIC_ID = 10
 
+# =============================================================================
+# Classe de Benchmark MQTT-SN (Standard)
+# =============================================================================
 class MQTTSNBenchmark:
     def __init__(self, client_ip):
         self.client_ip = client_ip
 
-    def build_packet(self, msg_type, payload):
-        return struct.pack('>BB', len(payload) + 2, msg_type) + payload
-
     def run_iteration(self, qos, retain, iteration):
-        client_id = f"bench_{iteration}_{random.randint(100, 999)}"
+        client_id = f"sn_{iteration}_{random.randint(100, 999)}"
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.client_ip, 0))
         sock.settimeout(TIMEOUT)
         
         msg_id = (iteration + (qos * 100)) % 0xFFFF
-        data_str = "MQTT_SN_PURE_DATA_BENCHMARK".ljust(62, "*")[:62]
+        # Payload de texto simples (sem criptografia)
+        data_str = "MQTTSN_STANDARD_DATA_BENCHMARK"
+        payload = data_str.encode()
         
-        t_start_flow = time.perf_counter()
-        t_start_pub = 0
-        t_end_total = 0
+        t_end_flow = 0
         
         try:
-            # Lógica Híbrida de Tópico
-            # QoS -1 OU (QoS 0 e SEM Retain) -> Predefined ID 10
-            use_predefined = (qos == QOS_M1) or (qos == QOS_0 and retain == 0)
-
+            # 1. SETUP (Fora da medição do fluxo de publicação)
             if qos != QOS_M1:
-                # CONNECT
-                conn_payload = struct.pack('>BBH', 0x04, 0x01, 60) + client_id.encode()
-                sock.sendto(self.build_packet(MQTTSN_CONNECT, conn_payload), SERVER_ADDRESS)
-                sock.recvfrom(1024) 
+                # CONNECT (Mensagem de 6 bytes + ID do cliente)
+                conn = struct.pack('>BBH', 0x04, 0x01, 60) + client_id.encode()
+                sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
+                sock.recvfrom(1024)
 
-                if not use_predefined:
-                    # REGISTER para "benchmark"
-                    reg_payload = struct.pack('>HH', 0x0000, msg_id) + b"benchmark"
-                    sock.sendto(self.build_packet(MQTTSN_REGISTER, reg_payload), SERVER_ADDRESS)
-                    regack, _ = sock.recvfrom(1024)
-                    topic_id = struct.unpack('>H', regack[2:4])[0]
-                    topic_type = TOPICIDTYPE_TOPICNAME
-                else:
-                    topic_id = 10
-                    topic_type = TOPICIDTYPE_PREDEFINEDTOPIC
-            else:
-                # QoS -1 usa sempre Predefined
-                topic_id = 10
-                topic_type = TOPICIDTYPE_PREDEFINEDTOPIC
-
-            # --- PUBLISH ---
-            t_start_pub = time.perf_counter()
+            # --- INÍCIO DA MEDIÇÃO DO FLUXO ---
+            t_start_flow = time.perf_counter()
             
-            retain_bit = (retain & 0x01) << 4 if qos != QOS_M1 else 0
-            flags = ((qos & 0x03) << 5) | (topic_type & 0x03) | retain_bit
-            pub_header = struct.pack('>BHH', flags, topic_id, msg_id)
-            sock.sendto(self.build_packet(MQTTSN_PUBLISH, pub_header + data_str.encode()), SERVER_ADDRESS)
+            flags = ((qos & 0x03) << 5) | ((retain & 0x01) << 4) | TOPICIDTYPE_PREDEFINED
             
-            t_end_pub = time.perf_counter()
-
+            # Cabeçalho PUBLISH padrão (sem Salt/OTP): Length(1), MsgType(1), Flags(1), TopicID(2), MsgID(2)
+            # Nota: Se o payload for grande (>255), o cabeçalho MQTT-SN muda, mas aqui usamos 1 byte para o tamanho.
+            header = struct.pack('>BB BHH', len(payload)+7, MQTTSN_PUBLISH, flags, PREDEFINED_TOPIC_ID, msg_id)
+            sock.sendto(header + payload, (GW_IP, GW_PORT))
+            
             # --- HANDSHAKES ---
-            if qos == QOS_1:
-                sock.recvfrom(1024) # PUBACK
-            elif qos == QOS_2:
-                resp, _ = sock.recvfrom(1024)
-                if resp[1] == MQTTSN_PUBREC:
-                    sock.sendto(self.build_packet(MQTTSN_PUBREL, struct.pack('>H', msg_id)), SERVER_ADDRESS)
-                    sock.recvfrom(1024) # PUBCOMP
+            if qos == QOS_0 or qos == QOS_M1:
+                t_end_flow = time.perf_counter()
             
-            t_end_total = time.perf_counter()
+            elif qos == QOS_1:
+                sock.recvfrom(1024) # Espera PUBACK
+                t_end_flow = time.perf_counter()
+                
+            elif qos == QOS_2:
+                rec, _ = sock.recvfrom(1024) # Espera PUBREC
+                if rec[1] == MQTTSN_PUBREC:
+                    # Envia PUBREL
+                    sock.sendto(struct.pack('>BBH', 4, MQTTSN_PUBREL, msg_id), (GW_IP, GW_PORT))
+                    # Espera PUBCOMP
+                    sock.recvfrom(1024)
+                t_end_flow = time.perf_counter()
+            # --- FIM DA MEDIÇÃO DO FLUXO ---
 
             if qos != QOS_M1:
-                sock.sendto(self.build_packet(MQTTSN_DISCONNECT, b""), SERVER_ADDRESS)
+                sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
 
         except (socket.timeout, Exception):
-            t_start_pub = t_end_pub = t_end_total = t_start_flow
+            t_start_flow = t_end_flow = 0
         finally:
             sock.close()
 
-        total_ms = (t_end_total - t_start_flow) * 1000 if t_end_total > t_start_flow else 0
-        status = "OK" if total_ms > 0 or qos == QOS_M1 else "FAIL"
-        print(f"[{iteration:03}/100] QoS: {qos} | Retain: {retain} | {status} | {round(total_ms, 2)}ms")
+        flow_ms = (t_end_flow - t_start_flow) * 1000 if t_end_flow > 0 else 0
+        q_label = -1 if qos == 0b11 else qos
+        print(f"[{iteration:03}/100] QoS: {q_label} | Retain: {retain} | Flow: {round(flow_ms, 4)}ms")
 
         return {
-            "cenario": "mqttsn", "qos": qos, "retain": retain,
-            "t_publish_ms": round((t_end_pub - t_start_pub)*1000, 4) if t_end_pub > 0 else 0,
-            "t_total_ms": round(total_ms, 4)
+            "cenario": "mqttsn",
+            "qos": qos,
+            "retain": retain,
+            "t_flow_ms": round(flow_ms, 4)
         }
 
 if __name__ == "__main__":
@@ -125,13 +103,15 @@ if __name__ == "__main__":
     
     test_cases = [(QOS_M1, 0), (QOS_0, 0), (QOS_0, 1), (QOS_1, 0), (QOS_2, 0)]
     
-    with open('results/mqttsn.csv', 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=["cenario", "qos", "retain", "t_publish_ms", "t_total_ms"])
+    with open('results/mqttsn_std.csv', 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=["cenario", "qos", "retain", "t_flow_ms"])
         writer.writeheader()
         
         for qos, ret in test_cases:
-            print(f"\n>>> Bateria: QoS {qos} | Retain {ret}")
-            time.sleep(2)
+            print(f"\n>>> Bateria MQTT-SN Padrão: QoS {qos} | Retain {ret}")
+            time.sleep(1)
             for i in range(1, 101):
                 writer.writerow(bench.run_iteration(qos, ret, i))
                 time.sleep(0.05)
+
+    print(f"\n[SUCESSO] CSV results/mqttsn_std.csv gerado.")
