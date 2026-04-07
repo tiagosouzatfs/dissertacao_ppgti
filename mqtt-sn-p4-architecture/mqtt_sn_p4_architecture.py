@@ -94,7 +94,6 @@ def topology():
         cls=DockerP4Switch,
         volumes=[path + "/:/root"],
         dimage="ramonfontes/bmv2", 
-        cpu_shares=20,
         netcfg=True, 
         thriftport=50001,
         IPBASE="172.17.0.0/16",
