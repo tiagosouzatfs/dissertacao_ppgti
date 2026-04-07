@@ -4,7 +4,7 @@ import time
 
 # --- CONFIGURAÇÃO ---
 CONTAINER_NAME = "mn.gw_bk"   # Nome do container do Gateway/Broker
-DURATION_SEC = 180            # Tempo total da coleta após o início
+DURATION_SEC = 120            # Tempo total da coleta após o início
 INTERVAL = 0.1                # Coleta a cada 100ms
 OUTPUT_FILE = "metrics_docker_stats.csv"
 
