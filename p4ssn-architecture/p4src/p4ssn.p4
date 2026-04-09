@@ -483,7 +483,6 @@ parser MyParser(packet_in packet,
             MQTTSN_PINGREQ:       parse_mqttsn_pingreq;
             MQTTSN_PINGRESP:      parse_mqttsn_pingresp;
             MQTTSN_DISCONNECT:    parse_mqttsn_disconnect;
-            /*
             MQTTSN_WILLTOPICREQ:  parse_mqttsn_willtopicreq;
             MQTTSN_WILLTOPIC:     parse_mqttsn_willtopic;
             MQTTSN_WILLMSGREQ:    parse_mqttsn_willmsgreq;
@@ -492,7 +491,6 @@ parser MyParser(packet_in packet,
             MQTTSN_WILLMSGUPD:    parse_mqttsn_willmsgupd;
             MQTTSN_WILLTOPICRESP: parse_mqttsn_willtopicresp;
             MQTTSN_WILLMSGRESP:   parse_mqttsn_willmsgresp;
-            */
             default: accept;
         }
     }
@@ -654,7 +652,6 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
-    /*
     state parse_mqttsn_willtopicreq {
         packet.extract(hdr.mqttsn_willtopicreq);
         verify(hdr.mqttsn_fixed.length == 2, error.MQTT_SN_InvalidLength);
@@ -726,7 +723,7 @@ parser MyParser(packet_in packet,
         verify(hdr.mqttsn_fixed.length == 3, error.MQTT_SN_InvalidLength);
         transition accept;
     }
-    */
+
 }
 
 /*************************************************************************
@@ -976,7 +973,6 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_variable_field.isValid()) {
                             static_forwarding.apply();
                 }
-                /*
                 // WILLTOPIC
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPIC &&
                     hdr.mqttsn_flags_willtopic.isValid() &&
@@ -1003,7 +999,6 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_variable_field.isValid()) {
                         static_forwarding.apply();
                 }
-                */
             }
 
             ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
@@ -1047,7 +1042,6 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_variable_field.isValid()) {
                         static_forwarding.apply();
                 }
-                /*
                 // WILLTOPICREQ
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICREQ &&
                     hdr.mqttsn_willtopicreq.isValid()) {
@@ -1068,12 +1062,10 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_willmsgresp.isValid()) {
                         static_forwarding.apply();
                 }
-                */
             }
 
             ///////////////////////// BROADCAST //////////////////////////////
 
-            /*
             // Trabalhos futuros //
             // ADVERTISE
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE &&
@@ -1091,7 +1083,6 @@ control MyIngress(inout headers hdr,
                 hdr.mqttsn_variable_field.isValid())  {
                     broadcast();
             }
-            */
         }
 
         // Se a parte fixa da mensagem mqttsn não for válida, ou

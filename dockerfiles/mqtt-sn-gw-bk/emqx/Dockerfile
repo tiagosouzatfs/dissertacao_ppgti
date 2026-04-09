@@ -11,4 +11,4 @@ USER emqx
 
 EXPOSE 1884 18084
 
-# docker build -t mqtt-sn-gw:latest .
+# docker build -t mqtt-sn-gw-bk:latest .
