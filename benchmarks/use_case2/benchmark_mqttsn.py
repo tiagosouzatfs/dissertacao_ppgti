@@ -5,8 +5,8 @@ import time
 from multiprocessing import Process
 
 # --- Configurações de Rede ---
-GW_IP, GW_PORT = "10.0.0.1", 1884
-CLIENT_IP = "10.0.0.2"
+GW_IP, GW_PORT = "10.0.0.2", 1884
+CLIENT_IP = "10.0.0.3"
 PREDEFINED_TOPIC_ID = 10
 TIMEOUT = 5.0
 
