@@ -18,26 +18,38 @@ def topology():
 
     net = Containernet()
 
-    # Definindo variáveis no EMQX Broker para inicialização automática do EMQX Gateway
-    emqx_env = {
+    # Definindo variáveis para inicialização automática do EMQX Gateway
+    emqx_env_bk = {
         "DISPLAY": ":{}".format(DISPLAY_ID),
-        "EMQX_GATEWAY__MQTTSN__ENABLE": "true",
-        "EMQX_GATEWAY__MQTTSN__GATEWAY_ID": "1",
-        "EMQX_GATEWAY__MQTTSN__LISTENERS__UDP__DEFAULT__BIND": "1884",
-        # Note o uso de aspas duplas escapadas dentro da string para o JSON dos tópicos
-        # "EMQX_GATEWAY__MQTTSN__PREDEFINED": '[{"id": 1, "topic": "sensor/temperatura"}, {"id": 2, "topic": "sensor/umidade"}]'
-        "EMQX_GATEWAY__MQTTSN__PREDEFINED": '[{"id": 10, "topic": "temperatura"}, {"id": 20, "topic": "umidade"}]'
+    
+        # 1. Define o SQL da regra (Escuta no tópico que vem do Gateway)
+        "EMQX_RULE_ENGINE__RULES__republish_to_gw__SQL": "SELECT * FROM \"#\"",
+        "EMQX_RULE_ENGINE__RULES__republish_to_gw__ENABLE": "true",
+
+        # 2. Define a função da Action como "republish" (Padrão nativo do EMQX)
+        "EMQX_RULE_ENGINE__RULES__republish_to_gw__ACTIONS__1__FUNCTION": "republish",
+
+        # 3. Define os argumentos (Onde a mensagem será enviada de volta)
+        # Tópico de destino que o gateway estará escutando
+        "EMQX_RULE_ENGINE__RULES__republish_to_gw__ACTIONS__1__ARGS__TOPIC": "${topic}",
+        "EMQX_RULE_ENGINE__RULES__republish_to_gw__ACTIONS__1__ARGS__QOS": "${qos}",
+        "EMQX_RULE_ENGINE__RULES__republish_to_gw__ACTIONS__1__ARGS__RETAIN": "${flags.retain}",
+        
+        # Encaminha o mesmo payload original recebido
+        "EMQX_RULE_ENGINE__RULES__republish_to_gw__ACTIONS__1__ARGS__PAYLOAD": "${payload}",
+        
+        # Evita que a mensagem entre em loop infinito no broker (Boa prática v5)
+        "EMQX_RULE_ENGINE__RULES__republish_to_gw__ACTIONS__1__ARGS__DIRECT_DISPATCH": "true"
     }
 
-    debug('Adicionando Gateway/broker MQTT-SN\n')
-    gw_bk = net.addDocker(
-        'gw_bk', 
-        ip='10.0.0.1', 
+    debug('Adicionando Broker MQTT\n')
+    bk = net.addDocker(
+        'bk', 
+        ip='10.0.0.1',
         mac="00:00:00:00:00:01", 
         dimage='mqtt-sn-gw',
-        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
         dcmd="emqx foreground",
-        environment=emqx_env
+        environment=emqx_env_bk
     )
 
     # Equivale a: /home/vboxuser/dissertacao_ppgti
@@ -46,40 +58,97 @@ def topology():
     client_pub_path = "/dockerfiles/mqtt-sn-client/python/publisher_p4ssn.py"
     pub_path = project_path + "/" + client_pub_path
 
-    debug("Adicionando sensores publishers\n")
-    pb1 = net.addDocker(
-        'pb1', 
-        ip='10.0.0.2', 
-        mac="00:00:00:00:00:02", 
-        dimage="mqtt-sn-client-python", 
-        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', pub_path + ':/root/publisher_p4ssn.py'],
+    client_pub_benchmark1_path = "/benchmarks/use_case1/benchmark1_p4ssn.py"
+    pub_benchmark1_path = project_path + "/" + client_pub_benchmark1_path
+
+    client_pub_benchmark2_path = "/benchmarks/use_case2/benchmark2_p4ssn.py"
+    pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
+
+    debug("Adicionando sensor publisher\n")
+    pb = net.addDocker(
+        'pb',
+        ip='10.0.0.3',
+        mac="00:00:00:00:00:03",
+        dimage="mqtt-sn-client-python",
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
+                 pub_path + ':/root/publisher_p4ssn.py',
+                 pub_benchmark1_path + ':/root/benchmark1_p4ssn.py',
+                 pub_benchmark2_path + ':/root/benchmark2_p4ssn.py',
+                ],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
     client_sub1_path = "/dockerfiles/mqtt-sn-client/python/subscriber_p4ssn1.py"
-    sub_path1 = project_path + "/" + client_sub1_path
+    sub1_path = project_path + "/" + client_sub1_path
 
     debug("Adicionando subscriber 1\n")
     ss1 = net.addDocker(
         'ss1', 
-        ip='10.0.0.3', 
-        mac="00:00:00:00:00:03", 
-        dimage="mqtt-sn-client-python", 
-        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', sub_path1 + ':/root/subscriber_p4ssn1.py'],
+        ip='10.0.0.4',
+        mac="00:00:00:00:00:04", 
+        dimage="mqtt-sn-client-python",
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
+                 sub1_path + ':/root/subscriber_p4ssn1.py'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
     client_sub2_path = "/dockerfiles/mqtt-sn-client/python/subscriber_p4ssn2.py"
-    sub_path2 = project_path + "/" + client_sub2_path
+    sub2_path = project_path + "/" + client_sub2_path
 
     debug("Adicionando subscriber 2\n")
     ss2 = net.addDocker(
         'ss2', 
-        ip='10.0.0.4', 
-        mac="00:00:00:00:00:04", 
-        dimage="mqtt-sn-client-python", 
-        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', sub_path2 + ':/root/subscriber_p4ssn2.py'],
+        ip='10.0.0.5',
+        mac="00:00:00:00:00:05", 
+        dimage="mqtt-sn-client-python",
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
+                 sub2_path + ':/root/subscriber_p4ssn2.py'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
+    )
+
+    # Definindo variáveis para inicialização automática do EMQX Gateway
+    emqx_env_gw = {
+        "DISPLAY": ":{}".format(DISPLAY_ID),
+
+        # Gateway
+        "EMQX_GATEWAY__MQTTSN__ENABLE": "true",
+        "EMQX_GATEWAY__MQTTSN__GATEWAY_ID": "1",
+        "EMQX_GATEWAY__MQTTSN__LISTENERS__UDP__DEFAULT__BIND": "1884",
+        "EMQX_GATEWAY__MQTTSN__PREDEFINED": '[{"id": 10, "topic": "temperatura"}]',
+
+        # Desabilita listeners mqtt
+        "EMQX_LISTENERS__TCP__DEFAULT__ENABLE": "false",
+        "EMQX_LISTENERS__SSL__DEFAULT__ENABLE": "false",
+        "EMQX_LISTENERS__WS__DEFAULT__ENABLE": "false",
+        "EMQX_LISTENERS__WSS__DEFAULT__ENABLE": "false",
+        
+        # CONNECTOR (Note o nome 'broker' em minúsculo)
+        "EMQX_CONNECTORS__MQTT__BROKER__SERVER": "10.0.0.1:1883",
+        "EMQX_CONNECTORS__MQTT__BROKER__RECONNECT_INTERVAL": "5s",
+        
+        # ACTION
+        "EMQX_ACTIONS__MQTT__SEND_BROKER__CONNECTOR": "broker",
+        "EMQX_ACTIONS__MQTT__SEND_BROKER__PARAMETERS__TOPIC": "${topic}",
+        "EMQX_ACTIONS__MQTT__SEND_BROKER__PARAMETERS__QOS": "${qos}",
+        "EMQX_ACTIONS__MQTT__SEND_BROKER__PARAMETERS__PAYLOAD": "${payload}",
+        "EMQX_ACTIONS__MQTT__SEND_BROKER__PARAMETERS__RETAIN": "${flags.retain}",
+        
+        # RULE
+        # Define o SQL da regra
+        "EMQX_RULE_ENGINE__RULES__SEND_BROKER__SQL": "SELECT * FROM \"#\"",
+        # Associa o nome da Action existente a essa regra
+        "EMQX_RULE_ENGINE__RULES__SEND_BROKER__ACTIONS__1": "mqtt:send_broker"
+    }
+
+    debug('Adicionando Gateway MQTT-SN\n')
+    gw = net.addDocker(
+        'gw', 
+        ip='10.0.0.2',
+        mac="00:00:00:00:00:02", 
+        dimage='mqtt-sn-gw',
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
+        dcmd="emqx foreground",
+        environment=emqx_env_gw
     )
 
     path = os.path.dirname(os.path.abspath(__file__))
@@ -100,10 +169,11 @@ def topology():
         loglevel="debug",
         **args
     )
-    
+
     debug('Adicionando links\n')
-    net.addLink(gw_bk, s1, txo=False, rxo=False)
-    net.addLink(pb1, s1, txo=False, rxo=False)
+    net.addLink(bk, s1, txo=False, rxo=False)
+    net.addLink(gw, s1, txo=False, rxo=False)
+    net.addLink(pb, s1, txo=False, rxo=False)
     net.addLink(ss1, s1, txo=False, rxo=False)
     net.addLink(ss2, s1, txo=False, rxo=False)
 
@@ -112,11 +182,14 @@ def topology():
     s1.start([])
     net.staticArp()
 
-    debug("Iniciando gateway/broker\n")
-    makeTerm(gw_bk)
+    debug("Iniciando broker\n")
+    makeTerm(bk)
+
+    debug("Iniciando gateway\n")
+    makeTerm(gw)
 
     debug("Iniciando publisher\n")
-    makeTerm(pb1)
+    makeTerm(pb)
 
     debug("Iniciando subscriber 1\n")
     makeTerm(ss1)

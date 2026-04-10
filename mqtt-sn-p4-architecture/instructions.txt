@@ -1,44 +1,75 @@
-### Testes MQTT-SN ###
+### Entrar na pasta do projeto ###
 
-# Entrar na pasta do projeto
 cd ~/dissertacao_ppgti
 
-# Iniciar o compilador e compilar o p4ssn
+
+-----------------------------------------------------------------------------
+
+
+### Compilação do programa p4###
+
+
 docker run -dit --name=p4c --rm ramonfontes/bmv2:latest
+
 docker cp mqtt-sn-p4-architecture/p4src/mqtt-sn.p4 p4c:/tmp/
+
 docker exec -it p4c bash
+
 cd /tmp
+
 p4c --target bmv2 --arch v1model mqtt-sn.p4
+
 exit
+
 docker cp p4c:/tmp/mqtt-sn.json mqtt-sn-p4-architecture/
+
+
+------------------------------------------------------------------------------
+
+
+### Experimento - clientes ###
 
 # Iniciar topologia containernet
 sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
 
-# Experimento - clientes python
-python3 subscriber_mqttsn1.py e/ou python3 subscriber_mqttsn2.py
-python3 publisher_mqttsn.py
+# Inicie os clientes
+python3 /root/publisher_mqttsn.py
 
-# Encerrar a rede containernet
+python3 /root/subscriber_mqttsn1.py
+
+python3 /root/subscriber_mqttsn2.py (Opcional)
+
+
+-------------------------------------------------------------------------------
+
+
+### Experimento - Benchmark ###
+
+
+# Iniciar topologia containernet
+sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
+
+# Inicie os clientes
+python3 /root/benchmark_mqttsn.py
+
+python3 /root/subscriber_mqttsn1.py
+
+python3 /root/subscriber_mqttsn2.py (Opcional)
+
+
+------------------------------------------------------------------------------
+
+
+### Encerrando a topologia ###
+
+
 exit
 
 # Se houver alguma falha ao encerrar a rede containernet!
 sudo mn -c
-# Ou
+
+# Ou, ainda
 docker stop mn.s1 mn.ss1 mn.pb1 mn.gw_bk;docker rm mn.s1 mn.ss1 mn.pb1 mn.gw_bk
 
 # Encerrar o compilador
 docker stop p4c
-
-
-### Benchmark ###
-
-# Iniciar topologia containernet
-sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
-
-# Verifique o gateway
-docker logs -f mn.gw_bk
-
-# Experimento - Benchmark (Copie os arquivos para dentro do container e execute as linhas abaixo)
-python3 benchmark_mqttsn.py
-python3 benchmark_p4ssn.py
