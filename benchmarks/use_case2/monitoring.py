@@ -1,21 +1,29 @@
 import subprocess
 import csv
 import time
+import sys
 
 # --- CONFIGURAÇÃO ---
-CONTAINER_NAME = "mn.gw_bk"   # Nome do container do Gateway/Broker
-DURATION_SEC = 120            # Tempo total da coleta após o início
-INTERVAL = 0.1                # Coleta a cada 100ms
-OUTPUT_FILE = "metrics_docker_stats.csv"
+# Exemplo: python3 script.py mqttsn ou python3 script.py p4ssn
+try:
+    MODE = sys.argv[1] 
+except IndexError:
+    print("Erro: Você deve especificar o modo. Exemplo: python3 script.py mqttsn")
+    sys.exit(1)
+
+CONTAINERS = ["mn.gw", "mn.bk"]  # Monitora ambos
+DURATION_SEC = 120
+INTERVAL = 0.1
+OUTPUT_FILE = f"metrics_docker_stats_{MODE}.csv"
 
 def collect_metrics():
-    print(f"--- Iniciando monitoramento do container: {CONTAINER_NAME} ---")
-    print(f"--- Frequência: {INTERVAL}s | Duração: {DURATION_SEC}s ---")
+    print(f"--- Iniciando monitoramento dos containers: {CONTAINERS} ---")
+    print(f"--- Modo: {MODE} | Arquivo: {OUTPUT_FILE} ---")
     
-    # Prepara o arquivo CSV
     with open(OUTPUT_FILE, mode='w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(['relative_time', 'cpu_percent', 'mem_percent'])
+        # Cabeçalho para os dois containers
+        writer.writerow(['relative_time', 'gw_cpu', 'gw_mem', 'bk_cpu', 'bk_mem'])
 
         start_time = time.time()
         
@@ -23,9 +31,9 @@ def collect_metrics():
             while (time.time() - start_time) < DURATION_SEC:
                 loop_start = time.time()
                 
-                # Executa o docker stats formatado (sem símbolos de % ou unidades)
+                # Coleta stats de todos os containers de uma vez
                 cmd = [
-                    "docker", "stats", CONTAINER_NAME, 
+                    "docker", "stats", *CONTAINERS, 
                     "--no-stream", 
                     "--format", "{{.CPUPerc}},{{.MemPerc}}"
                 ]
@@ -33,19 +41,15 @@ def collect_metrics():
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 
                 if result.returncode == 0:
-                    # Limpa os símbolos de '%' da string retornada
-                    raw_data = result.stdout.replace('%', '').strip()
-                    if ',' in raw_data:
-                        # Divide CPU e Memória
-                        parts = raw_data.split(',')
-                        if len(parts) == 2:
-                            cpu = parts[0].replace('%', '')
-                            mem = parts[1].replace('%', '')
-                            
-                            relative_tick = round(time.time() - start_time, 2)
-                            writer.writerow([relative_tick, cpu, mem])
+                    lines = result.stdout.strip().split('\n')
+                    if len(lines) == len(CONTAINERS):
+                        row = [round(time.time() - start_time, 2)]
+                        for line in lines:
+                            parts = line.replace('%', '').split(',')
+                            row.extend([parts[0].strip(), parts[1].strip()])
+                        
+                        writer.writerow(row)
                 
-                # Controle de precisão do intervalo
                 elapsed = time.time() - loop_start
                 wait_time = max(0, INTERVAL - elapsed)
                 time.sleep(wait_time)
@@ -56,25 +60,14 @@ def collect_metrics():
     print(f"\n[SUCESSO] Coleta finalizada. Dados salvos em: {OUTPUT_FILE}")
 
 if __name__ == "__main__":
-    print(f"Aguardando o container '{CONTAINER_NAME}' iniciar...")
-    
-    # Loop de espera ativa (Polling) até o container aparecer
+    print(f"Aguardando os containers {CONTAINERS} iniciarem...")
     while True:
         try:
-            check_docker = subprocess.run(
-                ["docker", "ps", "--filter", f"name={CONTAINER_NAME}", "--filter", "status=running", "-q"], 
-                capture_output=True, 
-                text=True
-            )
-            
-            # Se o comando retornar um ID, o container está rodando
-            if check_docker.stdout.strip():
-                print(f"Container '{CONTAINER_NAME}' detectado! Iniciando medição agora.")
+            check = subprocess.run(["docker", "ps", "--format", "{{.Names}}"], capture_output=True, text=True)
+            if all(name in check.stdout for name in CONTAINERS):
+                print(f"Containers detectados! Iniciando medição.")
                 collect_metrics()
                 break
-            
-            time.sleep(1) # Verifica a cada 1 segundo para não sobrecarregar a CPU
-            
+            time.sleep(1)
         except KeyboardInterrupt:
-            print("\nMonitoramento cancelado antes do início.")
             break

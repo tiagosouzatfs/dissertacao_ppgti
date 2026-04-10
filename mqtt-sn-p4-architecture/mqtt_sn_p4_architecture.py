@@ -64,6 +64,9 @@ def topology():
     client_pub_benchmark2_path = "/benchmarks/use_case2/benchmark2_mqttsn.py"
     pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
 
+    client_pub_results_benchmark1_path = "/benchmarks/use_case1/mqttsn.csv"
+    pub_results_benchmark1_path = project_path + "/" + client_pub_results_benchmark1_path
+
     debug("Adicionando sensor publisher\n")
     pb = net.addDocker(
         'pb',
@@ -74,6 +77,7 @@ def topology():
                  pub_path + ':/root/publisher_p4ssn.py',
                  pub_benchmark1_path + ':/root/benchmark1_mqttsn.py',
                  pub_benchmark2_path + ':/root/benchmark2_mqttsn.py',
+                 pub_results_benchmark1_path + ':/root/mqttsn.csv'
                 ],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
