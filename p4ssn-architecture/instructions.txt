@@ -1,44 +1,75 @@
-### Testes P4SSN ###
+### Entrar na pasta do projeto ###
 
-# Entrar na pasta do projeto
 cd ~/dissertacao_ppgti
 
-# Iniciar o compilador e compilar o p4ssn
+
+-----------------------------------------------------------------------------
+
+
+### Compilação do programa p4###
+
+
 docker run -dit --name=p4c --rm ramonfontes/bmv2:latest
+
 docker cp p4ssn-architecture/p4src/p4ssn.p4 p4c:/tmp/
+
 docker exec -it p4c bash
+
 cd /tmp
+
 p4c --target bmv2 --arch v1model p4ssn.p4
+
 exit
+
 docker cp p4c:/tmp/p4ssn.json p4ssn-architecture/
+
+
+------------------------------------------------------------------------------
+
+
+### Experimento - clientes ###
 
 # Iniciar topologia containernet
 sudo python3 p4ssn-architecture/p4ssn_architecture.py
 
-# Experimento - clientes python
-python3 subscriber_p4ssn1.py e/ou python3 subscriber_p4ssn2.py
-python3 publisher_p4ssn.py
+# Inicie os clientes
+python3 /root/publisher_p4ssn.py
 
-# Encerrar a rede containernet
+python3 /root/subscriber_p4ssn1.py
+
+python3 /root/subscriber_p4ssn2.py (Opcional)
+
+
+-------------------------------------------------------------------------------
+
+
+### Experimento - Benchmark ###
+
+
+# Iniciar topologia containernet
+sudo python3 p4ssn-architecture/p4ssn_architecture.py
+
+# Inicie os clientes
+python3 /root/benchmark_p4ssn.py
+
+python3 /root/subscriber_p4ssn1.py
+
+python3 /root/subscriber_p4ssn2.py (Opcional)
+
+
+------------------------------------------------------------------------------
+
+
+### Encerrando a topologia ###
+
+
 exit
 
 # Se houver alguma falha ao encerrar a rede containernet!
 sudo mn -c
-# Ou
+
+# Ou, ainda
 docker stop mn.s1 mn.ss1 mn.pb1 mn.gw_bk;docker rm mn.s1 mn.ss1 mn.pb1 mn.gw_bk
 
 # Encerrar o compilador
 docker stop p4c
-
-
-### Benchmark ###
-
-# Iniciar topologia containernet
-sudo python3 p4ssn-architecture/p4ssn_architecture.py
-
-# Verifique o gateway
-docker logs -f mn.gw_bk
-
-# Experimento - Benchmark (Copie os arquivos para dentro do container e execute as linhas abaixo)
-python3 benchmark_mqttsn.py
-python3 benchmark_p4ssn.py
