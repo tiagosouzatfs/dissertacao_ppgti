@@ -3,7 +3,6 @@ import socket
 import struct
 import random
 import time
-import sys
 
 # =============================================================================
 # Constantes MQTT-SN
@@ -39,7 +38,7 @@ TIMEOUT = 5
 KEEPALIVE = 30
 
 # =============================================================================
-# Comunicação e Builders (Originais)
+# Comunicação e Builders
 # =============================================================================
 
 def recv_packet(sock):
@@ -79,7 +78,7 @@ def build_puback(topic_id, msg_id):
 def mqttsn_subscriber():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((CLIENT_IP, CLIENT_PORT))
-    client_id = f"pure_sub_{random.randint(1000,9999)}"
+    client_id = f"mqttsn_sub_{random.randint(1000,9999)}"
 
     topic_input = input("Digite o tópico ou ID: ").strip()
     topic_type = int(input("Tipo (0=Name,1=Predefined,2=Short): ").strip())
@@ -102,41 +101,54 @@ def mqttsn_subscriber():
 
     print("Aguardando mensagens ...\n")
     last_ping = time.time()
+    msg_count = 0  # Contador de mensagens
 
-    while True:
-        pkt = recv_packet(sock)
-        if pkt is None:
-            if time.time() - last_ping > KEEPALIVE:
-                sock.sendto(struct.pack(">BB", 2, MQTTSN_PINGREQ), (GW_IP, GW_PORT))
+    with open("time_publication.csv", "w") as f:
+        f.write("id,t_pub_ms\n")
+        while True:
+            pkt = recv_packet(sock)
+            t_chegada = time.time() # Captura imediata na chegada
+
+            if pkt is None:
+                if time.time() - last_ping > KEEPALIVE:
+                    sock.sendto(struct.pack(">BB", 2, MQTTSN_PINGREQ), (GW_IP, GW_PORT))
+                    last_ping = time.time()
+                continue
+
+            msgType, data = pkt
+            if msgType == MQTTSN_PUBLISH:
+                msg_count += 1
+                flags = data[2]
+                qos_bits = (flags >> 5) & 0x03
+                
+                topic_id_rcv = struct.unpack(">H", data[3:5])[0]
+                msg_id_rcv = struct.unpack(">H", data[5:7])[0]
+                
+                decoded = data[7:].decode(errors="ignore")
+
+                # Cálculo de tempo de publicação
+                try:
+                    t_saida = float(decoded.split('_')[-1])
+                    latencia = (t_chegada - t_saida) * 1000
+                    f.write(f"{msg_count},{latencia:.4f}\n")
+                    f.flush()
+                except:
+                    latencia = 0
+
+                print(f"## PUBLISH {msg_count} (Tempo de Publicação: {latencia:.3f}ms)")
+                print(f"## Conteúdo: '{decoded}'\n")
+
+                if qos_bits == QOS_1:
+                    sock.sendto(build_puback(topic_id_rcv, msg_id_rcv), (GW_IP, GW_PORT))
+                elif qos_bits == QOS_2:
+                    sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBREC, msg_id_rcv), (GW_IP, GW_PORT))
+
+            elif msgType == MQTTSN_PUBREL:
+                msg_id_rel = struct.unpack(">H", data[2:4])[0]
+                sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBCOMP, msg_id_rel), (GW_IP, GW_PORT))
+            
+            elif msgType == MQTTSN_PINGRESP:
                 last_ping = time.time()
-            continue
-
-        msgType, data = pkt
-        if msgType == MQTTSN_PUBLISH:
-            flags = data[2]
-            qos_bits = (flags >> 5) & 0x03
-            
-            # Extração padrão MQTT-SN: TopicID(2 bytes), MsgId(2 bytes)
-            topic_id_rcv = struct.unpack(">H", data[3:5])[0]
-            msg_id_rcv = struct.unpack(">H", data[5:7])[0]
-            
-            # No MQTT-SN, o payload começa no byte 7
-            decoded = data[7:].decode(errors="ignore")
-
-            print(f"<- PUBLISH (TopicID={topic_id_rcv}, MsgID={msg_id_rcv})")
-            print(f"   Conteúdo: '{decoded}'\n")
-
-            if qos_bits == QOS_1:
-                sock.sendto(build_puback(topic_id_rcv, msg_id_rcv), (GW_IP, GW_PORT))
-            elif qos_bits == QOS_2:
-                sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBREC, msg_id_rcv), (GW_IP, GW_PORT))
-
-        elif msgType == MQTTSN_PUBREL:
-            msg_id_rel = struct.unpack(">H", data[2:4])[0]
-            sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBCOMP, msg_id_rel), (GW_IP, GW_PORT))
-        
-        elif msgType == MQTTSN_PINGRESP:
-            last_ping = time.time()
 
 if __name__ == "__main__":
     mqttsn_subscriber()

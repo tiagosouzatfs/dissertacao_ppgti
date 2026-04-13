@@ -115,7 +115,7 @@ if __name__ == "__main__":
         writer = csv.DictWriter(f, fieldnames=["cenario", "qos", "retain", "t_flow_ms"])
         writer.writeheader()
         for qos, ret in test_cases:
-            print(f"\n>>> Bateria P4SSN: QoS {qos} | Retain {ret}")
+            print(f"\n### Benchmark P4SSN: QoS {qos} | Retain {ret}")
             time.sleep(2)
             for i in range(1, 101):
                 writer.writerow(bench.run_iteration(qos, ret, i))

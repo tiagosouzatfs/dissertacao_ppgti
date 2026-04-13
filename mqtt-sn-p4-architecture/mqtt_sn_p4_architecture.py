@@ -58,14 +58,14 @@ def topology():
     client_pub_path = "/dockerfiles/mqtt-sn-client/python/publisher_mqttsn.py"
     pub_path = project_path + "/" + client_pub_path
 
-    client_pub_benchmark1_path = "/benchmarks/use_case1/benchmark1_mqttsn.py"
+    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_mqttsn.py"
     pub_benchmark1_path = project_path + "/" + client_pub_benchmark1_path
 
-    client_pub_benchmark2_path = "/benchmarks/use_case2/benchmark2_mqttsn.py"
-    pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
-
-    client_pub_results_benchmark1_path = "/benchmarks/use_case1/mqttsn.csv"
+    client_pub_results_benchmark1_path = "/benchmarks/use_case2/mqttsn.csv"
     pub_results_benchmark1_path = project_path + "/" + client_pub_results_benchmark1_path
+
+    client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_mqttsn.py"
+    pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
 
     debug("Adicionando sensor publisher\n")
     pb = net.addDocker(
@@ -118,7 +118,7 @@ def topology():
         "EMQX_GATEWAY__MQTTSN__ENABLE": "true",
         "EMQX_GATEWAY__MQTTSN__GATEWAY_ID": "1",
         "EMQX_GATEWAY__MQTTSN__LISTENERS__UDP__DEFAULT__BIND": "1884",
-        "EMQX_GATEWAY__MQTTSN__PREDEFINED": '[{"id": 10, "topic": "temperatura"}]',
+        "EMQX_GATEWAY__MQTTSN__PREDEFINED": '[{"id": 10, "topic": "temperatura"}, {"id": 20, "topic": "umidade"}]',
 
         # Desabilita listeners mqtt
         "EMQX_LISTENERS__TCP__DEFAULT__ENABLE": "false",
