@@ -69,7 +69,10 @@ def run_stress_mqttsn(msgs_per_qos):
     sock.close()
 
 if __name__ == "__main__":
-    MSGS_POR_QOS = 100 # 100 QoS -1 + 100 QoS 0 = 200 total
+
+    MSGS_POR_QOS = 500 # 500 QoS -1 + 500 QoS 0 = 1k total
+    # MSGS_POR_QOS = 2500 # 2500 QoS -1 + 2500 QoS 0 = 5k total
+    # MSGS_POR_QOS = 5000 # 5000 QoS -1 + 5000 QoS 0 = 10k total
 
     print(f"--- INICIANDO BENCHMARK MQTTSN PADRÃO ---")
 

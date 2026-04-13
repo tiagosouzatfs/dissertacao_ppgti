@@ -3,12 +3,10 @@ import socket
 import struct
 import random
 import time
-import os
 import csv
 
-# =============================================================================
 # Constantes e Segurança P4SSN
-# =============================================================================
+
 MQTTSN_CONNECT, MQTTSN_CONNACK = 0x04, 0x05
 MQTTSN_PUBLISH, MQTTSN_PUBACK = 0x0C, 0x0D
 MQTTSN_PUBREC, MQTTSN_PUBREL = 0x0F, 0x10
@@ -48,13 +46,13 @@ class P4SSNBenchmark:
         self.client_ip = client_ip
 
     def run_iteration(self, qos, retain, iteration):
-        client_id = f"p4_{iteration}_{random.randint(100, 999)}"
+        client_id = f"p4ssn_client_{iteration}_{random.randint(100, 999)}"
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.client_ip, 0))
         sock.settimeout(TIMEOUT)
         
         msg_id = (iteration + (qos * 100)) % 0xFFFF
-        data_str = "P4SSN_SECURE_DATA_BENCHMARK"
+        data_str = "P4SSN_DATA_BENCHMARK"
         
         t_start_flow = time.perf_counter()
         t_end_total = 0
@@ -66,7 +64,9 @@ class P4SSNBenchmark:
                 sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
                 sock.recvfrom(1024)
 
-            # PUBLISH (Sempre Predefinido)
+                time.sleep(0.0005)
+
+            # PUBLISH (Tópico 10 Fixo)
             salt = msg_id if qos != QOS_M1 else random.randint(1, 0xFFFF)
             flags = ((qos & 0x03) << 5) | ((retain & 0x01) << 4) | TOPICIDTYPE_PREDEFINED
             
@@ -83,10 +83,15 @@ class P4SSNBenchmark:
                 if rec[1] == MQTTSN_PUBREC:
                     sock.sendto(struct.pack('>BBH', 4, MQTTSN_PUBREL, msg_id), (GW_IP, GW_PORT))
                     sock.recvfrom(1024)
+
+            time.sleep(0.0005)
             
             if qos != QOS_M1:
                 # DISCONNECT
                 sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
+                sock.recvfrom(1024) # DISCONNECT Gateway
+
+                time.sleep(0.0005)
 
             t_end_total = time.perf_counter()
         except (socket.timeout, Exception):
