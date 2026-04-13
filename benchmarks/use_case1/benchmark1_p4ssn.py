@@ -103,9 +103,8 @@ class P4SSNBenchmark:
 
 if __name__ == "__main__":
     bench = P4SSNBenchmark(CLIENT_IP)
-    if not os.path.exists('results'): os.makedirs('results')
     test_cases = [(QOS_M1, 0), (QOS_0, 0), (QOS_0, 1), (QOS_1, 0), (QOS_2, 0)]
-    with open('results/p4ssn.csv', 'w', newline='') as f:
+    with open('/root/p4ssn.csv', 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=["cenario", "qos", "retain", "t_flow_ms"])
         writer.writeheader()
         for qos, ret in test_cases:

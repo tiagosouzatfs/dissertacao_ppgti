@@ -43,14 +43,43 @@ python3 /root/subscriber_p4ssn2.py (Opcional)
 -------------------------------------------------------------------------------
 
 
-### Experimento - Benchmark ###
+### Experimento - Benchmark - Use Case 1 ###
 
+
+# Iniciar o script de monitoramento de métricas (ele verifica se os containers do broker e gateway iniciaram)
+python3 monitoring.py mqttsn 10k ou python3 monitoring.py p4ssn 10k
 
 # Iniciar topologia containernet
 sudo python3 p4ssn-architecture/p4ssn_architecture.py
 
 # Inicie os clientes
-python3 /root/benchmark_p4ssn.py
+# No script de benchmark altere os parêmtros abaixo de acordo com o seu teste
+#    NUM_CLIENTES = 4
+#    MSGS_POR_QOS = 10000 # 10k QoS -1 + 10k QoS 0 = 20k por cliente (80k total)
+python3 /root/benchmark1_p4ssn.py
+
+python3 /root/subscriber_p4ssn1.py
+
+python3 /root/subscriber_p4ssn2.py (Opcional)
+
+
+-------------------------------------------------------------------------------
+
+
+### Experimento - Benchmark - Use Case 2 ###
+
+
+# Iniciar o script de monitoramento de métricas (ele verifica se os containers do broker e gateway iniciaram)
+python3 monitoring.py mqttsn 10k ou python3 monitoring.py p4ssn 10k
+
+# Iniciar topologia containernet
+sudo python3 p4ssn-architecture/p4ssn_architecture.py
+
+# Inicie os clientes
+# No script de benchmark altere os parêmtros abaixo de acordo com o seu teste
+#    NUM_CLIENTES = 4
+#    MSGS_POR_QOS = 10000 # 10k QoS -1 + 10k QoS 0 = 20k por cliente (80k total)
+python3 /root/benchmark2_p4ssn.py
 
 python3 /root/subscriber_p4ssn1.py
 

@@ -2,7 +2,6 @@ import socket
 import struct
 import random
 import time
-from multiprocessing import Process
 
 # --- Configurações de Rede ---
 GW_IP, GW_PORT = "10.0.0.2", 1884
@@ -29,70 +28,83 @@ def otp_encrypt_topic(topic_id, salt):
     val = (topic_id ^ SECRET_TOPIC_ID ^ otp) & 0xFFFF
     return ((val << 4) | (val >> 12)) & 0xFFFF
 
-def otp_process_data(data_str, salt):
+def otp_process_data(data):
     payload_salt = random.getrandbits(16)
     otp = generate_otp(payload_salt)
-    data_bytes = data_str.encode().ljust(62, b"*")[:62]
+
+    if isinstance(data, str):
+        data_bytes = data.encode().ljust(62, b"*")[:62]
+    else:
+        data_bytes = data.ljust(62, b"*")[:62]
+        
     mask_bytes = SECRET_DATA_PUBLISH.to_bytes(64, 'big')
     output = [b ^ (mask_bytes[i%64] ^ (otp & 0xFF if i%2==0 else (otp>>8)&0xFF)) for i, b in enumerate(data_bytes)]
     return struct.pack('>H', payload_salt) + bytes(output)
 
 # --- Lógica de Disparo ---
-def run_stress_client(worker_id, msgs_per_qos):
+def run_stress_p4ssn(msgs_per_qos):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((CLIENT_IP, 0))
     sock.settimeout(TIMEOUT)
     
-    # 1. Bateria QoS -1 (Disparo Direto)
-    print(f"[Worker {worker_id}] Iniciando msgs QoS -1...")
+    # QoS -1 (Disparo Direto)
+    print(f"Iniciando msgs QoS -1...")
+    base_payload_m1 = b"P4SSN_STRESS_M1"
+    
     for i in range(msgs_per_qos):
         salt = random.randint(1, 0xFFFF)
         flags = (QOS_M1 << 5) | TOPICIDTYPE_PREDEFINED
+        # Header padrão: Length(1), Type(1), Flags(1), TopicId(2), MsgId(2) = 7 bytes
         t_enc = otp_encrypt_topic(PREDEFINED_TOPIC_ID, salt)
-        p_enc = otp_process_data("P4SSN_STRESS_M1", salt)
-        header = struct.pack('>BB BHH', len(p_enc)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
-        sock.sendto(header + p_enc, (GW_IP, GW_PORT))
+        encrypted_payload = otp_process_data(base_payload_m1)
+        
+        header = struct.pack('>BB BHH', len(encrypted_payload)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
+        sock.sendto(header + encrypted_payload, (GW_IP, GW_PORT))
+
         time.sleep(0.0005)
 
-    # 2. Bateria QoS 0 (Connect -> Publish -> Disconnect)
-    print(f"[Worker {worker_id}] Iniciando msgs QoS 0 (Fluxo Completo)...")
+    time.sleep(0.001)
+
+    # QoS 0 (Connect -> Publish -> Disconnect)
+    print(f"Iniciando msgs QoS 0 (Fluxo Completo)...")
+    base_payload_q0 = b"MQTTSN_STRESS_Q0"
+    
     for i in range(msgs_per_qos):
         try:
             # CONNECT
-            client_id = f"w{worker_id}_i{i}"
+            client_id = f"p4ssn_client_{i}"
             conn = struct.pack('>BBH', 0x04, 0x01, 60) + client_id.encode()
             sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
             sock.recvfrom(1024) # Espera CONNACK
 
+            time.sleep(0.0005)
+
             # PUBLISH
             salt = random.randint(1, 0xFFFF)
-            flags = (QOS_0 << 5) | TOPICIDTYPE_PREDEFINED # Retain 0
+            flags = (QOS_0 << 5) | TOPICIDTYPE_PREDEFINED 
             t_enc = otp_encrypt_topic(PREDEFINED_TOPIC_ID, salt)
-            p_enc = otp_process_data("P4SSN_STRESS_Q0", salt)
-            header = struct.pack('>BB BHH', len(p_enc)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
-            sock.sendto(header + p_enc, (GW_IP, GW_PORT))
+            encrypted_payload = otp_process_data(base_payload_q0)
+            header = struct.pack('>BB BHH', len(encrypted_payload)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
+            sock.sendto(header + encrypted_payload, (GW_IP, GW_PORT))
+
+            time.sleep(0.0005)
 
             # DISCONNECT
             sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
-            time.sleep(0.001)
-        except:
-            pass
+            sock.recvfrom(1024) # Espera DISCONNECT
+
+            time.sleep(0.0005)
+
+        except Exception as e:
+            print(f"Erro: {e}")
 
     sock.close()
 
 if __name__ == "__main__":
-    NUM_CLIENTES = 4
-    MSGS_POR_QOS = 10000 # 10k QoS -1 + 10k QoS 0 = 20k por cliente (80k total)
-    
-    processos = []
-    print(f"--- INICIANDO BENCHMARK MQTTSN PADRÃO: 80.000 MENSAGENS ---")
-    
-    for i in range(NUM_CLIENTES):
-        p = Process(target=run_stress_client, args=(i, MSGS_POR_QOS))
-        processos.append(p)
-        p.start()
+    MSGS_POR_QOS = 100 # 100 QoS -1 + 100 QoS 0 = 200 total
 
-    for p in processos:
-        p.join()
+    print(f"--- INICIANDO BENCHMARK P4SSN ---")
 
-    print("\n[SUCESSO] Teste de estresse finalizado.")
+    run_stress_p4ssn(MSGS_POR_QOS)
+
+    print("\n[SUCESSO] Baseline P4SSN finalizado.")

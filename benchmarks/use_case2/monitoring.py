@@ -3,18 +3,17 @@ import csv
 import time
 import sys
 
-# --- CONFIGURAÇÃO ---
-# Exemplo: python3 script.py mqttsn ou python3 script.py p4ssn
 try:
-    MODE = sys.argv[1] 
+    MODE = sys.argv[1]
+    N_MSGS = sys.argv[2]
 except IndexError:
-    print("Erro: Você deve especificar o modo. Exemplo: python3 script.py mqttsn")
+    print("Erro: Você deve especificar o modo. Exemplo: python3 monitoring.py mqttsn 10k")
     sys.exit(1)
 
 CONTAINERS = ["mn.gw", "mn.bk"]  # Monitora ambos
-DURATION_SEC = 120
+DURATION_SEC = 60
 INTERVAL = 0.1
-OUTPUT_FILE = f"metrics_docker_stats_{MODE}.csv"
+OUTPUT_FILE = f"metrics_docker_stats_{MODE}_{N_MSGS}.csv"
 
 def collect_metrics():
     print(f"--- Iniciando monitoramento dos containers: {CONTAINERS} ---")
@@ -60,7 +59,7 @@ def collect_metrics():
     print(f"\n[SUCESSO] Coleta finalizada. Dados salvos em: {OUTPUT_FILE}")
 
 if __name__ == "__main__":
-    print(f"Aguardando os containers {CONTAINERS} iniciarem...")
+    print(f"Verificando se os containers {CONTAINERS} estão ativos...")
     while True:
         try:
             check = subprocess.run(["docker", "ps", "--format", "{{.Names}}"], capture_output=True, text=True)

@@ -67,19 +67,17 @@ const bit<2> FLAGS_QOS_LEVEL_2 = 0b10;
 const bit<2> FLAGS_QOS_LEVEL_MINUS1 = 0b11;
 
 /*Segment UDP*/
-const bit<8> TYPE_UDP = 0x11; // 17
+const bit<8> TYPE_UDP = 0x11;
 const bit<16> UDP_PORT_SVC_GW = 1884;
 
 /*Segment TCP*/
-const bit<8> TYPE_TCP = 0x06; // 6
+const bit<8> TYPE_TCP = 0x06;
 const bit<16> TCP_PORT_SVC_BK = 1883;
 
 /*Packet IP*/
 const bit<16> TYPE_IPV4 = 0x0800;
 
-// Address Resolution Protocol
-const bit<16> TYPE_ARP  = 0x0806;
-
+/*ICMP*/
 const bit<8> TYPE_ICMP = 0x01;
 
 /*************************************************************************
@@ -606,6 +604,7 @@ parser MyParser(packet_in packet,
         verify(hdr.mqttsn_fixed.length == 7, error.MQTT_SN_InvalidLength);
         transition accept;
     }
+    
     state parse_mqttsn_publish {
         packet.extract(hdr.mqttsn_flags_publish);
         packet.extract(hdr.mqttsn_publish);
