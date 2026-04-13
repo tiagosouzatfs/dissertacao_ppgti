@@ -869,7 +869,7 @@ control MyIngress(inout headers hdr,
         //////////////////////////////////////////////////////////////////
 
         if (hdr.tcp.isValid() || hdr.ipv4.protocol == TYPE_ICMP) {
-            static_forwarding.apply(); // // Encaminha mqtt e ping
+            static_forwarding.apply(); // Encaminha mqtt e ping
         }
 
         ///////////////////////////////////////////////////////////////////
@@ -920,7 +920,7 @@ control MyIngress(inout headers hdr,
 
             else if (hdr.udp.dstPort == UDP_PORT_SVC_GW) {    // porta 1884
 
-                /// CONNECT
+                // CONNECT
                 if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT &&
                     hdr.mqttsn_flags_connect.isValid() &&
                     hdr.mqttsn_connect.isValid()) {
