@@ -102,8 +102,7 @@ def run_benchmark_p4ssn(msgs_per_qos):
 
 if __name__ == "__main__":
 
-    MSGS_POR_QOS = 100
-    # MSGS_POR_QOS = 500 # 500 QoS -1 + 500 QoS 0 = 1k total
+    MSGS_POR_QOS = 500 # 500 QoS -1 + 500 QoS 0 = 1k total
     # MSGS_POR_QOS = 2500 # 2500 QoS -1 + 2500 QoS 0 = 5k total
     # MSGS_POR_QOS = 5000 # 5000 QoS -1 + 5000 QoS 0 = 10k total
 

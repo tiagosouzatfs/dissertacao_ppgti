@@ -3,11 +3,8 @@ import socket
 import struct
 import random
 import time
-import sys
 
-# =============================================================================
 # Constantes MQTT-SN
-# =============================================================================
 
 MQTTSN_CONNECT      = 0x04
 MQTTSN_CONNACK      = 0x05
@@ -35,15 +32,13 @@ SECRET_DATA_PUBLISH = 0x8D93D01BEE9B416847B69D483BDFB0D6D4D329D98B278AD866E6B170
 
 GW_IP = "10.0.0.2"
 GW_PORT = 1884
-CLIENT_IP = "10.0.0.5"
-CLIENT_PORT = 1895
+CLIENT_IP = "10.0.0.4"
+CLIENT_PORT = 1894
 
 TIMEOUT = 5
 KEEPALIVE = 30
 
-# =============================================================================
 # Lógica OTP (One-Time Pad) - Sincronizada com P4
-# =============================================================================
 
 def generate_otp(salt):
     otp = ((salt << 7) & 0xFFFF) ^ (salt >> 9) ^ 0xA5A5
@@ -69,9 +64,7 @@ def otp_process_data(payload_raw, salt_ignored):
         output.append(b ^ dynamic_mask)
     return bytes(output)
 
-# =============================================================================
-# Comunicação e Builders (Originais)
-# =============================================================================
+# Comunicação e Builders
 
 def recv_packet(sock):
     sock.settimeout(TIMEOUT)
@@ -85,6 +78,7 @@ def recv_packet(sock):
         return None
 
 def build_connect(client_id, duration=KEEPALIVE):
+    # Forçado Clean Session 0x04 para estabilidade no Benchmark
     payload = struct.pack(">BBH", 0x04, 0x01, duration) + client_id.encode()
     return struct.pack(">BB", len(payload)+2, MQTTSN_CONNECT) + payload
 
@@ -99,18 +93,15 @@ def build_subscribe(topic_input, msg_id, qos_level, topic_type):
     return struct.pack(">BB", len(payload)+2, MQTTSN_SUBSCRIBE) + payload
 
 def build_puback(topic_id, msg_id):
-    # Envia o ID real (o Switch no Egress tratará se necessário)
     payload = struct.pack(">HHB", topic_id, msg_id, 0x00)
     return struct.pack(">BB", len(payload)+2, MQTTSN_PUBACK) + payload
 
-# =============================================================================
-# Subscriber Principal (Original)
-# =============================================================================
+# Subscriber
 
-def mqttsn_subscriber():
+def p4ssn_subscriber():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((CLIENT_IP, CLIENT_PORT))
-    client_id = f"struct_sub_{random.randint(1000,9999)}"
+    client_id = f"p4ssn_sub_{random.randint(1000,9999)}"
 
     topic_input = input("Digite o tópico ou ID: ").strip()
     topic_type = int(input("Tipo (0=Name,1=Predefined,2=Short): ").strip())
@@ -124,50 +115,68 @@ def mqttsn_subscriber():
             break
 
     # SUBSCRIBE
-    msg_id = random.randint(1, 2000)
+    msg_id = random.randint(1, 0xFFFF)
     sock.sendto(build_subscribe(topic_input, msg_id, qos_level, topic_type), (GW_IP, GW_PORT))
     while True:
         pkt = recv_packet(sock)
         if pkt and pkt[0] == MQTTSN_SUBACK:
             break
 
-    print("Aguardando mensagens...\n")
+    print("Aguardando mensagens ...\n")
     last_ping = time.time()
+    msg_count = 0  # Contador de mensagens
 
-    while True:
-        pkt = recv_packet(sock)
-        if pkt is None:
-            if time.time() - last_ping > KEEPALIVE:
-                sock.sendto(struct.pack(">BB", 2, MQTTSN_PINGREQ), (GW_IP, GW_PORT))
+    with open("/root/time_publication_p4ssn1.csv", "w") as f:
+        f.write("id,t_pub_ms\n")
+        while True:
+            pkt = recv_packet(sock)
+            t_chegada = time.time() # Captura imediata na chegada
+
+            if pkt is None:
+                if time.time() - last_ping > KEEPALIVE:
+                    sock.sendto(struct.pack(">BB", 2, MQTTSN_PINGREQ), (GW_IP, GW_PORT))
+                    last_ping = time.time()
+                continue
+
+            msgType, data = pkt
+            if msgType == MQTTSN_PUBLISH:
+                msg_count += 1
+                flags = data[2]
+                qos_bits = (flags >> 5) & 0x03
+                
+                # Decodificação OTP usando o msgId (Salt)
+                topic_enc = struct.unpack(">H", data[3:5])[0]
+                salt = struct.unpack(">H", data[5:7])[0]
+                payload_raw = data[7:]
+
+                topic_id_rcv = otp_decrypt_topic(topic_enc, salt)
+                
+                # Altera apenas a chamada do data para usar a nova lógica de salt embutido
+                decoded = otp_process_data(payload_raw, salt).decode(errors="ignore").rstrip("*")
+
+                # Cálculo de tempo de publicação
+                try:
+                    t_saida = float(decoded.split('_')[-1])
+                    latencia = (t_chegada - t_saida) * 1000
+                    f.write(f"{msg_count},{latencia:.4f}\n")
+                    f.flush()
+                except:
+                    latencia = 0
+
+                print(f"## PUBLISH {msg_count} (Tempo de Publicação: {latencia:.3f}ms)")
+                print(f"## Conteúdo: '{decoded}'\n")
+
+                if qos_bits == QOS_1:
+                    sock.sendto(build_puback(topic_id_rcv, salt), (GW_IP, GW_PORT))
+                elif qos_bits == QOS_2:
+                    sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBREC, salt), (GW_IP, GW_PORT))
+
+            elif msgType == MQTTSN_PUBREL:
+                msg_id_rel = struct.unpack(">H", data[2:4])[0]
+                sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBCOMP, msg_id_rel), (GW_IP, GW_PORT))
+            
+            elif msgType == MQTTSN_PINGRESP:
                 last_ping = time.time()
-            continue
-
-        msgType, data = pkt
-        if msgType == MQTTSN_PUBLISH:
-            flags = data[2]
-            qos_bits = (flags >> 5) & 0x03
-            
-            # Decodificação OTP usando o msgId (Salt)
-            topic_enc = struct.unpack(">H", data[3:5])[0]
-            salt = struct.unpack(">H", data[5:7])[0]
-            payload_raw = data[7:]
-
-            topic_id_rcv = otp_decrypt_topic(topic_enc, salt)
-            
-            # Altera apenas a chamada do data para usar a nova lógica de salt embutido
-            decoded = otp_process_data(payload_raw, salt).decode(errors="ignore").rstrip("*")
-
-            print(f"<- PUBLISH (ID Real={topic_id_rcv}, Salt={hex(salt)})")
-            print(f"   Conteúdo: '{decoded}'\n")
-
-            if qos_bits == QOS_1:
-                sock.sendto(build_puback(topic_id_rcv, salt), (GW_IP, GW_PORT))
-            elif qos_bits == QOS_2:
-                sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBREC, salt), (GW_IP, GW_PORT))
-
-        elif msgType == MQTTSN_PUBREL:
-            msg_id_rel = struct.unpack(">H", data[2:4])[0]
-            sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBCOMP, msg_id_rel), (GW_IP, GW_PORT))
 
 if __name__ == "__main__":
-    mqttsn_subscriber()
+    p4ssn_subscriber()

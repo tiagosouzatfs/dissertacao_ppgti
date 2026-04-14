@@ -4,9 +4,7 @@ import struct
 import random
 import time
 
-# =============================================================================
 # Constantes MQTT-SN
-# =============================================================================
 
 MQTTSN_CONNECT      = 0x04
 MQTTSN_CONNACK      = 0x05
@@ -37,9 +35,7 @@ CLIENT_PORT = 1894
 TIMEOUT = 5
 KEEPALIVE = 30
 
-# =============================================================================
 # Comunicação e Builders
-# =============================================================================
 
 def recv_packet(sock):
     sock.settimeout(TIMEOUT)
@@ -71,9 +67,7 @@ def build_puback(topic_id, msg_id):
     payload = struct.pack(">HHB", topic_id, msg_id, 0x00)
     return struct.pack(">BB", len(payload)+2, MQTTSN_PUBACK) + payload
 
-# =============================================================================
-# Subscriber Principal 
-# =============================================================================
+# Subscriber
 
 def mqttsn_subscriber():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -103,7 +97,7 @@ def mqttsn_subscriber():
     last_ping = time.time()
     msg_count = 0  # Contador de mensagens
 
-    with open("time_publication.csv", "w") as f:
+    with open("/root/time_publication_mqttsn1.csv", "w") as f:
         f.write("id,t_pub_ms\n")
         while True:
             pkt = recv_packet(sock)
@@ -121,9 +115,11 @@ def mqttsn_subscriber():
                 flags = data[2]
                 qos_bits = (flags >> 5) & 0x03
                 
+                # Extração padrão MQTT-SN: TopicID(2 bytes), MsgId(2 bytes)
                 topic_id_rcv = struct.unpack(">H", data[3:5])[0]
                 msg_id_rcv = struct.unpack(">H", data[5:7])[0]
-                
+
+                # No MQTT-SN, o payload começa no byte 7
                 decoded = data[7:].decode(errors="ignore")
 
                 # Cálculo de tempo de publicação

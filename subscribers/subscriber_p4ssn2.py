@@ -4,9 +4,7 @@ import struct
 import random
 import time
 
-# =============================================================================
 # Constantes MQTT-SN
-# =============================================================================
 
 MQTTSN_CONNECT      = 0x04
 MQTTSN_CONNACK      = 0x05
@@ -34,15 +32,13 @@ SECRET_DATA_PUBLISH = 0x8D93D01BEE9B416847B69D483BDFB0D6D4D329D98B278AD866E6B170
 
 GW_IP = "10.0.0.2"
 GW_PORT = 1884
-CLIENT_IP = "10.0.0.4"
-CLIENT_PORT = 1894
+CLIENT_IP = "10.0.0.5"
+CLIENT_PORT = 1895
 
 TIMEOUT = 5
 KEEPALIVE = 30
 
-# =============================================================================
 # Lógica OTP (One-Time Pad) - Sincronizada com P4
-# =============================================================================
 
 def generate_otp(salt):
     otp = ((salt << 7) & 0xFFFF) ^ (salt >> 9) ^ 0xA5A5
@@ -68,9 +64,7 @@ def otp_process_data(payload_raw, salt_ignored):
         output.append(b ^ dynamic_mask)
     return bytes(output)
 
-# =============================================================================
 # Comunicação e Builders
-# =============================================================================
 
 def recv_packet(sock):
     sock.settimeout(TIMEOUT)
@@ -102,9 +96,7 @@ def build_puback(topic_id, msg_id):
     payload = struct.pack(">HHB", topic_id, msg_id, 0x00)
     return struct.pack(">BB", len(payload)+2, MQTTSN_PUBACK) + payload
 
-# =============================================================================
-# Subscriber Principal
-# =============================================================================
+# Subscriber
 
 def p4ssn_subscriber():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -134,7 +126,7 @@ def p4ssn_subscriber():
     last_ping = time.time()
     msg_count = 0  # Contador de mensagens
 
-    with open("time_publication.csv", "w") as f:
+    with open("/root/time_publication_p4ssn2.csv", "w") as f:
         f.write("id,t_pub_ms\n")
         while True:
             pkt = recv_packet(sock)
