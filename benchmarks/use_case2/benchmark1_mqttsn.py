@@ -3,7 +3,6 @@ import socket
 import struct
 import random
 import time
-import os
 import csv
 
 # Constantes
@@ -14,8 +13,8 @@ QOS_M1, QOS_0, QOS_1, QOS_2 = 0b11, 0b00, 0b01, 0b10
 TOPICIDTYPE_PREDEFINED = 0b01
 PREDEFINED_TOPIC_ID = 10
 
-GW_IP, GW_PORT = "10.0.0.1", 1884
-CLIENT_IP = "10.0.0.2"
+GW_IP, GW_PORT = "10.0.0.2", 1884
+CLIENT_IP = "10.0.0.3"
 TIMEOUT = 5.0
 
 class MQTTSNBenchmark:
@@ -23,13 +22,13 @@ class MQTTSNBenchmark:
         self.client_ip = client_ip
 
     def run_iteration(self, qos, retain, iteration):
-        client_id = f"sn_{iteration}_{random.randint(100, 999)}"
+        client_id = f"mqttsn_client_{iteration}_{random.randint(100, 999)}"
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.client_ip, 0))
         sock.settimeout(TIMEOUT)
         
         msg_id = (iteration + (qos * 100)) % 0xFFFF
-        payload = "MQTTSN_STANDARD_DATA_BENCHMARK".encode()
+        payload = "MQTTSN_DATA_BENCHMARK".encode()
         
         t_start_flow = time.perf_counter()
         t_end_total = 0
@@ -40,6 +39,8 @@ class MQTTSNBenchmark:
                 conn = struct.pack('>BBH', 0x04, 0x01, 60) + client_id.encode()
                 sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
                 sock.recvfrom(1024)
+
+                time.sleep(0.0005)
 
             # PUBLISH (Tópico 10 Fixo)
             flags = ((qos & 0x03) << 5) | ((retain & 0x01) << 4) | TOPICIDTYPE_PREDEFINED
@@ -53,10 +54,15 @@ class MQTTSNBenchmark:
                 if rec[1] == MQTTSN_PUBREC:
                     sock.sendto(struct.pack('>BBH', 4, MQTTSN_PUBREL, msg_id), (GW_IP, GW_PORT))
                     sock.recvfrom(1024)
+
+            time.sleep(0.0005)
             
             if qos != QOS_M1:
                 # DISCONNECT
                 sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
+                sock.recvfrom(1024) # DISCONNECT Gateway
+
+                time.sleep(0.0005)
 
             t_end_total = time.perf_counter()
         except (socket.timeout, Exception):
@@ -73,13 +79,14 @@ class MQTTSNBenchmark:
 
 if __name__ == "__main__":
     bench = MQTTSNBenchmark(CLIENT_IP)
-    if not os.path.exists('results'): os.makedirs('results')
-    test_cases = [(QOS_M1, 0), (QOS_0, 0), (QOS_0, 1), (QOS_1, 0), (QOS_2, 0)]
-    with open('results/mqttsn.csv', 'w', newline='') as f:
+    # test_cases = [(QOS_M1, 0), (QOS_0, 0), (QOS_0, 1), (QOS_1, 0), (QOS_2, 0)] # Se quiser testar com retain
+    test_cases = [(QOS_M1, 0), (QOS_0, 0), (QOS_1, 0), (QOS_2, 0)]
+    
+    with open('/root/mqttsn.csv', 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=["cenario", "qos", "retain", "t_flow_ms"])
         writer.writeheader()
         for qos, ret in test_cases:
-            print(f"\n>>> Bateria MQTT-SN Padrão: QoS {qos} | Retain {ret}")
+            print(f"\n### Benchmark MQTT-SN: QoS {qos} | Retain {ret}")
             time.sleep(2)
             for i in range(1, 101):
                 writer.writerow(bench.run_iteration(qos, ret, i))

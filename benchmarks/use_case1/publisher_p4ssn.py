@@ -2,10 +2,10 @@
 import socket
 import struct
 import random
+import time
 
-# =============================================================================
+
 # Constantes MQTT-SN
-# =============================================================================
 
 MQTTSN_CONNECT      = 0x04
 MQTTSN_CONNACK      = 0x05
@@ -30,9 +30,9 @@ TOPICIDTYPE_TOPICNAME         = 0b00
 TOPICIDTYPE_PREDEFINEDTOPIC   = 0b01
 TOPICIDTYPE_SHORTTOPICNAME    = 0b10
 
-GW_IP = "10.0.0.1"
+GW_IP = "10.0.0.2"
 GW_PORT = 1884
-CLIENT_IP = "10.0.0.2"
+CLIENT_IP = "10.0.0.3"
 CLIENT_PORT = 0
 
 SERVER_ADDRESS = (GW_IP, GW_PORT)
@@ -42,9 +42,7 @@ MAX_RETRIES = 3
 selected_topic_type = TOPICIDTYPE_TOPICNAME
 retain_flag = 0
 
-# =============================================================================
 # Lógica OTP (One-Time Pad) - Sincronizada com P4
-# =============================================================================
 
 def generate_otp(salt):
     otp = ((salt << 7) & 0xFFFF) ^ (salt >> 9) ^ 0xA5A5
@@ -72,9 +70,7 @@ def otp_process_data(data_str, salt_ignored):
     # Retorna o Salt (2 bytes) + Payload Cifrado (62 bytes)
     return struct.pack('>H', payload_salt) + bytes(output)
 
-# =============================================================================
-# Comunicação robusta (Original)
-# =============================================================================
+# Comunicação
 
 def recv_packet(sock, expected_type=None, expected_msg_id=None):
     sock.settimeout(TIMEOUT)
@@ -110,9 +106,7 @@ def drain_socket(sock):
     except socket.timeout:
         pass
 
-# =============================================================================
-# Construção de pacotes (Original com OTP)
-# =============================================================================
+# Construção de pacotes (com OTP)
 
 def build_connect(client_id, duration=30):
     payload = struct.pack('>BBH', 0x04, 0x01, duration) + client_id.encode()
@@ -145,37 +139,35 @@ def build_pubrel(msg_id):
 def build_disconnect():
     return struct.pack('>BB', 2, MQTTSN_DISCONNECT)
 
-# =============================================================================
 # Sequência principal
-# =============================================================================
 
 def sequence_common(sock, qos_level, msg_id, topic_input, data, client_id):
 
-    # ---------------- QoS -1 ----------------
+    # QoS -1
     if qos_level == QOS_M1:
         print("-> Enviando: PUBLISH (QoS -1)")
         sock.sendto(build_publish(qos_level, topic_input, 0, data), SERVER_ADDRESS)
         return
 
-    # ---------------- CONNECT ----------------
+    # CONNECT
     print(f"-> Enviando: CONNECT ({client_id})")
     if not send_and_wait(sock, build_connect(client_id), MQTTSN_CONNACK):
         return
 
-    # ---------------- REGISTER ----------------
+    # REGISTER
     if selected_topic_type == TOPICIDTYPE_TOPICNAME:
         print("-> Enviando: REGISTER")
         regack = send_and_wait(sock, build_register(topic_input, msg_id), MQTTSN_REGACK, msg_id)
         if not regack:
             return
-        # CORREÇÃO: O TopicId no REGACK MQTT-SN padrão (7 bytes) está nos bytes 2 e 3
+        
         # [0]=Len, [1]=Type(0x0B), [2:4]=TopicId, [4:6]=MsgId, [6]=ReturnCode
         topic_id = struct.unpack('>H', regack[2:4])[0]
         print(f"<- REGACK recebido: topic_id = {topic_id}")
     else:
         topic_id = topic_input
 
-    # ---------------- PUBLISH ----------------
+    # PUBLISH
     print("-> Enviando: PUBLISH")
     sock.sendto(build_publish(qos_level, topic_id, msg_id, data), SERVER_ADDRESS)
 
@@ -200,14 +192,11 @@ def sequence_common(sock, qos_level, msg_id, topic_input, data, client_id):
         sock.sendto(build_disconnect(), SERVER_ADDRESS)
         drain_socket(sock)
 
-# =============================================================================
-# MAIN
-# =============================================================================
 
 if __name__ == "__main__":
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((CLIENT_IP, CLIENT_PORT))
-    client_id = f"struct_client_{random.randint(1000,9999)}"
+    client_id = f"p4ssn_client_{random.randint(1000,9999)}"
 
     qos_map = {"-1": QOS_M1, "0": QOS_0, "1": QOS_1, "2": QOS_2}
     q_input = input("QoS (-1,0,1,2): ")
@@ -238,6 +227,7 @@ if __name__ == "__main__":
         topic_val = struct.unpack('>H', t_str.encode())[0]
 
     data_msg = input("Mensagem (máx 64 bytes): ").ljust(64, "*")[:64]
+    #data_msg = (input("Mensagem: ") + f"_{time.time()}").ljust(64, "*")[:64]
 
     sequence_common(sock, qos_level, 0x0001, topic_val, data_msg, client_id)
     sock.close()

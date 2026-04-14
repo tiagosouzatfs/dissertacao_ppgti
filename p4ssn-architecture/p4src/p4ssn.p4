@@ -67,11 +67,18 @@ const bit<2> FLAGS_QOS_LEVEL_2 = 0b10;
 const bit<2> FLAGS_QOS_LEVEL_MINUS1 = 0b11;
 
 /*Segment UDP*/
-const bit<8> TYPE_UDP = 0x11; // 17
+const bit<8> TYPE_UDP = 0x11;
 const bit<16> UDP_PORT_SVC_GW = 1884;
 
+/*Segment TCP*/
+const bit<8> TYPE_TCP = 0x06;
+const bit<16> TCP_PORT_SVC_BK = 1883;
+
 /*Packet IP*/
-const bit<16> TYPE_IPV4 = 0x800; // 2048
+const bit<16> TYPE_IPV4 = 0x0800;
+
+/*ICMP*/
+const bit<8> TYPE_ICMP = 0x01;
 
 /*Secrets Publish*/
 const bit<16> SECRET_TOPIC_ID = 0xB7A3;
@@ -128,6 +135,34 @@ header UDP_h {
     bit<16> dstPort;
     bit<16> length;
     bit<16> checksum;
+}
+
+///////////////////// TCP Header ////////////////////
+
+/* Segment TCP */
+header TCP_h {
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<32> seqNo;
+    bit<32> ackNo;
+    bit<4>  dataOffset; // Indica o tamanho do header (multiplicado por 4 bytes)
+    bit<3>  res;        // Bits reservados
+    bit<3>  ecn;        // Explicit Congestion Notification
+    bit<6>  ctrl;       // Flags de controle (URG, ACK, PSH, RST, SYN, FIN)
+    bit<16> window;
+    bit<16> checksum;
+    bit<16> urgentPtr;
+}
+
+//////////////////// MQTT Header Fixed ////////////////////
+
+/* Message MQTT fixed header (Simplificado para mensagens curtas) */
+header MQTT_fixed_h {
+    bit<4> msgType;   // Bits 7-4: Tipo da mensagem (ex: 0x3 para PUBLISH)
+    bit<1> dup;       // Bit 3: Duplicado
+    bit<2> qos;       // Bits 2-1: QoS level
+    bit<1> retain;    // Bit 0: Retain
+    bit<8> remainingLength; // Tamanho restante (simplificado para 1 byte)
 }
 
 //////////////////// MQTT-SN Headers ////////////////////
@@ -367,6 +402,8 @@ header MQTTSN_fixed_data_publish_h {
 struct headers {
     Ethernet_h ethernet;
     IPv4_h ipv4;
+    TCP_h tcp;
+    MQTT_fixed_h mqtt_fixed;
     UDP_h udp;
     MQTTSN_fixed_h mqttsn_fixed;
     MQTTSN_advertise_h mqttsn_advertise;
@@ -447,8 +484,24 @@ parser MyParser(packet_in packet,
         verify(hdr.ipv4.version == 4, error.IPv4IncorrectVersion);
         transition select(hdr.ipv4.protocol) {
             TYPE_UDP: parse_udp;
+            TYPE_TCP: parse_tcp;
+            TYPE_ICMP: accept;    // Libera o tráfego ICMP para o Ingress
             default: accept;
         }
+    }
+
+    state parse_tcp {
+        packet.extract(hdr.tcp);
+        transition select(hdr.tcp.srcPort, hdr.tcp.dstPort) {
+            (TCP_PORT_SVC_BK, _): parse_mqtt_fixed;   // Para mensagens com srcPort = 1883
+            (_, TCP_PORT_SVC_BK): parse_mqtt_fixed;   // Para mensagens com dstPort = 1883
+            default: accept;
+        }
+    }
+
+    state parse_mqtt_fixed {
+        // packet.extract(hdr.mqtt_fixed);
+        transition accept;
     }
 
     state parse_udp {
@@ -483,7 +536,6 @@ parser MyParser(packet_in packet,
             MQTTSN_PINGREQ:       parse_mqttsn_pingreq;
             MQTTSN_PINGRESP:      parse_mqttsn_pingresp;
             MQTTSN_DISCONNECT:    parse_mqttsn_disconnect;
-            /*
             MQTTSN_WILLTOPICREQ:  parse_mqttsn_willtopicreq;
             MQTTSN_WILLTOPIC:     parse_mqttsn_willtopic;
             MQTTSN_WILLMSGREQ:    parse_mqttsn_willmsgreq;
@@ -492,7 +544,6 @@ parser MyParser(packet_in packet,
             MQTTSN_WILLMSGUPD:    parse_mqttsn_willmsgupd;
             MQTTSN_WILLTOPICRESP: parse_mqttsn_willtopicresp;
             MQTTSN_WILLMSGRESP:   parse_mqttsn_willmsgresp;
-            */
             default: accept;
         }
     }
@@ -654,7 +705,6 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 
-    /*
     state parse_mqttsn_willtopicreq {
         packet.extract(hdr.mqttsn_willtopicreq);
         verify(hdr.mqttsn_fixed.length == 2, error.MQTT_SN_InvalidLength);
@@ -726,7 +776,7 @@ parser MyParser(packet_in packet,
         verify(hdr.mqttsn_fixed.length == 3, error.MQTT_SN_InvalidLength);
         transition accept;
     }
-    */
+
 }
 
 /*************************************************************************
@@ -873,10 +923,18 @@ control MyIngress(inout headers hdr,
         }
 
         ///////////////////////////////////////////////////////////////////
+        /////////////////////// MQTT / ICMP //////////////////////////////
+        //////////////////////////////////////////////////////////////////
+
+        if (hdr.tcp.isValid() || hdr.ipv4.protocol == TYPE_ICMP) {
+            static_forwarding.apply(); // Encaminha mqtt e ping
+        }
+
+        ///////////////////////////////////////////////////////////////////
         ///////////////////////// MQTT-SN ////////////////////////////////
         //////////////////////////////////////////////////////////////////
 
-        if (hdr.mqttsn_fixed.isValid()) {
+        else if (hdr.mqttsn_fixed.isValid()) {
 
             ////// Mensagens que podem vir de qualquer cliente pub/sub ou do Gateway MQTT-SN //////
 
@@ -920,7 +978,7 @@ control MyIngress(inout headers hdr,
 
             else if (hdr.udp.dstPort == UDP_PORT_SVC_GW) {    // porta 1884
 
-                /// CONNECT
+                // CONNECT
                 if (hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT &&
                     hdr.mqttsn_flags_connect.isValid() &&
                     hdr.mqttsn_connect.isValid()) {
@@ -976,7 +1034,6 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_variable_field.isValid()) {
                             static_forwarding.apply();
                 }
-                /*
                 // WILLTOPIC
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPIC &&
                     hdr.mqttsn_flags_willtopic.isValid() &&
@@ -1003,7 +1060,6 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_variable_field.isValid()) {
                         static_forwarding.apply();
                 }
-                */
             }
 
             ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
@@ -1047,7 +1103,6 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_variable_field.isValid()) {
                         static_forwarding.apply();
                 }
-                /*
                 // WILLTOPICREQ
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICREQ &&
                     hdr.mqttsn_willtopicreq.isValid()) {
@@ -1068,12 +1123,10 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_willmsgresp.isValid()) {
                         static_forwarding.apply();
                 }
-                */
             }
 
             ///////////////////////// BROADCAST //////////////////////////////
 
-            /*
             // Trabalhos futuros //
             // ADVERTISE
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE &&
@@ -1091,7 +1144,6 @@ control MyIngress(inout headers hdr,
                 hdr.mqttsn_variable_field.isValid())  {
                     broadcast();
             }
-            */
         }
 
         // Se a parte fixa da mensagem mqttsn não for válida, ou
@@ -1181,6 +1233,8 @@ control MyDeparser(packet_out packet,
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
+        packet.emit(hdr.tcp);
+        packet.emit(hdr.mqtt_fixed);
         packet.emit(hdr.udp);
         packet.emit(hdr.mqttsn_fixed);
         packet.emit(hdr.mqttsn_advertise);

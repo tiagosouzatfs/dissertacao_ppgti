@@ -55,16 +55,16 @@ def topology():
     # Equivale a: /home/vboxuser/dissertacao_ppgti
     project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    client_pub_path = "/benchmarks/use_case1/publisher_mqttsn.py"
+    client_pub_path = "/benchmarks/use_case1/publisher_p4ssn.py"
     pub_path = project_path + "/" + client_pub_path
 
-    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_mqttsn.py"
+    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_p4ssn.py"
     pub_benchmark1_path = project_path + "/" + client_pub_benchmark1_path
 
-    client_pub_results_benchmark1_path = "/benchmarks/use_case2/mqttsn.csv"
+    client_pub_results_benchmark1_path = "/benchmarks/use_case2/p4ssn.csv"
     pub_results_benchmark1_path = project_path + "/" + client_pub_results_benchmark1_path
 
-    client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_mqttsn.py"
+    client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_p4ssn.py"
     pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
 
     debug("Adicionando sensor publisher\n")
@@ -75,17 +75,17 @@ def topology():
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
                  pub_path + ':/root/publisher_p4ssn.py',
-                 pub_benchmark1_path + ':/root/benchmark1_mqttsn.py',
-                 pub_benchmark2_path + ':/root/benchmark2_mqttsn.py',
-                 pub_results_benchmark1_path + ':/root/mqttsn.csv'
+                 pub_benchmark1_path + ':/root/benchmark1_p4ssn.py',
+                 pub_benchmark2_path + ':/root/benchmark2_p4ssn.py',
+                 pub_results_benchmark1_path + ':/root/p4ssn.csv'
                 ],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    client_sub1_path = "/subscribers/subscriber_mqttsn1.py"
+    client_sub1_path = "/subscribers/subscriber_p4ssn1.py"
     sub1_path = project_path + "/" + client_sub1_path
 
-    client_sub1_time_publication_path = "/benchmarks/use_case3/time_publication_mqttsn1.csv"
+    client_sub1_time_publication_path = "/benchmarks/use_case3/time_publication_p4ssn1.csv"
     sub1_time_publication_path = project_path + "/" + client_sub1_time_publication_path
 
     debug("Adicionando subscriber 1\n")
@@ -95,15 +95,15 @@ def topology():
         mac="00:00:00:00:00:04", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
-                 sub1_path + ':/root/subscriber_mqttsn1.py',
-                 sub1_time_publication_path + ':/root/time_publication_mqttsn1.csv'],
+                 sub1_path + ':/root/subscriber_p4ssn1.py',
+                 sub1_time_publication_path + ':/root/time_publication_p4ssn1.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    client_sub2_path = "/subscribers/subscriber_mqttsn2.py"
+    client_sub2_path = "/subscribers/subscriber_p4ssn1.py"
     sub2_path = project_path + "/" + client_sub2_path
 
-    client_sub2_time_publication_path = "/benchmarks/use_case3/time_publication_mqttsn2.csv"
+    client_sub2_time_publication_path = "/benchmarks/use_case3/time_publication_p4ssn2.csv"
     sub2_time_publication_path = project_path + "/" + client_sub2_time_publication_path
 
     debug("Adicionando subscriber 2\n")
@@ -113,8 +113,8 @@ def topology():
         mac="00:00:00:00:00:05", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
-                 sub2_path + ':/root/subscriber_mqttsn2.py',
-                 sub2_time_publication_path + ':/root/time_publication_mqttsn2.csv'],
+                 sub2_path + ':/root/subscriber_p4ssn2.py',
+                 sub2_time_publication_path + ':/root/time_publication_p4ssn2.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -164,7 +164,7 @@ def topology():
     )
 
     path = os.path.dirname(os.path.abspath(__file__))
-    json_file = '/root/mqtt-sn.json'
+    json_file = '/root/p4ssn.json'
     config = path + '/rules/forwarding.txt'
     args = {'json': json_file, 'switch_config': config}
 

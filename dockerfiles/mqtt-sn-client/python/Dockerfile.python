@@ -20,4 +20,4 @@ RUN usermod -aG wireshark root
 
 RUN pip install crcmod
 
-# docker build -t mqtt-sn-client-python:latest . -f Dockerfile.python
+# docker build -t mqtt-sn-client-pub-sub:latest . -f Dockerfile.python
