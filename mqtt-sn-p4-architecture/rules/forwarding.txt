@@ -9,3 +9,9 @@ table_add MyIngress.static_forwarding forwarding 10.0.0.3 => 00:00:00:00:00:03 3
 table_add MyIngress.static_forwarding forwarding 10.0.0.4 => 00:00:00:00:00:04 4
 # Cliente Sub 2
 table_add MyIngress.static_forwarding forwarding 10.0.0.5 => 00:00:00:00:00:05 5
+# Cliente Sub 3
+table_add MyIngress.static_forwarding forwarding 10.0.0.6 => 00:00:00:00:00:06 6
+# Cliente Sub 4
+table_add MyIngress.static_forwarding forwarding 10.0.0.7 => 00:00:00:00:00:07 7
+# Cliente Sub 5
+table_add MyIngress.static_forwarding forwarding 10.0.0.8 => 00:00:00:00:00:08 8

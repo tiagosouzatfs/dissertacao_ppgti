@@ -118,6 +118,60 @@ def topology():
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
+    client_sub3_path = "/subscribers/subscriber_p4ssn3.py"
+    sub3_path = project_path + "/" + client_sub3_path
+
+    client_sub3_time_publication_path = "/benchmarks/use_case3/time_publication_p4ssn3.csv"
+    sub3_time_publication_path = project_path + "/" + client_sub3_time_publication_path
+
+    debug("Adicionando subscriber 3\n")
+    ss3 = net.addDocker(
+        'ss3', 
+        ip='10.0.0.6',
+        mac="00:00:00:00:00:06", 
+        dimage="mqtt-sn-client-python",
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
+                 sub3_path + ':/root/subscriber_p4ssn3.py',
+                 sub3_time_publication_path + ':/root/time_publication_p4ssn3.csv'],
+        environment={'DISPLAY':":{}".format(DISPLAY_ID)}
+    )
+
+    client_sub4_path = "/subscribers/subscriber_p4ssn4.py"
+    sub4_path = project_path + "/" + client_sub4_path
+
+    client_sub4_time_publication_path = "/benchmarks/use_case3/time_publication_p4ssn4.csv"
+    sub4_time_publication_path = project_path + "/" + client_sub4_time_publication_path
+
+    debug("Adicionando subscriber 4\n")
+    ss4 = net.addDocker(
+        'ss4', 
+        ip='10.0.0.7',
+        mac="00:00:00:00:00:07", 
+        dimage="mqtt-sn-client-python",
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
+                 sub4_path + ':/root/subscriber_p4ssn4.py',
+                 sub4_time_publication_path + ':/root/time_publication_p4ssn4.csv'],
+        environment={'DISPLAY':":{}".format(DISPLAY_ID)}
+    )
+
+    client_sub5_path = "/subscribers/subscriber_p4ssn2.py"
+    sub5_path = project_path + "/" + client_sub5_path
+
+    client_sub5_time_publication_path = "/benchmarks/use_case3/time_publication_p4ssn5.csv"
+    sub5_time_publication_path = project_path + "/" + client_sub5_time_publication_path
+
+    debug("Adicionando subscriber 5\n")
+    ss5 = net.addDocker(
+        'ss5', 
+        ip='10.0.0.8',
+        mac="00:00:00:00:00:08", 
+        dimage="mqtt-sn-client-python",
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
+                 sub5_path + ':/root/subscriber_p4ssn5.py',
+                 sub5_time_publication_path + ':/root/time_publication_p4ssn5.csv'],
+        environment={'DISPLAY':":{}".format(DISPLAY_ID)}
+    )
+
     # Definindo variáveis para inicialização automática do EMQX Gateway
     emqx_env_gw = {
         "DISPLAY": ":{}".format(DISPLAY_ID),
@@ -188,6 +242,9 @@ def topology():
     net.addLink(pb, s1, txo=False, rxo=False)
     net.addLink(ss1, s1, txo=False, rxo=False)
     net.addLink(ss2, s1, txo=False, rxo=False)
+    net.addLink(ss3, s1, txo=False, rxo=False)
+    net.addLink(ss4, s1, txo=False, rxo=False)
+    net.addLink(ss5, s1, txo=False, rxo=False)
 
     debug('*** Starting network\n')
     net.build()
@@ -206,8 +263,17 @@ def topology():
     debug("Iniciando subscriber 1\n")
     makeTerm(ss1)
 
-    #debug("Iniciando subscriber 2\n")
-    #makeTerm(ss2)
+    debug("Iniciando subscriber 2\n")
+    makeTerm(ss2)
+
+    debug("Iniciando subscriber 3\n")
+    makeTerm(ss3)
+
+    debug("Iniciando subscriber 4\n")
+    makeTerm(ss4)
+
+    debug("Iniciando subscriber 5\n")
+    makeTerm(ss5)
 
     debug("CLI containernet\n")
     CLI(net)

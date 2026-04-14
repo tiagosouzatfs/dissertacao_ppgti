@@ -70,9 +70,13 @@ def run_benchmark_mqttsn(msgs_per_qos):
 
 if __name__ == "__main__":
 
-    MSGS_POR_QOS = 500 # 500 QoS -1 + 500 QoS 0 = 1k total
-    # MSGS_POR_QOS = 2500 # 2500 QoS -1 + 2500 QoS 0 = 5k total
-    # MSGS_POR_QOS = 5000 # 5000 QoS -1 + 5000 QoS 0 = 10k total
+    # Testes Gerais
+    MSGS_POR_QOS = 5000 # 5.000 QoS -1 + 5.000 QoS 0 = 10k total
+    # MSGS_POR_QOS = 10000 # 10.000 QoS -1 + 10.000 QoS 0 = 20k total
+    # MSGS_POR_QOS = 15000 # 15.000 QoS -1 + 15.000 QoS 0 = 30k total
+
+    # Último teste apenas para popular o teste do tempo de publicação
+    # MSGS_POR_QOS = 50 # 50 QoS -1 + 50 QoS 0 = 100 total
 
     print(f"--- INICIANDO BENCHMARK MQTTSN ---")
 
