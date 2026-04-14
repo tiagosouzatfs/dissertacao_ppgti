@@ -17,7 +17,7 @@ senha padrão
 public
 
 
-O emqx tem um api, exemplo:
+O emqx tem uma api, exemplo:
 
 curl -X 'PUT' 'http://127.0.0.1:18083/api/v5/gateways/mqttsn' \
   -u admin:public \

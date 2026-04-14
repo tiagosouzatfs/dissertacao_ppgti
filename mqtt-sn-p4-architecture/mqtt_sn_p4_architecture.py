@@ -55,17 +55,17 @@ def topology():
     # Equivale a: /home/vboxuser/dissertacao_ppgti
     project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    client_pub_path = "/dockerfiles/mqtt-sn-client/python/publisher_mqttsn.py"
+    client_pub_path = "/benchmarks/use_case1/publisher_mqttsn.py"
     pub_path = project_path + "/" + client_pub_path
 
-    client_pub_benchmark1_path = "/benchmarks/use_case1/benchmark1_mqttsn.py"
+    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_mqttsn.py"
     pub_benchmark1_path = project_path + "/" + client_pub_benchmark1_path
 
-    client_pub_benchmark2_path = "/benchmarks/use_case2/benchmark2_mqttsn.py"
-    pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
-
-    client_pub_results_benchmark1_path = "/benchmarks/use_case1/mqttsn.csv"
+    client_pub_results_benchmark1_path = "/benchmarks/use_case2/mqttsn.csv"
     pub_results_benchmark1_path = project_path + "/" + client_pub_results_benchmark1_path
+
+    client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_mqttsn.py"
+    pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
 
     debug("Adicionando sensor publisher\n")
     pb = net.addDocker(
@@ -82,8 +82,11 @@ def topology():
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    client_sub1_path = "/dockerfiles/mqtt-sn-client/python/subscriber_mqttsn1.py"
+    client_sub1_path = "/subscribers/subscriber_mqttsn1.py"
     sub1_path = project_path + "/" + client_sub1_path
+
+    client_sub1_time_publication_path = "/benchmarks/use_case3/time_publication_mqttsn1.csv"
+    sub1_time_publication_path = project_path + "/" + client_sub1_time_publication_path
 
     debug("Adicionando subscriber 1\n")
     ss1 = net.addDocker(
@@ -92,12 +95,16 @@ def topology():
         mac="00:00:00:00:00:04", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
-                 sub1_path + ':/root/subscriber_mqttsn1.py'],
+                 sub1_path + ':/root/subscriber_mqttsn1.py',
+                 sub1_time_publication_path + ':/root/time_publication_mqttsn1.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    client_sub2_path = "/dockerfiles/mqtt-sn-client/python/subscriber_mqttsn2.py"
+    client_sub2_path = "/subscribers/subscriber_mqttsn2.py"
     sub2_path = project_path + "/" + client_sub2_path
+
+    client_sub2_time_publication_path = "/benchmarks/use_case3/time_publication_mqttsn2.csv"
+    sub2_time_publication_path = project_path + "/" + client_sub2_time_publication_path
 
     debug("Adicionando subscriber 2\n")
     ss2 = net.addDocker(
@@ -106,7 +113,8 @@ def topology():
         mac="00:00:00:00:00:05", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
-                 sub2_path + ':/root/subscriber_mqttsn2.py'],
+                 sub2_path + ':/root/subscriber_mqttsn2.py',
+                 sub2_time_publication_path + ':/root/time_publication_mqttsn2.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -118,7 +126,7 @@ def topology():
         "EMQX_GATEWAY__MQTTSN__ENABLE": "true",
         "EMQX_GATEWAY__MQTTSN__GATEWAY_ID": "1",
         "EMQX_GATEWAY__MQTTSN__LISTENERS__UDP__DEFAULT__BIND": "1884",
-        "EMQX_GATEWAY__MQTTSN__PREDEFINED": '[{"id": 10, "topic": "temperatura"}]',
+        "EMQX_GATEWAY__MQTTSN__PREDEFINED": '[{"id": 10, "topic": "temperatura"}, {"id": 20, "topic": "umidade"}]',
 
         # Desabilita listeners mqtt
         "EMQX_LISTENERS__TCP__DEFAULT__ENABLE": "false",
@@ -138,7 +146,7 @@ def topology():
         "EMQX_ACTIONS__MQTT__SEND_BROKER__PARAMETERS__RETAIN": "${flags.retain}",
         
         # RULE
-        # Define o SQL da regra
+        # Define o SQL da regra (Enviar todas as publicações para o broker)
         "EMQX_RULE_ENGINE__RULES__SEND_BROKER__SQL": "SELECT * FROM \"#\"",
         # Associa o nome da Action existente a essa regra
         "EMQX_RULE_ENGINE__RULES__SEND_BROKER__ACTIONS__1": "mqtt:send_broker"
@@ -186,11 +194,11 @@ def topology():
     s1.start([])
     net.staticArp()
 
-    debug("Iniciando broker\n")
-    makeTerm(bk)
+    #debug("Iniciando broker\n")
+    #makeTerm(bk)
 
-    debug("Iniciando gateway\n")
-    makeTerm(gw)
+    #debug("Iniciando gateway\n")
+    #makeTerm(gw)
 
     debug("Iniciando publisher\n")
     makeTerm(pb)
@@ -198,8 +206,8 @@ def topology():
     debug("Iniciando subscriber 1\n")
     makeTerm(ss1)
 
-    debug("Iniciando subscriber 2\n")
-    makeTerm(ss2)
+    #debug("Iniciando subscriber 2\n")
+    #makeTerm(ss2)
 
     debug("CLI containernet\n")
     CLI(net)

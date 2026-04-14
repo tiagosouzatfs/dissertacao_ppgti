@@ -27,40 +27,17 @@ docker cp p4c:/tmp/mqtt-sn.json mqtt-sn-p4-architecture/
 ------------------------------------------------------------------------------
 
 
-### Experimento - clientes ###
+### Experimento - clientes - Use Case 1 ###
+
 
 # Iniciar topologia containernet
 sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
 
 # Inicie os clientes
+python3 /root/subscriber_mqttsn1.py
+python3 /root/subscriber_mqttsn2.py (Opcional)
+
 python3 /root/publisher_mqttsn.py
-
-python3 /root/subscriber_mqttsn1.py
-
-python3 /root/subscriber_mqttsn2.py (Opcional)
-
-
--------------------------------------------------------------------------------
-
-
-### Experimento - Benchmark - Use Case 1 ###
-
-
-# Iniciar o script de monitoramento de métricas (ele verifica se os containers do broker e gateway iniciaram)
-python3 monitoring.py mqttsn 10k ou python3 monitoring.py p4ssn 10k
-
-# Iniciar topologia containernet
-sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
-
-# Inicie os clientes
-# No script de benchmark altere os parêmtros abaixo de acordo com o seu teste
-#    NUM_CLIENTES = 4
-#    MSGS_POR_QOS = 10000 # 10k QoS -1 + 10k QoS 0 = 20k por cliente (80k total)
-python3 /root/benchmark1_mqttsn.py
-
-python3 /root/subscriber_mqttsn1.py
-
-python3 /root/subscriber_mqttsn2.py (Opcional)
 
 
 -------------------------------------------------------------------------------
@@ -69,22 +46,36 @@ python3 /root/subscriber_mqttsn2.py (Opcional)
 ### Experimento - Benchmark - Use Case 2 ###
 
 
+# Iniciar topologia containernet
+sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
+
+# Inicie os clientes
+python3 /root/subscriber_mqttsn1.py
+python3 /root/subscriber_mqttsn2.py (Opcional)
+
+python3 /root/benchmark1_mqttsn.py
+
+
+-------------------------------------------------------------------------------
+
+
+### Experimento - Benchmark - Use Case 3 ###
+
+
 # Iniciar o script de monitoramento de métricas (ele verifica se os containers do broker e gateway iniciaram)
-python3 monitoring.py mqttsn 10k ou python3 monitoring.py p4ssn 10k
+python3 monitoring.py mqttsn 1k
 
 # Iniciar topologia containernet
 sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
 
 # Inicie os clientes
 # No script de benchmark altere os parêmtros abaixo de acordo com o seu teste
-#    NUM_CLIENTES = 4
-#    MSGS_POR_QOS = 10000 # 10k QoS -1 + 10k QoS 0 = 20k por cliente (80k total)
-python3 /root/benchmark2_mqttsn.py
+#    MSGS_POR_QOS = 500 # 500 QoS -1 + 500 QoS 0 = 1k total
 
 python3 /root/subscriber_mqttsn1.py
-
 python3 /root/subscriber_mqttsn2.py (Opcional)
 
+python3 /root/benchmark2_mqttsn.py
 
 ------------------------------------------------------------------------------
 

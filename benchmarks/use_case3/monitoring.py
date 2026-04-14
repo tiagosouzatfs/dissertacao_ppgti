@@ -7,7 +7,7 @@ try:
     MODE = sys.argv[1]
     N_MSGS = sys.argv[2]
 except IndexError:
-    print("Erro: Você deve especificar o modo. Exemplo: python3 monitoring.py mqttsn 10k")
+    print("Erro: Você deve especificar o modo e quantidade de mensagens. Exemplo: python3 monitoring.py mqttsn 1k")
     sys.exit(1)
 
 CONTAINERS = ["mn.gw", "mn.bk"]  # Monitora ambos
