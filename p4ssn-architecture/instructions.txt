@@ -77,6 +77,7 @@ python3 /root/subscriber_p4ssn2.py (Opcional)
 
 python3 /root/benchmark2_p4ssn.py
 
+
 ------------------------------------------------------------------------------
 
 
@@ -93,3 +94,9 @@ docker stop mn.s1 mn.ss1 mn.pb1 mn.gw_bk;docker rm mn.s1 mn.ss1 mn.pb1 mn.gw_bk
 
 # Encerrar o compilador
 docker stop p4c
+
+
+------------------------------------------------------------------------------
+
+
+### Comandos BMv2 ###

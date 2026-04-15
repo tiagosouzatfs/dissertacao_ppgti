@@ -45,7 +45,7 @@ def topology():
     debug('Adicionando Broker MQTT\n')
     bk = net.addDocker(
         'bk', 
-        ip='10.0.0.1',
+        ip='10.0.0.1/8',
         mac="00:00:00:00:00:01", 
         dimage='mqtt-sn-gw',
         dcmd="emqx foreground",
@@ -70,7 +70,7 @@ def topology():
     debug("Adicionando sensor publisher\n")
     pb = net.addDocker(
         'pb',
-        ip='10.0.0.3',
+        ip='10.0.0.3/8',
         mac="00:00:00:00:00:03",
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
@@ -92,7 +92,7 @@ def topology():
     ss1 = net.addDocker(
         'ss1', 
         ip='10.0.0.4',
-        mac="00:00:00:00:00:04", 
+        mac="00:00:00:00:00:04/8", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
                  sub1_path + ':/root/subscriber_p4ssn1.py',
@@ -100,7 +100,7 @@ def topology():
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    client_sub2_path = "/subscribers/subscriber_p4ssn1.py"
+    client_sub2_path = "/subscribers/subscriber_p4ssn2.py"
     sub2_path = project_path + "/" + client_sub2_path
 
     client_sub2_time_publication_path = "/benchmarks/use_case3/time_publication_p4ssn2.csv"
@@ -109,7 +109,7 @@ def topology():
     debug("Adicionando subscriber 2\n")
     ss2 = net.addDocker(
         'ss2', 
-        ip='10.0.0.5',
+        ip='10.0.0.5/8',
         mac="00:00:00:00:00:05", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
@@ -127,7 +127,7 @@ def topology():
     debug("Adicionando subscriber 3\n")
     ss3 = net.addDocker(
         'ss3', 
-        ip='10.0.0.6',
+        ip='10.0.0.6/8',
         mac="00:00:00:00:00:06", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
@@ -145,7 +145,7 @@ def topology():
     debug("Adicionando subscriber 4\n")
     ss4 = net.addDocker(
         'ss4', 
-        ip='10.0.0.7',
+        ip='10.0.0.7/8',
         mac="00:00:00:00:00:07", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
@@ -154,7 +154,7 @@ def topology():
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    client_sub5_path = "/subscribers/subscriber_p4ssn2.py"
+    client_sub5_path = "/subscribers/subscriber_p4ssn5.py"
     sub5_path = project_path + "/" + client_sub5_path
 
     client_sub5_time_publication_path = "/benchmarks/use_case3/time_publication_p4ssn5.csv"
@@ -163,7 +163,7 @@ def topology():
     debug("Adicionando subscriber 5\n")
     ss5 = net.addDocker(
         'ss5', 
-        ip='10.0.0.8',
+        ip='10.0.0.8/8',
         mac="00:00:00:00:00:08", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
@@ -209,7 +209,7 @@ def topology():
     debug('Adicionando Gateway MQTT-SN\n')
     gw = net.addDocker(
         'gw', 
-        ip='10.0.0.2',
+        ip='10.0.0.2/8',
         mac="00:00:00:00:00:02", 
         dimage='mqtt-sn-gw',
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
@@ -219,7 +219,7 @@ def topology():
 
     path = os.path.dirname(os.path.abspath(__file__))
     json_file = '/root/p4ssn.json'
-    config = path + '/rules/forwarding.txt'
+    config = path + '/rules/commands.txt'
     args = {'json': json_file, 'switch_config': config}
 
     debug('*** Adding P4 Switch\n')
@@ -250,6 +250,39 @@ def topology():
     net.build()
     s1.start([])
     net.staticArp()
+
+    # --- Configurando grupos de portas ---
+    mc_cmds = """
+    mc_mgrp_create 100
+    mc_node_create 0 1
+    mc_node_create 1 2
+    mc_node_create 2 3
+    mc_node_create 3 4
+    mc_node_create 4 5
+    mc_node_create 5 6
+    mc_node_create 6 7
+    mc_node_create 7 8
+    mc_node_associate 100 0
+    mc_node_associate 100 1
+    mc_node_associate 100 2
+    mc_node_associate 100 3
+    mc_node_associate 100 4
+    mc_node_associate 100 5
+    mc_node_associate 100 6
+    mc_node_associate 100 7
+    mc_mgrp_create 10
+    mc_node_create 10 4
+    mc_node_create 11 5
+    mc_node_create 12 6
+    mc_node_create 13 7
+    mc_node_create 14 8
+    mc_node_associate 10 8
+    mc_node_associate 10 9
+    mc_node_associate 10 10
+    mc_node_associate 10 11
+    mc_node_associate 10 12
+    """
+    s1.cmd('simple_switch_CLI --thrift-port 50001 <<< "{}"'.format(mc_cmds))
 
     #debug("Iniciando broker\n")
     #makeTerm(bk)

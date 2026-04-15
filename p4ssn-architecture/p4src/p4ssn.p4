@@ -795,8 +795,7 @@ control MyVerifyChecksum(inout headers hdr,
 /*
 /////////////// LIMITAÇÕES: ////////////////
 1 - Veja a seção 6.14 Support of sleeping clients.
-2 - Mensagens em Broadcast não foram totalmente implementadas neste código e não foram nos clientes python.
-3 - Mensagens do tipo WILL não foram totalmente implementadas neste código e não foram nos clientes python.
+2 - Mensagens do tipo WILL não foram implementadas nos códigos dos clientes python.
 */
 
 control MyIngress(inout headers hdr,
@@ -811,23 +810,30 @@ control MyIngress(inout headers hdr,
         mark_to_drop(standard_metadata);
     }
 
-    //////////////////////////////////////////////////////
-    /////// ACTION: ENCAMINHAMENTO EM BROADCAST //////////
-    //////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////
+    /////// ACTION DE REMOÇÃO CRIPTOGRAFIA (OTP) ////////////////
+    /////////////////////////////////////////////////////////////
 
-    action broadcast() {
+    action otp_decrypt() {
+        // O salt é o msgId (que no QoS -1 é um Nonce aleatório do Pub)
+        bit<16> salt = hdr.mqttsn_publish.msgId;
+        
+        // Gerador de OTP dinâmico
+        bit<16> otp = (salt << 7) ^ (salt >> 9) ^ 0xA5A5;
+        otp = (otp << 3) | (otp >> 13); 
 
-        // Trabalhos futuros!
-
-        // Criar grupo de portas no switch BMv2 e enviar
-        // o pacote de broadcast para esse grupo de portas.
+        // 1. Reverte a rotação (Shift para a DIREITA)
+        bit<16> val = (hdr.mqttsn_publish.topicId >> 4) | (hdr.mqttsn_publish.topicId << 12);
+        
+        // 2. Reverte OTP e Segredo Estático
+        hdr.mqttsn_publish.topicId = val ^ otp ^ SECRET_TOPIC_ID;
     }
 
     //////////////////////////////////////////////////////
     /////////// ACTION: ENCAMINHAMENTO ESTÁTICO //////////
     //////////////////////////////////////////////////////
 
-    action forwarding(macAddr_t dstAddr, egressSpec_t port) {
+    action static_(macAddr_t dstAddr, egressSpec_t port) {
         // o novo mac de destino recebe o mac do próximo dispositivo (tabela de encaminhamento)
         hdr.ethernet.dstAddr = dstAddr;
         // define a porta de do switch para qual o pacote deve ser encaminhado (tabela de encaminhamento)
@@ -848,7 +854,7 @@ control MyIngress(inout headers hdr,
             hdr.ipv4.dstAddr: exact;
         }
         actions = {
-            forwarding;
+            static_;
             drop;
             NoAction;
         }
@@ -856,11 +862,60 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
+
     //////////////////////////////////////////////////////
-    /////////// ACTION: ENCAMINHAMENTO ACELERADO //////////
+    /////// ACTION: ENCAMINHAMENTO EM BROADCAST //////////
     //////////////////////////////////////////////////////
 
-    action acelerate(macAddr_t macDstAddr, egressSpec_t port, ipv4Addr_t IpDstAddr, bit<16> UdpDstPort) {
+    action broadcast(bit<16> mgid) {
+        standard_metadata.mcast_grp = mgid;
+    }
+
+    //////////////////////////////////////////////////////
+    /////// TABELA DE ENCAMINHAMENTO BROADCAST ////////////
+    //////////////////////////////////////////////////////
+
+    table broadcast_forwarding {
+        key = {
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            broadcast;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
+    ///////////////////////////////////////////////////////////////
+    /////////// ACTION: ENCAMINHAMENTO ACELERADO MULTICAST ////////
+    ///////////////////////////////////////////////////////////////
+
+    action multicast_acelerate(bit<16> mgid) {
+        standard_metadata.mcast_grp = mgid;
+    }
+
+    ///////////////////////////////////////////////////////////////
+    /////// TABELA DE ENCAMINHAMENTO ACELERADO MULTICAST //////////
+    ///////////////////////////////////////////////////////////////
+
+    table multicast_acelerate_forwarding {
+        key = {
+            hdr.mqttsn_publish.topicId: exact;
+        }
+        actions = {
+            multicast_acelerate;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
+    ///////////////////////////////////////////////////////////////
+    /////////// ACTION: ENCAMINHAMENTO ACELERADO UNICAST //////////
+    ///////////////////////////////////////////////////////////////
+
+    action unicast_acelerate(macAddr_t macDstAddr, egressSpec_t port, ipv4Addr_t IpDstAddr, bit<16> UdpDstPort) {
 
         standard_metadata.egress_spec = port;
         hdr.ethernet.dstAddr = macDstAddr;
@@ -872,40 +927,23 @@ control MyIngress(inout headers hdr,
         hdr.udp.checksum = 0;
     }
 
-    //////////////////////////////////////////////////////
-    /////// TABELA DE ENCAMINHAMENTO ACELERADO ////////////
-    //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////
+    /////// TABELA DE ENCAMINHAMENTO ACELERADO UNICAST ////////////
+    ///////////////////////////////////////////////////////////////
 
-    table acelerate_forwarding {
+    // Tem que deixar sem drop para que se o ponteiro não encontrar
+    //    correspondencias nessa tabela ele possa analisar a tabela
+    //    multicast, veja o exemplo na mensagem PUBLISH.
+    table unicast_acelerate_forwarding {
         key = {
             hdr.mqttsn_publish.topicId: exact;
         }
         actions = {
-            acelerate;
-            drop;
+            unicast_acelerate;
             NoAction;
         }
         size = 1024;
         default_action = NoAction();
-    }
-
-    //////////////////////////////////////////////////////
-    /////// ACTIONS DE CRIPTOGRAFIA REFORÇADA (OTP) //////
-    //////////////////////////////////////////////////////
-
-    action otp_decrypt() {
-        // O salt é o msgId (que no QoS -1 é um Nonce aleatório do Pub)
-        bit<16> salt = hdr.mqttsn_publish.msgId;
-        
-        // Gerador de OTP dinâmico
-        bit<16> otp = (salt << 7) ^ (salt >> 9) ^ 0xA5A5;
-        otp = (otp << 3) | (otp >> 13); 
-
-        // 1. Reverte a rotação (Shift para a DIREITA)
-        bit<16> val = (hdr.mqttsn_publish.topicId >> 4) | (hdr.mqttsn_publish.topicId << 12);
-        
-        // 2. Reverte OTP e Segredo Estático
-        hdr.mqttsn_publish.topicId = val ^ otp ^ SECRET_TOPIC_ID;
     }
 
     //////////////////////////////////////////////////////
@@ -1000,16 +1038,15 @@ control MyIngress(inout headers hdr,
 
                         // QoS -1
                         if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
-                            acelerate_forwarding.apply();
-                        } 
+                            unicast_acelerate_forwarding.apply();
+                            multicast_acelerate_forwarding.apply();
+                        }
                         // QoS 0 && flag retain = 0 (do not need remember last message, so não should to pass gateway)
                         else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
-                            if (hdr.mqttsn_flags_publish.retain == 0 &&
-                               (hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC || 
-                                hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_SHORTTOPICNAME)) {
-                                acelerate_forwarding.apply();
+                            if (hdr.mqttsn_flags_publish.retain == 0) {
+                                unicast_acelerate_forwarding.apply();
+                                multicast_acelerate_forwarding.apply();
                             }
-                            // QoS 0 && flag retain = 0, but topicIdType == TOPICIDTYPE_TOPICNAME
                             // QoS 0 && flag retain = 1 (remember last message, so should to pass gateway)
                             else {
                                 static_forwarding.apply();
@@ -1032,7 +1069,7 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_unsubscribe.isValid() && 
                     hdr.mqttsn_unsubscribe.isValid() &&
                     hdr.mqttsn_variable_field.isValid()) {
-                            static_forwarding.apply();
+                        static_forwarding.apply();
                 }
                 // WILLTOPIC
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPIC &&
@@ -1127,22 +1164,20 @@ control MyIngress(inout headers hdr,
 
             ///////////////////////// BROADCAST //////////////////////////////
 
-            // Trabalhos futuros //
             // ADVERTISE
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE &&
                 hdr.mqttsn_advertise.isValid()) {
-                    broadcast();
+                    broadcast_forwarding.apply();
             }
             // SEARCHGW
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW &&
                 hdr.mqttsn_searchgw.isValid()) {
-                    broadcast();
+                    broadcast_forwarding.apply();
             }
             // GWINFO
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_GWINFO &&
-                hdr.mqttsn_gwinfo.isValid() &&
-                hdr.mqttsn_variable_field.isValid())  {
-                    broadcast();
+                hdr.mqttsn_gwinfo.isValid())  {
+                    broadcast_forwarding.apply();
             }
         }
 
@@ -1162,6 +1197,10 @@ control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
 
+    ////////////////////////////////////////////////////////////////
+    /////// ACTION DE ADIÇÃO DE CRIPTOGRAFIA (OTP) ////////////////
+    ////////////////////////////////////////////////////////////////
+
     action otp_encrypt() {
         bit<16> salt = hdr.mqttsn_publish.msgId;
 
@@ -1176,23 +1215,95 @@ control MyEgress(inout headers hdr,
         hdr.mqttsn_publish.topicId = (val << 4) | (val >> 12);
     }
 
-    apply {
+    ///////////////////////////////////////////////////////////
+    /////////// ACTION: ENCAMINHAMENTO BROADCAST /////////////
+    //////////////////////////////////////////////////////////
 
-        if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
-            // QoS -1
-            if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
-                otp_encrypt();
-            } 
-            // QoS 0 && flag retain = 0 (do not need remember last message, so não should to pass gateway)
-            else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
-                if (hdr.mqttsn_flags_publish.retain == 0 &&
-                    (hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_PREDEFINEDTOPIC || 
-                     hdr.mqttsn_flags_publish.topicIdType == TOPICIDTYPE_SHORTTOPICNAME)) {
-                    otp_encrypt();
-                }
+    action broadcast(bit<48> dst_mac, bit<32> dst_ip) {
+        hdr.ethernet.dstAddr = dst_mac;
+        hdr.ipv4.dstAddr = dst_ip;
+
+        hdr.ipv4.hdrChecksum = 0;
+    }
+
+    /////////////////////////////////////////////////////
+    /////// TABELA DE ENCAMINHAMENTO BROADCAST //////////
+    /////////////////////////////////////////////////////
+
+    table broadcast_forwarding {
+        key = {
+            standard_metadata.egress_port: exact;
+        }
+        actions = {
+            broadcast;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
+    ///////////////////////////////////////////////////////////////
+    /////////// ACTION: ENCAMINHAMENTO ACELERADO MULTICAST ////////
+    ///////////////////////////////////////////////////////////////
+
+    action multicast_acelerate(macAddr_t macDstAddr, ipv4Addr_t IpDstAddr, bit<16> UdpDstPort) {
+
+        hdr.ethernet.dstAddr = macDstAddr;
+        hdr.ipv4.dstAddr = IpDstAddr;
+        // hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+        hdr.udp.dstPort = UdpDstPort;
+
+        hdr.ipv4.hdrChecksum = 0;
+        hdr.udp.checksum = 0;
+    }
+
+    ///////////////////////////////////////////////////////////////
+    /////// TABELA DE ENCAMINHAMENTO ACELERADO MULTICAST //////////
+    ///////////////////////////////////////////////////////////////
+
+    table multicast_acelerate_forwarding {
+        key = {
+            standard_metadata.egress_port: exact;
+        }
+        actions = {
+            multicast_acelerate;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
+    //////////////////////////////////////////////////////
+    /////////////////// APPLY ////////////////////////////
+    //////////////////////////////////////////////////////
+
+    apply {
+        // 1. Tratamento de Multicast/Broadcast
+        if (standard_metadata.mcast_grp != 0) {
+            hdr.ethernet.setValid();
+            hdr.ipv4.setValid();
+            hdr.udp.setValid();
+
+            if (standard_metadata.mcast_grp == 10) {
+                multicast_acelerate_forwarding.apply();
+                hdr.udp.checksum = 0; // Crucial: ignora erro de checksum no receptor
+            } else if (standard_metadata.mcast_grp == 100) {
+                broadcast_forwarding.apply();
             }
-            ///// Mensagens do Gateway MQTT-SN com destino aos clientes //////
-            else if (hdr.udp.srcPort == UDP_PORT_SVC_GW) {    // porta 1884
+            
+            // Força a validade dos campos para o Deparser não truncar o pacote replicado
+            if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
+                hdr.mqttsn_flags_publish.setValid();
+                hdr.mqttsn_publish.setValid();
+                hdr.mqttsn_fixed_data_publish.setValid();
+            }
+        }
+
+        // 2. Lógica de Criptografia (OTP)
+        if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
+            if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1 || 
+               (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0 && hdr.mqttsn_flags_publish.retain == 0) ||
+                hdr.udp.srcPort == UDP_PORT_SVC_GW) {
                 otp_encrypt();
             }
         }
@@ -1233,29 +1344,26 @@ control MyDeparser(packet_out packet,
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
+        packet.emit(hdr.udp);
         packet.emit(hdr.tcp);
         packet.emit(hdr.mqtt_fixed);
-        packet.emit(hdr.udp);
         packet.emit(hdr.mqttsn_fixed);
-        packet.emit(hdr.mqttsn_advertise);
-        packet.emit(hdr.mqttsn_searchgw);
-        packet.emit(hdr.mqttsn_gwinfo);
         packet.emit(hdr.mqttsn_flags_connect);
         packet.emit(hdr.mqttsn_connect);
         packet.emit(hdr.mqttsn_connack);
-        packet.emit(hdr.mqttsn_willtopicreq);
-        packet.emit(hdr.mqttsn_flags_willtopic);
-        packet.emit(hdr.mqttsn_willtopic);
-        packet.emit(hdr.mqttsn_willmsgreq);
-        packet.emit(hdr.mqttsn_willmsg);
         packet.emit(hdr.mqttsn_register);
         packet.emit(hdr.mqttsn_regack);
         packet.emit(hdr.mqttsn_flags_publish);
         packet.emit(hdr.mqttsn_publish);
+        packet.emit(hdr.mqttsn_variable_field);
+        packet.emit(hdr.mqttsn_fixed_data_publish);
         packet.emit(hdr.mqttsn_puback);
         packet.emit(hdr.mqttsn_pubrec);
         packet.emit(hdr.mqttsn_pubrel);
         packet.emit(hdr.mqttsn_pubcomp);
+        packet.emit(hdr.mqttsn_pingreq);
+        packet.emit(hdr.mqttsn_pingresp);
+        packet.emit(hdr.mqttsn_disconnect);
         packet.emit(hdr.mqttsn_flags_subscribe);
         packet.emit(hdr.mqttsn_subscribe);
         packet.emit(hdr.mqttsn_flags_suback);
@@ -1263,16 +1371,19 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.mqttsn_flags_unsubscribe);
         packet.emit(hdr.mqttsn_unsubscribe);
         packet.emit(hdr.mqttsn_unsuback);
-        packet.emit(hdr.mqttsn_pingreq);
-        packet.emit(hdr.mqttsn_pingresp);
-        packet.emit(hdr.mqttsn_disconnect);
+        packet.emit(hdr.mqttsn_advertise);
+        packet.emit(hdr.mqttsn_searchgw);
+        packet.emit(hdr.mqttsn_gwinfo);
+        packet.emit(hdr.mqttsn_willtopicreq);
+        packet.emit(hdr.mqttsn_flags_willtopic);
+        packet.emit(hdr.mqttsn_willtopic);
+        packet.emit(hdr.mqttsn_willmsgreq);
+        packet.emit(hdr.mqttsn_willmsg);
         packet.emit(hdr.mqttsn_flags_willtopicupd);
         packet.emit(hdr.mqttsn_willtopicupd);
         packet.emit(hdr.mqttsn_willmsgupd);
         packet.emit(hdr.mqttsn_willtopicresp);
         packet.emit(hdr.mqttsn_willmsgresp);
-        packet.emit(hdr.mqttsn_variable_field);
-        packet.emit(hdr.mqttsn_fixed_data_publish);
     }
 }
 
