@@ -10,9 +10,9 @@ except IndexError:
     print("Erro: Você deve especificar o modo e quantidade de mensagens. Exemplo: python3 monitoring.py mqttsn 1k")
     sys.exit(1)
 
-CONTAINERS = ["mn.gw", "mn.bk"]  # Monitora ambos
+CONTAINERS = ["mn.s1", "mn.gw", "mn.bk"]
 DURATION_SEC = 60
-INTERVAL = 0.1
+INTERVAL = 1
 OUTPUT_FILE = f"metrics_docker_stats_{MODE}_{N_MSGS}.csv"
 
 def collect_metrics():
@@ -22,7 +22,7 @@ def collect_metrics():
     with open(OUTPUT_FILE, mode='w', newline='') as f:
         writer = csv.writer(f)
         # Cabeçalho para os dois containers
-        writer.writerow(['relative_time', 'gw_cpu', 'gw_mem', 'bk_cpu', 'bk_mem'])
+        writer.writerow(['relative_time', 's1_cpu', 's1_mem', 'gw_cpu', 'gw_mem', 'bk_cpu', 'bk_mem'])
 
         start_time = time.time()
         
@@ -42,6 +42,7 @@ def collect_metrics():
                 if result.returncode == 0:
                     lines = result.stdout.strip().split('\n')
                     if len(lines) == len(CONTAINERS):
+                        # Tempo relativo formatado para 2 casas decimais conforme seu script
                         row = [round(time.time() - start_time, 2)]
                         for line in lines:
                             parts = line.replace('%', '').split(',')
@@ -49,6 +50,7 @@ def collect_metrics():
                         
                         writer.writerow(row)
                 
+                # Sincronização para manter o intervalo de 1s
                 elapsed = time.time() - loop_start
                 wait_time = max(0, INTERVAL - elapsed)
                 time.sleep(wait_time)
