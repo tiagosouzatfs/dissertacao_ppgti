@@ -35,8 +35,6 @@ table_add MyEgress.multicast_acelerate_forwarding MyEgress.multicast_acelerate 8
 table_add MyIngress.unicast_acelerate_forwarding MyIngress.unicast_acelerate 20 => 00:00:00:00:00:05 5 10.0.0.5 1895
 # Tópico 0x6162 é representação hexadecimal do shorttopicname Unicast "ab"
 table_add MyIngress.unicast_acelerate_forwarding MyIngress.unicast_acelerate 0x6162 => 00:00:00:00:00:05 5 10.0.0.5 1895
-# Tópico 0x7465737465 é representação hexadecimal do topicname Unicast "teste"
-table_add MyIngress.unicast_acelerate_forwarding MyIngress.unicast_acelerate 0x7465737465 => 00:00:00:00:00:05 5 10.0.0.5 1895
 
 
 # --- ENCAMINHAMENTO UNICAST PADRÃO ---

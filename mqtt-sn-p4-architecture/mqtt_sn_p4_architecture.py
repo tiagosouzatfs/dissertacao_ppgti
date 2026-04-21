@@ -45,7 +45,7 @@ def topology():
     debug('Adicionando Broker MQTT\n')
     bk = net.addDocker(
         'bk', 
-        ip='10.0.0.1',
+        ip='10.0.0.1/8',
         mac="00:00:00:00:00:01", 
         dimage='mqtt-sn-gw',
         dcmd="emqx foreground",
@@ -70,7 +70,7 @@ def topology():
     debug("Adicionando sensor publisher\n")
     pb = net.addDocker(
         'pb',
-        ip='10.0.0.3',
+        ip='10.0.0.3/8',
         mac="00:00:00:00:00:03",
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
@@ -91,7 +91,7 @@ def topology():
     debug("Adicionando subscriber 1\n")
     ss1 = net.addDocker(
         'ss1', 
-        ip='10.0.0.4',
+        ip='10.0.0.4/8',
         mac="00:00:00:00:00:04", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
@@ -109,7 +109,7 @@ def topology():
     debug("Adicionando subscriber 2\n")
     ss2 = net.addDocker(
         'ss2', 
-        ip='10.0.0.5',
+        ip='10.0.0.5/8',
         mac="00:00:00:00:00:05", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
@@ -127,7 +127,7 @@ def topology():
     debug("Adicionando subscriber 3\n")
     ss3 = net.addDocker(
         'ss3', 
-        ip='10.0.0.6',
+        ip='10.0.0.6/8',
         mac="00:00:00:00:00:06", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
@@ -145,7 +145,7 @@ def topology():
     debug("Adicionando subscriber 4\n")
     ss4 = net.addDocker(
         'ss4', 
-        ip='10.0.0.7',
+        ip='10.0.0.7/8',
         mac="00:00:00:00:00:07", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
@@ -154,7 +154,7 @@ def topology():
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    client_sub5_path = "/subscribers/subscriber_mqttsn2.py"
+    client_sub5_path = "/subscribers/subscriber_mqttsn5.py"
     sub5_path = project_path + "/" + client_sub5_path
 
     client_sub5_time_publication_path = "/benchmarks/use_case3/time_publication_mqttsn5.csv"
@@ -163,7 +163,7 @@ def topology():
     debug("Adicionando subscriber 5\n")
     ss5 = net.addDocker(
         'ss5', 
-        ip='10.0.0.8',
+        ip='10.0.0.8/8',
         mac="00:00:00:00:00:08", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
@@ -209,7 +209,7 @@ def topology():
     debug('Adicionando Gateway MQTT-SN\n')
     gw = net.addDocker(
         'gw', 
-        ip='10.0.0.2',
+        ip='10.0.0.2/8',
         mac="00:00:00:00:00:02", 
         dimage='mqtt-sn-gw',
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
@@ -219,7 +219,7 @@ def topology():
 
     path = os.path.dirname(os.path.abspath(__file__))
     json_file = '/root/mqtt-sn.json'
-    config = path + '/rules/forwarding.txt'
+    config = path + '/rules/commands.txt'
     args = {'json': json_file, 'switch_config': config}
 
     debug('*** Adding P4 Switch\n')
