@@ -91,8 +91,8 @@ def topology():
     debug("Adicionando subscriber 1\n")
     ss1 = net.addDocker(
         'ss1', 
-        ip='10.0.0.4',
-        mac="00:00:00:00:00:04/8", 
+        ip='10.0.0.4/8',
+        mac="00:00:00:00:00:04", 
         dimage="mqtt-sn-client-python",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
                  sub1_path + ':/root/subscriber_p4ssn1.py',
