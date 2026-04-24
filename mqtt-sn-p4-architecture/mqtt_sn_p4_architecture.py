@@ -47,9 +47,9 @@ def topology():
         'bk', 
         ip='10.0.0.1/8',
         mac="00:00:00:00:00:01", 
-        dimage='mqtt-sn-gw',
+        dimage='mqtt-sn-gw-bk',
         dcmd="emqx foreground",
-        environment=emqx_env_bk
+        #environment=emqx_env_bk
     )
 
     # Equivale a: /home/vboxuser/dissertacao_ppgti
@@ -72,12 +72,12 @@ def topology():
         'pb',
         ip='10.0.0.3/8',
         mac="00:00:00:00:00:03",
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
-                 pub_path + ':/root/publisher_p4ssn.py',
-                 pub_benchmark1_path + ':/root/benchmark1_mqttsn.py',
-                 pub_benchmark2_path + ':/root/benchmark2_mqttsn.py',
-                 pub_results_benchmark1_path + ':/root/mqttsn.csv'
+                 pub_path + ':/app/mqtt-sn/publisher_p4ssn.py',
+                 pub_benchmark1_path + ':/app/mqtt-sn/benchmark1_mqttsn.py',
+                 pub_benchmark2_path + ':/app/mqtt-sn/benchmark2_mqttsn.py',
+                 pub_results_benchmark1_path + ':/app/mqtt-sn/mqttsn.csv'
                 ],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
@@ -93,10 +93,10 @@ def topology():
         'ss1', 
         ip='10.0.0.4/8',
         mac="00:00:00:00:00:04", 
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
-                 sub1_path + ':/root/subscriber_mqttsn1.py',
-                 sub1_time_publication_path + ':/root/time_publication_mqttsn1.csv'],
+                 sub1_path + ':/app/mqtt-sn/subscriber_mqttsn1.py',
+                 sub1_time_publication_path + ':/app/mqtt-sn/time_publication_mqttsn1.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -111,10 +111,10 @@ def topology():
         'ss2', 
         ip='10.0.0.5/8',
         mac="00:00:00:00:00:05", 
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
-                 sub2_path + ':/root/subscriber_mqttsn2.py',
-                 sub2_time_publication_path + ':/root/time_publication_mqttsn2.csv'],
+                 sub2_path + ':/app/mqtt-sn/subscriber_mqttsn2.py',
+                 sub2_time_publication_path + ':/app/mqtt-sn/time_publication_mqttsn2.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -129,10 +129,10 @@ def topology():
         'ss3', 
         ip='10.0.0.6/8',
         mac="00:00:00:00:00:06", 
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
-                 sub3_path + ':/root/subscriber_mqttsn3.py',
-                 sub3_time_publication_path + ':/root/time_publication_mqttsn3.csv'],
+                 sub3_path + ':/app/mqtt-sn/subscriber_mqttsn3.py',
+                 sub3_time_publication_path + ':/app/mqtt-sn/time_publication_mqttsn3.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -147,10 +147,10 @@ def topology():
         'ss4', 
         ip='10.0.0.7/8',
         mac="00:00:00:00:00:07", 
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
-                 sub4_path + ':/root/subscriber_mqttsn4.py',
-                 sub4_time_publication_path + ':/root/time_publication_mqttsn4.csv'],
+                 sub4_path + ':/app/mqtt-sn/subscriber_mqttsn4.py',
+                 sub4_time_publication_path + ':/app/mqtt-sn/time_publication_mqttsn4.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -165,10 +165,10 @@ def topology():
         'ss5', 
         ip='10.0.0.8/8',
         mac="00:00:00:00:00:08", 
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
-                 sub5_path + ':/root/subscriber_mqttsn5.py',
-                 sub5_time_publication_path + ':/root/time_publication_mqttsn5.csv'],
+                 sub5_path + ':/app/mqtt-sn/subscriber_mqttsn5.py',
+                 sub5_time_publication_path + ':/app/mqtt-sn/time_publication_mqttsn5.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -212,9 +212,10 @@ def topology():
         ip='10.0.0.2/8',
         mac="00:00:00:00:00:02", 
         dimage='mqtt-sn-gw',
+        #dimage='mqtt-sn-gw-bk',
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
-        dcmd="emqx foreground",
-        environment=emqx_env_gw
+        #dcmd="emqx foreground",
+        #environment=emqx_env_gw
     )
 
     path = os.path.dirname(os.path.abspath(__file__))
@@ -251,11 +252,11 @@ def topology():
     s1.start([])
     net.staticArp()
 
-    #debug("Iniciando broker\n")
-    #makeTerm(bk)
+    debug("Iniciando broker\n")
+    makeTerm(bk)
 
-    #debug("Iniciando gateway\n")
-    #makeTerm(gw)
+    debug("Iniciando gateway\n")
+    makeTerm(gw)
 
     debug("Iniciando publisher\n")
     makeTerm(pb)
