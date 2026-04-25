@@ -47,7 +47,7 @@ def topology():
         'bk', 
         ip='10.0.0.1/8',
         mac="00:00:00:00:00:01", 
-        dimage='mqtt-sn-gw-bk',
+        dimage='mqtt-sn-gw-bk-emqx',
         dcmd="emqx foreground",
         #environment=emqx_env_bk
     )
@@ -173,7 +173,7 @@ def topology():
     )
 
     # Definindo variáveis para inicialização automática do EMQX Gateway
-    emqx_env_gw = {
+    emqx_env_gw_emqx = {
         "DISPLAY": ":{}".format(DISPLAY_ID),
 
         # Gateway
@@ -206,16 +206,31 @@ def topology():
         "EMQX_RULE_ENGINE__RULES__SEND_BROKER__ACTIONS__1": "mqtt:send_broker"
     }
 
+    # Definindo variáveis para inicialização automática do EMQX Gateway
+    emqx_env_gw_bisquitt = {
+        "DISPLAY": ":{}".format(DISPLAY_ID),
+        "MQTT_HOST": "10.0.0.1",
+        "MQTT_PORT": "1883",
+        "HOST": "0.0.0.0",
+        "PORT": "1884",
+        "BISQUITT_USER": "bisquitt",
+        "BISQUITT_GROUP": "bisquitt",
+        "PREDEFINED_TOPIC": "*;temperatura;10"
+        #"PREDEFINED_TOPICS_FILE": "/etc/bisquitt/predefinedTopics.yaml"
+    }
+
     debug('Adicionando Gateway MQTT-SN\n')
     gw = net.addDocker(
         'gw', 
         ip='10.0.0.2/8',
-        mac="00:00:00:00:00:02", 
-        dimage='mqtt-sn-gw',
-        #dimage='mqtt-sn-gw-bk',
+        mac="00:00:00:00:00:02",
+        #dimage='mqtt-sn-gw-bk-emqx',
+        dimage='mqtt-sn-gw-bisquitt',
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
         #dcmd="emqx foreground",
-        #environment=emqx_env_gw
+        #environment=emqx_env_gw_emqx
+        dcmd="bisquitt --debug",
+        environment=emqx_env_gw_bisquitt
     )
 
     path = os.path.dirname(os.path.abspath(__file__))
@@ -251,6 +266,28 @@ def topology():
     net.build()
     s1.start([])
     net.staticArp()
+
+    # --- Configurando grupos de portas ---
+    mc_cmds = """
+    mc_mgrp_create 100
+    mc_node_create 0 1
+    mc_node_create 1 2
+    mc_node_create 2 3
+    mc_node_create 3 4
+    mc_node_create 4 5
+    mc_node_create 5 6
+    mc_node_create 6 7
+    mc_node_create 7 8
+    mc_node_associate 100 0
+    mc_node_associate 100 1
+    mc_node_associate 100 2
+    mc_node_associate 100 3
+    mc_node_associate 100 4
+    mc_node_associate 100 5
+    mc_node_associate 100 6
+    mc_node_associate 100 7
+    """
+    s1.cmd('simple_switch_CLI --thrift-port 50001 <<< "{}"'.format(mc_cmds))
 
     debug("Iniciando broker\n")
     makeTerm(bk)

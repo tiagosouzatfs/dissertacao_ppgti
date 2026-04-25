@@ -789,8 +789,7 @@ control MyVerifyChecksum(inout headers hdr,
 /*
 /////////////// LIMITAÇÕES: ////////////////
 1 - Veja a seção 6.14 Support of sleeping clients.
-2 - Mensagens em Broadcast não foram totalmente implementadas neste código e não foram nos clientes python.
-3 - Mensagens do tipo WILL não foram totalmente implementadas neste código e não foram nos clientes python.
+2 - Mensagens do tipo WILL não foram implementadas nos códigos dos clientes python.
 */
 
 control MyIngress(inout headers hdr,
@@ -806,22 +805,10 @@ control MyIngress(inout headers hdr,
     }
 
     //////////////////////////////////////////////////////
-    /////// ACTION: ENCAMINHAMENTO EM BROADCAST //////////
-    //////////////////////////////////////////////////////
-
-    action broadcast() {
-
-        // Trabalhos futuros!
-
-        // Criar grupo de portas no switch BMv2 e enviar
-        // o pacote de broadcast para esse grupo de portas.
-    }
-
-    //////////////////////////////////////////////////////
     /////////// ACTION: ENCAMINHAMENTO ESTÁTICO //////////
     //////////////////////////////////////////////////////
 
-    action forwarding(macAddr_t dstAddr, egressSpec_t port) {
+    action static_(macAddr_t dstAddr, egressSpec_t port) {
         // o novo mac de destino recebe o mac do próximo dispositivo (tabela de encaminhamento)
         hdr.ethernet.dstAddr = dstAddr;
         // define a porta de do switch para qual o pacote deve ser encaminhado (tabela de encaminhamento)
@@ -842,8 +829,32 @@ control MyIngress(inout headers hdr,
             hdr.ipv4.dstAddr: exact;
         }
         actions = {
-            forwarding;
+            static_;
             drop;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
+    //////////////////////////////////////////////////////
+    /////// ACTION: ENCAMINHAMENTO EM BROADCAST //////////
+    //////////////////////////////////////////////////////
+
+    action broadcast(bit<16> mgid) {
+        standard_metadata.mcast_grp = mgid;
+    }
+
+    //////////////////////////////////////////////////////
+    /////// TABELA DE ENCAMINHAMENTO BROADCAST ////////////
+    //////////////////////////////////////////////////////
+
+    table broadcast_forwarding {
+        key = {
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            broadcast;
             NoAction;
         }
         size = 1024;
@@ -1044,22 +1055,20 @@ control MyIngress(inout headers hdr,
 
             ///////////////////////// BROADCAST //////////////////////////////
 
-            // Trabalhos futuros //
             // ADVERTISE
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE &&
                 hdr.mqttsn_advertise.isValid()) {
-                    broadcast();
+                    broadcast_forwarding.apply();
             }
             // SEARCHGW
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW &&
                 hdr.mqttsn_searchgw.isValid()) {
-                    broadcast();
+                    broadcast_forwarding.apply();
             }
             // GWINFO
             else if (hdr.mqttsn_fixed.msgType == MQTTSN_GWINFO &&
-                hdr.mqttsn_gwinfo.isValid() &&
-                hdr.mqttsn_variable_field.isValid())  {
-                    broadcast();
+                hdr.mqttsn_gwinfo.isValid())  {
+                    broadcast_forwarding.apply();
             }
         }
 
@@ -1079,7 +1088,52 @@ control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
 
-    apply { }
+    ///////////////////////////////////////////////////////////
+    /////////// ACTION: ENCAMINHAMENTO BROADCAST /////////////
+    //////////////////////////////////////////////////////////
+
+    action broadcast(bit<48> dst_mac, bit<32> dst_ip) {
+        hdr.ethernet.dstAddr = dst_mac;
+        hdr.ipv4.dstAddr = dst_ip;
+
+        hdr.ipv4.hdrChecksum = 0;
+    }
+
+    /////////////////////////////////////////////////////
+    /////// TABELA DE ENCAMINHAMENTO BROADCAST //////////
+    /////////////////////////////////////////////////////
+
+    table broadcast_forwarding {
+        key = {
+            standard_metadata.egress_port: exact;
+        }
+        actions = {
+            broadcast;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
+    apply {
+        // 1. Tratamento de Multicast/Broadcast
+        if (standard_metadata.mcast_grp != 0) {
+            hdr.ethernet.setValid();
+            hdr.ipv4.setValid();
+            hdr.udp.setValid();
+
+            if (standard_metadata.mcast_grp == 100) {
+                broadcast_forwarding.apply();
+            }
+            
+            // Força a validade dos campos para o Deparser não truncar o pacote replicado
+            if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH) {
+                hdr.mqttsn_flags_publish.setValid();
+                hdr.mqttsn_publish.setValid();
+            }
+        }
+
+    }
 }
 
 /*************************************************************************
@@ -1116,29 +1170,25 @@ control MyDeparser(packet_out packet,
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
+        packet.emit(hdr.udp);
         packet.emit(hdr.tcp);
         packet.emit(hdr.mqtt_fixed);
-        packet.emit(hdr.udp);
         packet.emit(hdr.mqttsn_fixed);
-        packet.emit(hdr.mqttsn_advertise);
-        packet.emit(hdr.mqttsn_searchgw);
-        packet.emit(hdr.mqttsn_gwinfo);
         packet.emit(hdr.mqttsn_flags_connect);
         packet.emit(hdr.mqttsn_connect);
         packet.emit(hdr.mqttsn_connack);
-        packet.emit(hdr.mqttsn_willtopicreq);
-        packet.emit(hdr.mqttsn_flags_willtopic);
-        packet.emit(hdr.mqttsn_willtopic);
-        packet.emit(hdr.mqttsn_willmsgreq);
-        packet.emit(hdr.mqttsn_willmsg);
         packet.emit(hdr.mqttsn_register);
         packet.emit(hdr.mqttsn_regack);
         packet.emit(hdr.mqttsn_flags_publish);
         packet.emit(hdr.mqttsn_publish);
+        packet.emit(hdr.mqttsn_variable_field);
         packet.emit(hdr.mqttsn_puback);
         packet.emit(hdr.mqttsn_pubrec);
         packet.emit(hdr.mqttsn_pubrel);
         packet.emit(hdr.mqttsn_pubcomp);
+        packet.emit(hdr.mqttsn_pingreq);
+        packet.emit(hdr.mqttsn_pingresp);
+        packet.emit(hdr.mqttsn_disconnect);
         packet.emit(hdr.mqttsn_flags_subscribe);
         packet.emit(hdr.mqttsn_subscribe);
         packet.emit(hdr.mqttsn_flags_suback);
@@ -1146,15 +1196,19 @@ control MyDeparser(packet_out packet,
         packet.emit(hdr.mqttsn_flags_unsubscribe);
         packet.emit(hdr.mqttsn_unsubscribe);
         packet.emit(hdr.mqttsn_unsuback);
-        packet.emit(hdr.mqttsn_pingreq);
-        packet.emit(hdr.mqttsn_pingresp);
-        packet.emit(hdr.mqttsn_disconnect);
+        packet.emit(hdr.mqttsn_advertise);
+        packet.emit(hdr.mqttsn_searchgw);
+        packet.emit(hdr.mqttsn_gwinfo);
+        packet.emit(hdr.mqttsn_willtopicreq);
+        packet.emit(hdr.mqttsn_flags_willtopic);
+        packet.emit(hdr.mqttsn_willtopic);
+        packet.emit(hdr.mqttsn_willmsgreq);
+        packet.emit(hdr.mqttsn_willmsg);
         packet.emit(hdr.mqttsn_flags_willtopicupd);
         packet.emit(hdr.mqttsn_willtopicupd);
         packet.emit(hdr.mqttsn_willmsgupd);
         packet.emit(hdr.mqttsn_willtopicresp);
         packet.emit(hdr.mqttsn_willmsgresp);
-        packet.emit(hdr.mqttsn_variable_field);
     }
 }
 
