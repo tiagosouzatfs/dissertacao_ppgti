@@ -4200,11 +4200,11 @@
       "id" : 0,
       "source_info" : {
         "filename" : "mqtt-sn.p4",
-        "line" : 1114,
+        "line" : 1168,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
-      "order" : ["ethernet", "ipv4", "tcp", "mqtt_fixed", "udp", "mqttsn_fixed", "mqttsn_advertise", "mqttsn_searchgw", "mqttsn_gwinfo", "mqttsn_flags_connect", "mqttsn_connect", "mqttsn_connack", "mqttsn_willtopicreq", "mqttsn_flags_willtopic", "mqttsn_willtopic", "mqttsn_willmsgreq", "mqttsn_willmsg", "mqttsn_register", "mqttsn_regack", "mqttsn_flags_publish", "mqttsn_publish", "mqttsn_puback", "mqttsn_pubrec", "mqttsn_pubrel", "mqttsn_pubcomp", "mqttsn_flags_subscribe", "mqttsn_subscribe", "mqttsn_flags_suback", "mqttsn_suback", "mqttsn_flags_unsubscribe", "mqttsn_unsubscribe", "mqttsn_unsuback", "mqttsn_pingreq", "mqttsn_pingresp", "mqttsn_disconnect", "mqttsn_flags_willtopicupd", "mqttsn_willtopicupd", "mqttsn_willmsgupd", "mqttsn_willtopicresp", "mqttsn_willmsgresp", "mqttsn_variable_field"],
+      "order" : ["ethernet", "ipv4", "udp", "tcp", "mqtt_fixed", "mqttsn_fixed", "mqttsn_flags_connect", "mqttsn_connect", "mqttsn_connack", "mqttsn_register", "mqttsn_regack", "mqttsn_flags_publish", "mqttsn_publish", "mqttsn_variable_field", "mqttsn_puback", "mqttsn_pubrec", "mqttsn_pubrel", "mqttsn_pubcomp", "mqttsn_pingreq", "mqttsn_pingresp", "mqttsn_disconnect", "mqttsn_flags_subscribe", "mqttsn_subscribe", "mqttsn_flags_suback", "mqttsn_suback", "mqttsn_flags_unsubscribe", "mqttsn_unsubscribe", "mqttsn_unsuback", "mqttsn_advertise", "mqttsn_searchgw", "mqttsn_gwinfo", "mqttsn_willtopicreq", "mqttsn_flags_willtopic", "mqttsn_willtopic", "mqttsn_willmsgreq", "mqttsn_willmsg", "mqttsn_flags_willtopicupd", "mqttsn_willtopicupd", "mqttsn_willmsgupd", "mqttsn_willtopicresp", "mqttsn_willmsgresp"],
       "primitives" : []
     }
   ],
@@ -4217,7 +4217,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "mqtt-sn.p4",
-        "line" : 1092,
+        "line" : 1146,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },
@@ -4279,26 +4279,10 @@
       "primitives" : []
     },
     {
-      "name" : "MyIngress.drop",
+      "name" : "NoAction",
       "id" : 1,
       "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "mark_to_drop",
-          "parameters" : [
-            {
-              "type" : "header",
-              "value" : "standard_metadata"
-            }
-          ],
-          "source_info" : {
-            "filename" : "mqtt-sn.p4",
-            "line" : 805,
-            "column" : 8,
-            "source_fragment" : "mark_to_drop(standard_metadata)"
-          }
-        }
-      ]
+      "primitives" : []
     },
     {
       "name" : "MyIngress.drop",
@@ -4315,7 +4299,7 @@
           ],
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 805,
+            "line" : 804,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -4337,7 +4321,7 @@
           ],
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 805,
+            "line" : 804,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -4345,26 +4329,30 @@
       ]
     },
     {
-      "name" : "MyIngress.broadcast",
+      "name" : "MyIngress.drop",
       "id" : 4,
       "runtime_data" : [],
-      "primitives" : []
+      "primitives" : [
+        {
+          "op" : "mark_to_drop",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "standard_metadata"
+            }
+          ],
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 804,
+            "column" : 8,
+            "source_fragment" : "mark_to_drop(standard_metadata)"
+          }
+        }
+      ]
     },
     {
-      "name" : "MyIngress.broadcast",
+      "name" : "MyIngress.static_",
       "id" : 5,
-      "runtime_data" : [],
-      "primitives" : []
-    },
-    {
-      "name" : "MyIngress.broadcast",
-      "id" : 6,
-      "runtime_data" : [],
-      "primitives" : []
-    },
-    {
-      "name" : "MyIngress.forwarding",
-      "id" : 7,
       "runtime_data" : [
         {
           "name" : "dstAddr",
@@ -4390,7 +4378,7 @@
           ],
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 826,
+            "line" : 813,
             "column" : 8,
             "source_fragment" : "hdr.ethernet.dstAddr = dstAddr"
           }
@@ -4409,7 +4397,7 @@
           ],
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 828,
+            "line" : 815,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
           }
@@ -4451,7 +4439,7 @@
           ],
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 830,
+            "line" : 817,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl-1"
           }
@@ -4470,7 +4458,7 @@
           ],
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 832,
+            "line" : 819,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
           }
@@ -4489,9 +4477,208 @@
           ],
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 833,
+            "line" : 820,
             "column" : 8,
             "source_fragment" : "hdr.udp.checksum = 0"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.broadcast",
+      "id" : 6,
+      "runtime_data" : [
+        {
+          "name" : "mgid",
+          "bitwidth" : 16
+        }
+      ],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "mcast_grp"]
+            },
+            {
+              "type" : "runtime_data",
+              "value" : 0
+            }
+          ],
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 845,
+            "column" : 8,
+            "source_fragment" : "standard_metadata.mcast_grp = mgid"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "NoAction",
+      "id" : 7,
+      "runtime_data" : [],
+      "primitives" : []
+    },
+    {
+      "name" : "MyEgress.broadcast",
+      "id" : 8,
+      "runtime_data" : [
+        {
+          "name" : "dst_mac",
+          "bitwidth" : 48
+        },
+        {
+          "name" : "dst_ip",
+          "bitwidth" : 32
+        }
+      ],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "dstAddr"]
+            },
+            {
+              "type" : "runtime_data",
+              "value" : 0
+            }
+          ],
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1096,
+            "column" : 8,
+            "source_fragment" : "hdr.ethernet.dstAddr = dst_mac"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            },
+            {
+              "type" : "runtime_data",
+              "value" : 1
+            }
+          ],
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1097,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.dstAddr = dst_ip"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "hdrChecksum"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1099,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.hdrChecksum = 0"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "mqttsn1121",
+      "id" : 9,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "ethernet"
+            }
+          ],
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1121,
+            "column" : 12,
+            "source_fragment" : "hdr.ethernet.setValid()"
+          }
+        },
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "ipv4"
+            }
+          ],
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1122,
+            "column" : 12,
+            "source_fragment" : "hdr.ipv4.setValid()"
+          }
+        },
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "udp"
+            }
+          ],
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1123,
+            "column" : 12,
+            "source_fragment" : "hdr.udp.setValid()"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "mqttsn1131",
+      "id" : 10,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_flags_publish"
+            }
+          ],
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1131,
+            "column" : 16,
+            "source_fragment" : "hdr.mqttsn_flags_publish.setValid()"
+          }
+        },
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "mqttsn_publish"
+            }
+          ],
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1132,
+            "column" : 16,
+            "source_fragment" : "hdr.mqttsn_publish.setValid()"
           }
         }
       ]
@@ -4503,7 +4690,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "mqtt-sn.p4",
-        "line" : 796,
+        "line" : 795,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
@@ -4514,7 +4701,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 864,
+            "line" : 875,
             "column" : 12,
             "source_fragment" : "drop()"
           },
@@ -4525,14 +4712,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [2],
+          "action_ids" : [3],
           "actions" : ["MyIngress.drop"],
           "base_default_next" : "node_4",
           "next_tables" : {
             "MyIngress.drop" : "node_4"
           },
           "default_entry" : {
-            "action_id" : 2,
+            "action_id" : 3,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -4543,7 +4730,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 840,
+            "line" : 827,
             "column" : 10,
             "source_fragment" : "static_forwarding"
           },
@@ -4561,11 +4748,11 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [7, 1, 0],
-          "actions" : ["MyIngress.forwarding", "MyIngress.drop", "NoAction"],
+          "action_ids" : [5, 2, 0],
+          "actions" : ["MyIngress.static_", "MyIngress.drop", "NoAction"],
           "base_default_next" : null,
           "next_tables" : {
-            "MyIngress.forwarding" : null,
+            "MyIngress.static_" : null,
             "MyIngress.drop" : null,
             "NoAction" : null
           },
@@ -4577,98 +4764,48 @@
           }
         },
         {
-          "name" : "tbl_broadcast",
+          "name" : "MyIngress.broadcast_forwarding",
           "id" : 2,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1051,
-            "column" : 20,
-            "source_fragment" : "broadcast()"
+            "line" : 852,
+            "column" : 10,
+            "source_fragment" : "broadcast_forwarding"
           },
-          "key" : [],
+          "key" : [
+            {
+              "match_type" : "exact",
+              "name" : "hdr.ipv4.dstAddr",
+              "target" : ["ipv4", "dstAddr"],
+              "mask" : null
+            }
+          ],
           "match_type" : "exact",
           "type" : "simple",
           "max_size" : 1024,
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [4],
-          "actions" : ["MyIngress.broadcast"],
+          "action_ids" : [6, 1],
+          "actions" : ["MyIngress.broadcast", "NoAction"],
           "base_default_next" : null,
           "next_tables" : {
-            "MyIngress.broadcast" : null
+            "MyIngress.broadcast" : null,
+            "NoAction" : null
           },
           "default_entry" : {
-            "action_id" : 4,
-            "action_const" : true,
+            "action_id" : 1,
+            "action_const" : false,
             "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "tbl_broadcast_0",
-          "id" : 3,
-          "source_info" : {
-            "filename" : "mqtt-sn.p4",
-            "line" : 1056,
-            "column" : 20,
-            "source_fragment" : "broadcast()"
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [5],
-          "actions" : ["MyIngress.broadcast"],
-          "base_default_next" : null,
-          "next_tables" : {
-            "MyIngress.broadcast" : null
-          },
-          "default_entry" : {
-            "action_id" : 5,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "tbl_broadcast_1",
-          "id" : 4,
-          "source_info" : {
-            "filename" : "mqtt-sn.p4",
-            "line" : 1062,
-            "column" : 20,
-            "source_fragment" : "broadcast()"
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [6],
-          "actions" : ["MyIngress.broadcast"],
-          "base_default_next" : null,
-          "next_tables" : {
-            "MyIngress.broadcast" : null
-          },
-          "default_entry" : {
-            "action_id" : 6,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
+            "action_entry_const" : false
           }
         },
         {
           "name" : "tbl_drop_0",
-          "id" : 5,
+          "id" : 3,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1069,
+            "line" : 1078,
             "column" : 12,
             "source_fragment" : "drop()"
           },
@@ -4679,14 +4816,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [3],
+          "action_ids" : [4],
           "actions" : ["MyIngress.drop"],
           "base_default_next" : null,
           "next_tables" : {
             "MyIngress.drop" : null
           },
           "default_entry" : {
-            "action_id" : 3,
+            "action_id" : 4,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -4700,7 +4837,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 863,
+            "line" : 874,
             "column" : 12,
             "source_fragment" : "standard_metadata.instance_type == 4"
           },
@@ -4726,7 +4863,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 871,
+            "line" : 882,
             "column" : 12,
             "source_fragment" : "hdr.tcp.isValid() || hdr.ipv4.protocol == TYPE_ICMP"
           },
@@ -4769,7 +4906,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 879,
+            "line" : 890,
             "column" : 17,
             "source_fragment" : "hdr.mqttsn_fixed.isValid()"
           },
@@ -4792,7 +4929,7 @@
           "id" : 3,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 884,
+            "line" : 895,
             "column" : 16,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_DISCONNECT && ..."
           },
@@ -4835,7 +4972,7 @@
           "id" : 4,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 889,
+            "line" : 900,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBACK && // QoS 1 ..."
           },
@@ -4878,7 +5015,7 @@
           "id" : 5,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 894,
+            "line" : 905,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBREC && // QoS 2 ..."
           },
@@ -4921,7 +5058,7 @@
           "id" : 6,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 899,
+            "line" : 910,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBREL && // QoS 2 ..."
           },
@@ -4964,7 +5101,7 @@
           "id" : 7,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 904,
+            "line" : 915,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBCOMP && // QoS 2 ..."
           },
@@ -5007,7 +5144,7 @@
           "id" : 8,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 909,
+            "line" : 920,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PINGREQ && ..."
           },
@@ -5050,7 +5187,7 @@
           "id" : 9,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 914,
+            "line" : 925,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PINGRESP && ..."
           },
@@ -5093,7 +5230,7 @@
           "id" : 10,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 921,
+            "line" : 932,
             "column" : 21,
             "source_fragment" : "hdr.udp.dstPort == UDP_PORT_SVC_GW"
           },
@@ -5119,7 +5256,7 @@
           "id" : 11,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 924,
+            "line" : 935,
             "column" : 20,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNECT && ..."
           },
@@ -5179,7 +5316,7 @@
           "id" : 12,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 930,
+            "line" : 941,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER && ..."
           },
@@ -5239,7 +5376,7 @@
           "id" : 13,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 936,
+            "line" : 947,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH && ..."
           },
@@ -5299,7 +5436,7 @@
           "id" : 14,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 942,
+            "line" : 953,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE && ..."
           },
@@ -5376,7 +5513,7 @@
           "id" : 15,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 949,
+            "line" : 960,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBSCRIBE && ..."
           },
@@ -5453,7 +5590,7 @@
           "id" : 16,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 956,
+            "line" : 967,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPIC && ..."
           },
@@ -5530,7 +5667,7 @@
           "id" : 17,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 963,
+            "line" : 974,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSG && ..."
           },
@@ -5590,7 +5727,7 @@
           "id" : 18,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 969,
+            "line" : 980,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICUPD && ..."
           },
@@ -5667,7 +5804,7 @@
           "id" : 19,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 976,
+            "line" : 987,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGUPD && ..."
           },
@@ -5727,7 +5864,7 @@
           "id" : 20,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 985,
+            "line" : 996,
             "column" : 21,
             "source_fragment" : "hdr.udp.srcPort == UDP_PORT_SVC_GW"
           },
@@ -5753,7 +5890,7 @@
           "id" : 21,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 988,
+            "line" : 999,
             "column" : 20,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_CONNACK && ..."
           },
@@ -5796,7 +5933,7 @@
           "id" : 22,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 993,
+            "line" : 1004,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGACK && ..."
           },
@@ -5839,7 +5976,7 @@
           "id" : 23,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 998,
+            "line" : 1009,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH && ..."
           },
@@ -5899,7 +6036,7 @@
           "id" : 24,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1006,
+            "line" : 1017,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SUBACK && ..."
           },
@@ -5959,7 +6096,7 @@
           "id" : 25,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1012,
+            "line" : 1023,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_UNSUBACK && ..."
           },
@@ -6002,7 +6139,7 @@
           "id" : 26,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1018,
+            "line" : 1029,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_REGISTER && ..."
           },
@@ -6062,7 +6199,7 @@
           "id" : 27,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1024,
+            "line" : 1035,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICREQ && ..."
           },
@@ -6105,7 +6242,7 @@
           "id" : 28,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1029,
+            "line" : 1040,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGREQ && ..."
           },
@@ -6148,7 +6285,7 @@
           "id" : 29,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1034,
+            "line" : 1045,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPICRESP && ..."
           },
@@ -6191,7 +6328,7 @@
           "id" : 30,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1039,
+            "line" : 1050,
             "column" : 25,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_WILLMSGRESP && ..."
           },
@@ -6234,7 +6371,7 @@
           "id" : 31,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1049,
+            "line" : 1059,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_ADVERTISE && ..."
           },
@@ -6269,7 +6406,7 @@
               }
             }
           },
-          "true_next" : "tbl_broadcast",
+          "true_next" : "MyIngress.broadcast_forwarding",
           "false_next" : "node_63"
         },
         {
@@ -6277,7 +6414,7 @@
           "id" : 32,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1054,
+            "line" : 1064,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_SEARCHGW && ..."
           },
@@ -6312,7 +6449,7 @@
               }
             }
           },
-          "true_next" : "tbl_broadcast_0",
+          "true_next" : "MyIngress.broadcast_forwarding",
           "false_next" : "node_65"
         },
         {
@@ -6320,7 +6457,7 @@
           "id" : 33,
           "source_info" : {
             "filename" : "mqtt-sn.p4",
-            "line" : 1059,
+            "line" : 1069,
             "column" : 21,
             "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_GWINFO && ..."
           },
@@ -6331,31 +6468,14 @@
               "left" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "and",
+                  "op" : "==",
                   "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "==",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["mqttsn_fixed", "msgType"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x02"
-                      }
-                    }
+                    "type" : "field",
+                    "value" : ["mqttsn_fixed", "msgType"]
                   },
                   "right" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "d2b",
-                      "left" : null,
-                      "right" : {
-                        "type" : "field",
-                        "value" : ["mqttsn_gwinfo", "$valid$"]
-                      }
-                    }
+                    "type" : "hexstr",
+                    "value" : "0x02"
                   }
                 }
               },
@@ -6366,14 +6486,14 @@
                   "left" : null,
                   "right" : {
                     "type" : "field",
-                    "value" : ["mqttsn_variable_field", "$valid$"]
+                    "value" : ["mqttsn_gwinfo", "$valid$"]
                   }
                 }
               }
             }
           },
           "false_next" : null,
-          "true_next" : "tbl_broadcast_1"
+          "true_next" : "MyIngress.broadcast_forwarding"
         }
       ]
     },
@@ -6382,14 +6502,189 @@
       "id" : 1,
       "source_info" : {
         "filename" : "mqtt-sn.p4",
-        "line" : 1078,
+        "line" : 1087,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
-      "init_table" : null,
-      "tables" : [],
+      "init_table" : "node_70",
+      "tables" : [
+        {
+          "name" : "tbl_mqttsn1121",
+          "id" : 4,
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1121,
+            "column" : 12,
+            "source_fragment" : "hdr.ethernet.setValid(); ..."
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [9],
+          "actions" : ["mqttsn1121"],
+          "base_default_next" : "node_72",
+          "next_tables" : {
+            "mqttsn1121" : "node_72"
+          },
+          "default_entry" : {
+            "action_id" : 9,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "MyEgress.broadcast_forwarding",
+          "id" : 5,
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1106,
+            "column" : 10,
+            "source_fragment" : "broadcast_forwarding"
+          },
+          "key" : [
+            {
+              "match_type" : "exact",
+              "name" : "standard_metadata.egress_port",
+              "target" : ["standard_metadata", "egress_port"],
+              "mask" : null
+            }
+          ],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [8, 7],
+          "actions" : ["MyEgress.broadcast", "NoAction"],
+          "base_default_next" : "node_74",
+          "next_tables" : {
+            "MyEgress.broadcast" : "node_74",
+            "NoAction" : "node_74"
+          },
+          "default_entry" : {
+            "action_id" : 7,
+            "action_const" : false,
+            "action_data" : [],
+            "action_entry_const" : false
+          }
+        },
+        {
+          "name" : "tbl_mqttsn1131",
+          "id" : 6,
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1131,
+            "column" : 16,
+            "source_fragment" : "hdr.mqttsn_flags_publish.setValid(); ..."
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [10],
+          "actions" : ["mqttsn1131"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "mqttsn1131" : null
+          },
+          "default_entry" : {
+            "action_id" : 10,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        }
+      ],
       "action_profiles" : [],
-      "conditionals" : []
+      "conditionals" : [
+        {
+          "name" : "node_70",
+          "id" : 34,
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1120,
+            "column" : 12,
+            "source_fragment" : "standard_metadata.mcast_grp != 0"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "!=",
+              "left" : {
+                "type" : "field",
+                "value" : ["standard_metadata", "mcast_grp"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x0000"
+              }
+            }
+          },
+          "false_next" : null,
+          "true_next" : "tbl_mqttsn1121"
+        },
+        {
+          "name" : "node_72",
+          "id" : 35,
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1125,
+            "column" : 16,
+            "source_fragment" : "standard_metadata.mcast_grp == 100"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["standard_metadata", "mcast_grp"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x0064"
+              }
+            }
+          },
+          "true_next" : "MyEgress.broadcast_forwarding",
+          "false_next" : "node_74"
+        },
+        {
+          "name" : "node_74",
+          "id" : 36,
+          "source_info" : {
+            "filename" : "mqtt-sn.p4",
+            "line" : 1130,
+            "column" : 16,
+            "source_fragment" : "hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["mqttsn_fixed", "msgType"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x0c"
+              }
+            }
+          },
+          "false_next" : null,
+          "true_next" : "tbl_mqttsn1131"
+        }
+      ]
     }
   ],
   "checksums" : [
@@ -6398,7 +6693,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "mqtt-sn.p4",
-        "line" : 1092,
+        "line" : 1146,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },

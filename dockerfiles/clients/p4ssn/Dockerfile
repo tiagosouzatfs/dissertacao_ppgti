@@ -18,6 +18,6 @@ RUN groupadd wireshark
 
 RUN usermod -aG wireshark root
 
-RUN pip install crcmod
+WORKDIR /app/p4ssn
 
-# docker build -t mqtt-sn-client-pub-sub:latest . -f Dockerfile.python
+# docker build -t p4ssn-client-pub-sub:latest .

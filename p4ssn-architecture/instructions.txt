@@ -99,7 +99,9 @@ exit
 sudo mn -c
 
 # Ou, ainda
-docker stop mn.s1 mn.ss1 mn.pb1 mn.gw_bk;docker rm mn.s1 mn.ss1 mn.pb1 mn.gw_bk
+docker stop mn.s1 mn.gw mn.bk mn.pb mn.ss1 mn.ss2 mn.ss3 mn.ss4 mn.ss5
+
+docker rm mn.s1 mn.gw mn.bk mn.pb mn.ss1 mn.ss2 mn.ss3 mn.ss4 mn.ss5
 
 # Encerrar o compilador
 docker stop p4c
