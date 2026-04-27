@@ -97,7 +97,7 @@ def mqttsn_subscriber():
     last_ping = time.time()
     msg_count = 0  # Contador de mensagens
 
-    with open("/root/time_publication_mqttsn5.csv", "w") as f:
+    with open("/app/mqtt-sn/time_publication_mqttsn5.csv", "w") as f:
         f.write("id,t_pub_ms\n")
         while True:
             pkt = recv_packet(sock)

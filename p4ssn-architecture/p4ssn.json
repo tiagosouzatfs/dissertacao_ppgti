@@ -7983,7 +7983,7 @@
             "filename" : "p4ssn.p4",
             "line" : 1286,
             "column" : 16,
-            "source_fragment" : "standard_metadata.mcast_grp == 10"
+            "source_fragment" : "standard_metadata.mcast_grp == 20"
           },
           "expression" : {
             "type" : "expression",
@@ -7995,7 +7995,7 @@
               },
               "right" : {
                 "type" : "hexstr",
-                "value" : "0x000a"
+                "value" : "0x0014"
               }
             }
           },

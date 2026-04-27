@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # test_cases = [(QOS_M1, 0), (QOS_0, 0), (QOS_0, 1), (QOS_1, 0), (QOS_2, 0)] # Se quiser testar com retain
     test_cases = [(QOS_M1, 0), (QOS_0, 0), (QOS_1, 0), (QOS_2, 0)]
     
-    with open('/root/mqttsn.csv', 'w', newline='') as f:
+    with open('/app/mqtt-sn/mqttsn.csv', 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=["cenario", "qos", "retain", "t_flow_ms"])
         writer.writeheader()
         for qos, ret in test_cases:

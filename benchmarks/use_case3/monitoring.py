@@ -11,9 +11,23 @@ except IndexError:
     sys.exit(1)
 
 CONTAINERS = ["mn.s1", "mn.gw", "mn.bk"]
-DURATION_SEC = 120
+DURATION_SEC = 300
 INTERVAL = 1
 OUTPUT_FILE = f"metrics_docker_stats_{MODE}_{N_MSGS}.csv"
+
+def get_net_stats(container):
+    """Coleta bytes e pacotes via docker exec."""
+    try:
+        cmd = ["docker", "exec", container, "cat", "/proc/net/dev"]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        for line in res.stdout.splitlines():
+            if "eth0" in line:
+                data = line.split()
+                # RX_Bytes (1), RX_Packets (2), TX_Bytes (9), TX_Packets (10)
+                return [data[1], data[2], data[9], data[10]]
+    except:
+        pass
+    return ["0", "0", "0", "0"]
 
 def collect_metrics():
     print(f"--- Iniciando monitoramento dos containers: {CONTAINERS} ---")
@@ -21,8 +35,11 @@ def collect_metrics():
     
     with open(OUTPUT_FILE, mode='w', newline='') as f:
         writer = csv.writer(f)
-        # Cabeçalho para os dois containers
-        writer.writerow(['relative_time', 's1_cpu', 's1_mem', 'gw_cpu', 'gw_mem', 'bk_cpu', 'bk_mem'])
+        # Cabeçalho atualizado com colunas de rede para cada container
+        header = ['relative_time']
+        for c in ['s1', 'gw', 'bk']:
+            header += [f'{c}_cpu', f'{c}_mem', f'{c}_rx_bytes', f'{c}_rx_pkts', f'{c}_tx_bytes', f'{c}_tx_pkts']
+        writer.writerow(header)
 
         start_time = time.time()
         
@@ -30,7 +47,6 @@ def collect_metrics():
             while (time.time() - start_time) < DURATION_SEC:
                 loop_start = time.time()
                 
-                # Coleta stats de todos os containers de uma vez
                 cmd = [
                     "docker", "stats", *CONTAINERS, 
                     "--no-stream", 
@@ -42,15 +58,19 @@ def collect_metrics():
                 if result.returncode == 0:
                     lines = result.stdout.strip().split('\n')
                     if len(lines) == len(CONTAINERS):
-                        # Tempo relativo formatado para 2 casas decimais conforme seu script
                         row = [round(time.time() - start_time, 2)]
-                        for line in lines:
+                        
+                        # Itera sobre os resultados do stats e busca a rede individualmente
+                        for i, line in enumerate(lines):
                             parts = line.replace('%', '').split(',')
-                            row.extend([parts[0].strip(), parts[1].strip()])
+                            cpu_mem = [parts[0].strip(), parts[1].strip()]
+                            net_data = get_net_stats(CONTAINERS[i])
+                            
+                            row.extend(cpu_mem + net_data)
                         
                         writer.writerow(row)
+                        f.flush() # Garante a escrita imediata
                 
-                # Sincronização para manter o intervalo de 1s
                 elapsed = time.time() - loop_start
                 wait_time = max(0, INTERVAL - elapsed)
                 time.sleep(wait_time)

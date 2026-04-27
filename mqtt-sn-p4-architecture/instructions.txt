@@ -33,14 +33,10 @@ docker cp p4c:/tmp/mqtt-sn.json mqtt-sn-p4-architecture/
 # Iniciar topologia containernet
 sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
 
-# Inicie os clientes
-python3 /root/subscriber_mqttsn1.py
-python3 /root/subscriber_mqttsn2.py (Opcional)
-python3 /root/subscriber_mqttsn3.py (Opcional)
-python3 /root/subscriber_mqttsn4.py (Opcional)
-python3 /root/subscriber_mqttsn5.py (Opcional)
+# Inicie os clientes (topicId 10)
+python3 /app/mqtt-sn/subscriber_mqttsn1.py
 
-python3 /root/publisher_mqttsn.py
+python3 /app/mqtt-sn/publisher_mqttsn.py
 
 
 -------------------------------------------------------------------------------
@@ -52,14 +48,10 @@ python3 /root/publisher_mqttsn.py
 # Iniciar topologia containernet
 sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
 
-# Inicie os clientes
-python3 /root/subscriber_mqttsn1.py
-python3 /root/subscriber_mqttsn2.py (Opcional)
-python3 /root/subscriber_mqttsn3.py (Opcional)
-python3 /root/subscriber_mqttsn4.py (Opcional)
-python3 /root/subscriber_mqttsn5.py (Opcional)
+# Inicie os clientes (topicId 10)
+python3 /app/mqtt-sn/subscriber_mqttsn1.py
 
-python3 /root/benchmark1_mqttsn.py
+python3 /app/mqtt-sn/benchmark1_mqttsn.py
 
 
 -------------------------------------------------------------------------------
@@ -74,17 +66,17 @@ python3 monitoring.py mqttsn 1k
 # Iniciar topologia containernet
 sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
 
-# Inicie os clientes
+# Inicie os clientes (topicId 20)
 # No script de benchmark altere os parêmtros abaixo de acordo com o seu teste
 #    MSGS_POR_QOS = 500 # 500 QoS -1 + 500 QoS 0 = 1k total
 
-python3 /root/subscriber_mqttsn1.py
-python3 /root/subscriber_mqttsn2.py
-python3 /root/subscriber_mqttsn3.py
-python3 /root/subscriber_mqttsn4.py
-python3 /root/subscriber_mqttsn5.py
+python3 /app/mqtt-sn/subscriber_mqttsn1.py
+python3 /app/mqtt-sn/subscriber_mqttsn2.py
+python3 /app/mqtt-sn/subscriber_mqttsn3.py
+python3 /app/mqtt-sn/subscriber_mqttsn4.py
+python3 /app/mqtt-sn/subscriber_mqttsn5.py
 
-python3 /root/benchmark2_mqttsn.py
+python3 /app/mqtt-sn/benchmark2_mqttsn.py
 
 
 ------------------------------------------------------------------------------

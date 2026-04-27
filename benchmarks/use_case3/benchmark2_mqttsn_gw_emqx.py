@@ -6,7 +6,7 @@ import time
 # Configurações de Rede
 GW_IP, GW_PORT = "10.0.0.2", 1884
 CLIENT_IP = "10.0.0.3"
-PREDEFINED_TOPIC_ID = 10
+PREDEFINED_TOPIC_ID = 20
 TIMEOUT = 5.0
 
 # Constantes MQTT-SN
@@ -71,9 +71,9 @@ def run_benchmark_mqttsn(msgs_per_qos):
 if __name__ == "__main__":
 
     # Testes Gerais
-    # MSGS_POR_QOS = 500 # 500 QoS -1 + 500 QoS 0 = 1k total
+    MSGS_POR_QOS = 100 # 500 QoS -1 + 500 QoS 0 = 1k total
     # MSGS_POR_QOS = 2500 # 2.500 QoS -1 + 2.500 QoS 0 = 5k total
-    MSGS_POR_QOS = 5000 # 5.000 QoS -1 + 5.000 QoS 0 = 10k total
+    #MSGS_POR_QOS = 5000 # 5.000 QoS -1 + 5.000 QoS 0 = 10k total
 
     print(f"--- INICIANDO BENCHMARK MQTTSN ---")
 
