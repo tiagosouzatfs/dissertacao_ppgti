@@ -40,7 +40,7 @@ class MQTTSNBenchmark:
                 sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
                 sock.recvfrom(1024)
 
-                time.sleep(0.0005)
+                time.sleep(0.001)
 
             # PUBLISH (Tópico 10 Fixo)
             flags = ((qos & 0x03) << 5) | ((retain & 0x01) << 4) | TOPICIDTYPE_PREDEFINED
@@ -55,14 +55,14 @@ class MQTTSNBenchmark:
                     sock.sendto(struct.pack('>BBH', 4, MQTTSN_PUBREL, msg_id), (GW_IP, GW_PORT))
                     sock.recvfrom(1024)
 
-            time.sleep(0.0005)
+            time.sleep(0.001)
             
             if qos != QOS_M1:
                 # DISCONNECT
                 sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
                 sock.recvfrom(1024) # DISCONNECT Gateway
 
-                time.sleep(0.0005)
+                time.sleep(0.001)
 
             t_end_total = time.perf_counter()
         except (socket.timeout, Exception):
@@ -85,9 +85,10 @@ if __name__ == "__main__":
     with open('/app/mqtt-sn/mqttsn.csv', 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=["cenario", "qos", "retain", "t_flow_ms"])
         writer.writeheader()
+
         for qos, ret in test_cases:
             print(f"\n### Benchmark MQTT-SN: QoS {qos} | Retain {ret}")
-            time.sleep(2)
+            time.sleep(1)
             for i in range(1, 101):
                 writer.writerow(bench.run_iteration(qos, ret, i))
                 time.sleep(0.05)

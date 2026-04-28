@@ -36,7 +36,8 @@ CLIENT_IP = "10.0.0.5"
 CLIENT_PORT = 1895
 
 TIMEOUT = 5
-KEEPALIVE = 30
+#KEEPALIVE = 30
+KEEPALIVE = 720
 
 # Lógica OTP (One-Time Pad) - Sincronizada com P4
 

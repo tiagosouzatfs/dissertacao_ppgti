@@ -4,7 +4,6 @@ import struct
 import random
 import time
 
-
 # Constantes MQTT-SN
 
 MQTTSN_CONNECT      = 0x04

@@ -6,7 +6,7 @@ import time
 # Configurações de Rede
 GW_IP, GW_PORT = "10.0.0.2", 1884
 CLIENT_IP = "10.0.0.3"
-PREDEFINED_TOPIC_ID = 10
+PREDEFINED_TOPIC_ID = 20
 TIMEOUT = 5.0
 
 # Constantes MQTT-SN
@@ -17,7 +17,7 @@ TOPICIDTYPE_PREDEFINED = 0b01
 SECRET_TOPIC_ID = 0xB7A3
 SECRET_DATA_PUBLISH = 0x8D93D01BEE9B416847B69D483BDFB0D6D4D329D98B278AD866E6B17076638B6F7BA810790B07C638825AE5F9B05FABCF7EC35360992DB924F0ECFEEDA972170B
 
-# --- Funções de Criptografia ---
+# --- Funções de Criptografia P4SSN ---
 def generate_otp(salt):
     otp = ((salt << 7) & 0xFFFF) ^ (salt >> 9) ^ 0xA5A5
     otp = ((otp << 3) & 0xFFFF) | (otp >> 13)
@@ -61,7 +61,7 @@ def run_benchmark_p4ssn(msgs_per_qos):
         header = struct.pack('>BB BHH', len(encrypted_payload)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
         sock.sendto(header + encrypted_payload, (GW_IP, GW_PORT))
 
-        time.sleep(0.0005)
+        time.sleep(0.001)
 
     time.sleep(0.001)
 
@@ -77,7 +77,7 @@ def run_benchmark_p4ssn(msgs_per_qos):
             sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
             sock.recvfrom(1024) # Espera CONNACK
 
-            time.sleep(0.0005)
+            time.sleep(0.001)
 
             # PUBLISH
             salt = random.randint(1, 0xFFFF)
@@ -87,13 +87,13 @@ def run_benchmark_p4ssn(msgs_per_qos):
             header = struct.pack('>BB BHH', len(encrypted_payload)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
             sock.sendto(header + encrypted_payload, (GW_IP, GW_PORT))
 
-            time.sleep(0.0005)
+            time.sleep(0.001)
 
             # DISCONNECT
             sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
             sock.recvfrom(1024) # Espera DISCONNECT
 
-            time.sleep(0.0005)
+            time.sleep(0.001)
 
         except Exception as e:
             print(f"Erro: {e}")

@@ -4,7 +4,6 @@ import struct
 import random
 import time
 
-
 # Constantes MQTT-SN
 
 MQTTSN_CONNECT      = 0x04
@@ -18,6 +17,7 @@ MQTTSN_PUBREL       = 0x10
 MQTTSN_PUBCOMP      = 0x0E
 MQTTSN_DISCONNECT   = 0x18
 
+# Segurança P4SSN
 SECRET_TOPIC_ID = 0xB7A3
 SECRET_DATA_PUBLISH = 0x8D93D01BEE9B416847B69D483BDFB0D6D4D329D98B278AD866E6B17076638B6F7BA810790B07C638825AE5F9B05FABCF7EC35360992DB924F0ECFEEDA972170B
 
@@ -108,7 +108,7 @@ def drain_socket(sock):
 
 # Construção de pacotes (com OTP)
 
-def build_connect(client_id, duration=30):
+def build_connect(client_id, duration=60):
     payload = struct.pack('>BBH', 0x04, 0x01, duration) + client_id.encode()
     return struct.pack('>BB', len(payload)+2, MQTTSN_CONNECT) + payload
 

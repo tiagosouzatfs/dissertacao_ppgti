@@ -33,7 +33,8 @@ CLIENT_IP = "10.0.0.8"
 CLIENT_PORT = 1898
 
 TIMEOUT = 5
-KEEPALIVE = 30
+#KEEPALIVE = 30
+KEEPALIVE = 720
 
 # Comunicação e Builders
 

@@ -6,7 +6,6 @@ import time
 import csv
 
 # Constantes e Segurança P4SSN
-
 MQTTSN_CONNECT, MQTTSN_CONNACK = 0x04, 0x05
 MQTTSN_PUBLISH, MQTTSN_PUBACK = 0x0C, 0x0D
 MQTTSN_PUBREC, MQTTSN_PUBREL = 0x0F, 0x10
@@ -23,6 +22,7 @@ GW_IP, GW_PORT = "10.0.0.2", 1884
 CLIENT_IP = "10.0.0.3"
 TIMEOUT = 5.0
 
+# --- Funções Criptográficas P4SSN ---
 def generate_otp(salt):
     otp = ((salt << 7) & 0xFFFF) ^ (salt >> 9) ^ 0xA5A5
     otp = ((otp << 3) & 0xFFFF) | (otp >> 13)
@@ -58,14 +58,14 @@ class P4SSNBenchmark:
         t_end_total = 0
         
         try:
-            # --- CONNECT (Sempre obrigatório para este Gateway) ---
+            # --- CONNECT ---
             conn = struct.pack('>BBH', 0x04, 0x01, 60) + client_id.encode()
             sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
             resp, _ = sock.recvfrom(1024)
             if resp[1] != MQTTSN_CONNACK:
                 raise Exception("Falha ao conectar: Não recebeu CONNACK")
 
-            time.sleep(0.0005)
+            time.sleep(0.001)
 
             # PUBLISH (Tópico 10 Fixo)
             salt = msg_id if qos != QOS_M1 else random.randint(1, 0xFFFF)
@@ -85,13 +85,13 @@ class P4SSNBenchmark:
                     sock.sendto(struct.pack('>BBH', 4, MQTTSN_PUBREL, msg_id), (GW_IP, GW_PORT))
                     sock.recvfrom(1024)
 
-            time.sleep(0.0005)
+            time.sleep(0.001)
             
             # --- DISCONNECT (Sempre obrigatório para encerrar a sessão) ---
             sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
             sock.recvfrom(1024) # DISCONNECT Gateway
 
-            time.sleep(0.0005)
+            time.sleep(0.001)
 
             t_end_total = time.perf_counter()
         except (socket.timeout, Exception):

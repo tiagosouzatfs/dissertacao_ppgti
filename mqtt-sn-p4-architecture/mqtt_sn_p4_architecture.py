@@ -221,8 +221,8 @@ def topology():
         "PORT": "1884",
         "BISQUITT_USER": "bisquitt",
         "BISQUITT_GROUP": "bisquitt",
-        #"PREDEFINED_TOPIC": "*;temperatura;10"
-        "PREDEFINED_TOPIC": "*;umidade;20"
+        "PREDEFINED_TOPIC": "*;temperatura;10"
+        #"PREDEFINED_TOPIC": "*;umidade;20"
         #"PREDEFINED_TOPICS_FILE": "/etc/bisquitt/predefinedTopics.yaml"
     }
 
@@ -297,10 +297,10 @@ def topology():
     s1.cmd('simple_switch_CLI --thrift-port 50001 <<< "{}"'.format(mc_cmds))
 
     debug("Iniciando broker\n")
-    makeTerm(bk)
+    #makeTerm(bk)
 
     debug("Iniciando gateway\n")
-    makeTerm(gw)
+    #makeTerm(gw)
 
     debug("Iniciando publisher\n")
     makeTerm(pb)

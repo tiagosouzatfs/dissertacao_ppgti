@@ -5,6 +5,7 @@ import random
 import time
 
 # Constantes MQTT-SN
+
 MQTTSN_CONNECT      = 0x04
 MQTTSN_CONNACK      = 0x05
 MQTTSN_REGISTER     = 0x0A
@@ -21,11 +22,10 @@ TOPICIDTYPE_TOPICNAME         = 0b00
 TOPICIDTYPE_PREDEFINEDTOPIC   = 0b01
 TOPICIDTYPE_SHORTTOPICNAME    = 0b10
 
-# Configurações de Rede
 GW_IP = "10.0.0.2"
 GW_PORT = 1884
 CLIENT_IP = "10.0.0.3"
-CLIENT_PORT = 0 # Porta dinâmica
+CLIENT_PORT = 0
 
 SERVER_ADDRESS = (GW_IP, GW_PORT)
 TIMEOUT = 5
