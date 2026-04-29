@@ -55,15 +55,20 @@ def topology():
     # Equivale a: /home/vboxuser/dissertacao_ppgti
     project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    client_pub_path = "/benchmarks/use_case1/publisher_p4ssn.py"
+    client_pub_path = "/benchmarks/use_case1/publisher_p4ssn_gw_bisquitt.py"
+    #client_pub_path = "/benchmarks/use_case1/publisher_p4ssn_gw_emqx.py"
     pub_path = project_path + "/" + client_pub_path
 
-    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_p4ssn.py"
+    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_p4ssn_gw_bisquitt.py"
+    #client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_p4ssn_gw_emqx.py"
     pub_benchmark1_path = project_path + "/" + client_pub_benchmark1_path
 
     client_pub_results_benchmark1_path = "/benchmarks/use_case2/p4ssn.csv"
     pub_results_benchmark1_path = project_path + "/" + client_pub_results_benchmark1_path
 
+    # Como só são testados os níveis de QoS -1 e 0, e o P4SSN a solução envia a mensagem
+    #   diretamente para o cliente inscrito no tópico da tabela não precisa um arquivo para 
+    #   cada gateway, a solução se torna agnóstica nesse ponto.
     client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_p4ssn.py"
     pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
 
@@ -74,8 +79,10 @@ def topology():
         mac="00:00:00:00:00:03",
         dimage="p4ssn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
-                 pub_path + ':/app/p4ssn/publisher_p4ssn.py',
-                 pub_benchmark1_path + ':/app/p4ssn/benchmark1_p4ssn.py',
+                 pub_path + ':/app/p4ssn/publisher_p4ssn_gw_bisquitt.py',
+                 #pub_path + ':/app/p4ssn/publisher_p4ssn_gw_emqx.py',
+                 pub_benchmark1_path + ':/app/p4ssn/benchmark1_p4ssn_gw_bisquitt.py',
+                 #pub_benchmark1_path + ':/app/p4ssn/benchmark1_p4ssn_gw_emqx.py',
                  pub_benchmark2_path + ':/app/p4ssn/benchmark2_p4ssn.py',
                  pub_results_benchmark1_path + ':/app/p4ssn/p4ssn.csv'
                 ],
@@ -172,7 +179,7 @@ def topology():
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    # Definindo variáveis para inicialização automática do EMQX Gateway
+    # Definindo variáveis para inicialização automática do EMQX Gateway Aggreagating
     emqx_env_gw_emqx = {
         "DISPLAY": ":{}".format(DISPLAY_ID),
 
@@ -206,7 +213,7 @@ def topology():
         "EMQX_RULE_ENGINE__RULES__SEND_BROKER__ACTIONS__1": "mqtt:send_broker"
     }
 
-    # Definindo variáveis para inicialização automática do EMQX Gateway
+    # Definindo variáveis para inicialização automática do Bisquitt Gateway Transparent
     emqx_env_gw_bisquitt = {
         "DISPLAY": ":{}".format(DISPLAY_ID),
         "MQTT_HOST": "10.0.0.1",
@@ -215,7 +222,8 @@ def topology():
         "PORT": "1884",
         "BISQUITT_USER": "bisquitt",
         "BISQUITT_GROUP": "bisquitt",
-        "PREDEFINED_TOPIC": "*;temperatura;10"
+        #"PREDEFINED_TOPIC": "*;temperatura;10"
+        "PREDEFINED_TOPIC": "*;umidade;20"
         #"PREDEFINED_TOPICS_FILE": "/etc/bisquitt/predefinedTopics.yaml"
     }
 
@@ -286,25 +294,25 @@ def topology():
     mc_node_associate 100 5
     mc_node_associate 100 6
     mc_node_associate 100 7
-    mc_mgrp_create 10
+    mc_mgrp_create 20
     mc_node_create 10 4
     mc_node_create 11 5
     mc_node_create 12 6
     mc_node_create 13 7
     mc_node_create 14 8
-    mc_node_associate 10 8
-    mc_node_associate 10 9
-    mc_node_associate 10 10
-    mc_node_associate 10 11
-    mc_node_associate 10 12
+    mc_node_associate 20 8
+    mc_node_associate 20 9
+    mc_node_associate 20 10
+    mc_node_associate 20 11
+    mc_node_associate 20 12
     """
     s1.cmd('simple_switch_CLI --thrift-port 50001 <<< "{}"'.format(mc_cmds))
 
     debug("Iniciando broker\n")
-    makeTerm(bk)
+    #makeTerm(bk)
 
     debug("Iniciando gateway\n")
-    makeTerm(gw)
+    #makeTerm(gw)
 
     debug("Iniciando publisher\n")
     makeTerm(pb)

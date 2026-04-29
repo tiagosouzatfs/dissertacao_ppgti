@@ -36,7 +36,8 @@ CLIENT_IP = "10.0.0.6"
 CLIENT_PORT = 1896
 
 TIMEOUT = 5
-KEEPALIVE = 30
+#KEEPALIVE = 30
+KEEPALIVE = 720
 
 # Lógica OTP (One-Time Pad) - Sincronizada com P4
 
@@ -126,7 +127,7 @@ def p4ssn_subscriber():
     last_ping = time.time()
     msg_count = 0  # Contador de mensagens
 
-    with open("/root/time_publication_p4ssn3.csv", "w") as f:
+    with open("/app/p4ssn/time_publication_p4ssn3.csv", "w") as f:
         f.write("id,t_pub_ms\n")
         while True:
             pkt = recv_packet(sock)

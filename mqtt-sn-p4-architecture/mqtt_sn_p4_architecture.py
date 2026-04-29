@@ -55,16 +55,19 @@ def topology():
     # Equivale a: /home/vboxuser/dissertacao_ppgti
     project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    client_pub_path = "/benchmarks/use_case1/publisher_mqttsn.py"
+    client_pub_path = "/benchmarks/use_case1/publisher_mqttsn_gw_bisquitt.py"
+    #client_pub_path = "/benchmarks/use_case1/publisher_mqttsn_gw_emqx.py"
     pub_path = project_path + "/" + client_pub_path
 
-    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_mqttsn.py"
+    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_mqttsn_gw_bisquitt.py"
+    #client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_mqttsn_gw_emqx.py"
     pub_benchmark1_path = project_path + "/" + client_pub_benchmark1_path
 
     client_pub_results_benchmark1_path = "/benchmarks/use_case2/mqttsn.csv"
     pub_results_benchmark1_path = project_path + "/" + client_pub_results_benchmark1_path
 
-    client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_mqttsn.py"
+    client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_mqttsn_gw_bisquitt.py"
+    #client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_mqttsn_gw_emqx.py"
     pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
 
     debug("Adicionando sensor publisher\n")
@@ -74,9 +77,12 @@ def topology():
         mac="00:00:00:00:00:03",
         dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
-                 pub_path + ':/app/mqtt-sn/publisher_p4ssn.py',
-                 pub_benchmark1_path + ':/app/mqtt-sn/benchmark1_mqttsn.py',
-                 pub_benchmark2_path + ':/app/mqtt-sn/benchmark2_mqttsn.py',
+                 pub_path + ':/app/mqtt-sn/publisher_mqttsn_gw_bisquitt.py',
+                 #pub_path + ':/app/mqtt-sn/publisher_mqttsn_gw_emqx.py',
+                 pub_benchmark1_path + ':/app/mqtt-sn/benchmark1_mqttsn_gw_bisquitt.py',
+                 #pub_benchmark1_path + ':/app/mqtt-sn/benchmark1_mqttsn_gw_emqx.py',
+                 pub_benchmark2_path + ':/app/mqtt-sn/benchmark2_mqttsn_gw_bisquitt.py',
+                 #pub_benchmark2_path + ':/app/mqtt-sn/benchmark2_mqttsn_gw_emqx.py',
                  pub_results_benchmark1_path + ':/app/mqtt-sn/mqttsn.csv'
                 ],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
@@ -172,7 +178,7 @@ def topology():
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    # Definindo variáveis para inicialização automática do EMQX Gateway
+    # Definindo variáveis para inicialização automática do EMQX Gateway Aggreagating
     emqx_env_gw_emqx = {
         "DISPLAY": ":{}".format(DISPLAY_ID),
 
@@ -206,7 +212,7 @@ def topology():
         "EMQX_RULE_ENGINE__RULES__SEND_BROKER__ACTIONS__1": "mqtt:send_broker"
     }
 
-    # Definindo variáveis para inicialização automática do EMQX Gateway
+    # Definindo variáveis para inicialização automática do Bisquitt Gateway Transparent
     emqx_env_gw_bisquitt = {
         "DISPLAY": ":{}".format(DISPLAY_ID),
         "MQTT_HOST": "10.0.0.1",
@@ -215,7 +221,8 @@ def topology():
         "PORT": "1884",
         "BISQUITT_USER": "bisquitt",
         "BISQUITT_GROUP": "bisquitt",
-        "PREDEFINED_TOPIC": "*;temperatura;10"
+        #"PREDEFINED_TOPIC": "*;temperatura;10"
+        "PREDEFINED_TOPIC": "*;umidade;20"
         #"PREDEFINED_TOPICS_FILE": "/etc/bisquitt/predefinedTopics.yaml"
     }
 
@@ -290,10 +297,10 @@ def topology():
     s1.cmd('simple_switch_CLI --thrift-port 50001 <<< "{}"'.format(mc_cmds))
 
     debug("Iniciando broker\n")
-    makeTerm(bk)
+    #makeTerm(bk)
 
     debug("Iniciando gateway\n")
-    makeTerm(gw)
+    #makeTerm(gw)
 
     debug("Iniciando publisher\n")
     makeTerm(pb)
