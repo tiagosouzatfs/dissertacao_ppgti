@@ -55,15 +55,20 @@ def topology():
     # Equivale a: /home/vboxuser/dissertacao_ppgti
     project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    client_pub_path = "/benchmarks/use_case1/publisher_p4ssn.py"
+    client_pub_path = "/benchmarks/use_case1/publisher_p4ssn_gw_bisquitt.py"
+    #client_pub_path = "/benchmarks/use_case1/publisher_p4ssn_gw_emqx.py"
     pub_path = project_path + "/" + client_pub_path
 
-    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_p4ssn.py"
+    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_p4ssn_gw_bisquitt.py"
+    #client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_p4ssn_gw_emqx.py"
     pub_benchmark1_path = project_path + "/" + client_pub_benchmark1_path
 
     client_pub_results_benchmark1_path = "/benchmarks/use_case2/p4ssn.csv"
     pub_results_benchmark1_path = project_path + "/" + client_pub_results_benchmark1_path
 
+    # Como só são testados os níveis de QoS -1 e 0, e o P4SSN a solução envia a mensagem
+    #   diretamente para o cliente inscrito no tópico da tabela não precisa um arquivo para 
+    #   cada gateway, a solução se torna agnóstica nesse ponto.
     client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_p4ssn.py"
     pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
 
@@ -74,8 +79,10 @@ def topology():
         mac="00:00:00:00:00:03",
         dimage="p4ssn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
-                 pub_path + ':/app/p4ssn/publisher_p4ssn.py',
-                 pub_benchmark1_path + ':/app/p4ssn/benchmark1_p4ssn.py',
+                 pub_path + ':/app/p4ssn/publisher_p4ssn_gw_bisquitt.py',
+                 #pub_path + ':/app/p4ssn/publisher_p4ssn_gw_emqx.py',
+                 pub_benchmark1_path + ':/app/p4ssn/benchmark1_p4ssn_gw_bisquitt.py',
+                 #pub_benchmark1_path + ':/app/p4ssn/benchmark1_p4ssn_gw_emqx.py',
                  pub_benchmark2_path + ':/app/p4ssn/benchmark2_p4ssn.py',
                  pub_results_benchmark1_path + ':/app/p4ssn/p4ssn.csv'
                 ],
@@ -215,8 +222,8 @@ def topology():
         "PORT": "1884",
         "BISQUITT_USER": "bisquitt",
         "BISQUITT_GROUP": "bisquitt",
-        "PREDEFINED_TOPIC": "*;temperatura;10"
-        #"PREDEFINED_TOPIC": "*;umidade;20"
+        #"PREDEFINED_TOPIC": "*;temperatura;10"
+        "PREDEFINED_TOPIC": "*;umidade;20"
         #"PREDEFINED_TOPICS_FILE": "/etc/bisquitt/predefinedTopics.yaml"
     }
 

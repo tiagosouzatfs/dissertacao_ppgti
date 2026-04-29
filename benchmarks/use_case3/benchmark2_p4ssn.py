@@ -44,55 +44,43 @@ def otp_process_data(data):
 
 # Lógica de Publicação
 def run_benchmark_p4ssn(msgs_per_qos):
+
     test_qos = [QOS_M1, QOS_0]
 
     for current_qos in test_qos:
         label = "-1" if current_qos == QOS_M1 else "0"
-        print(f"Iniciando benchmark P4SSN QoS {label}...")
+        print(f"Iniciando msgs QoS {label}...")
+        payload_base = b"P4SSN_DATA_BENCHMARK"
 
-        # --- CASO ESPECIAL: QoS -1 ---
+        # --- QoS -1 ---
         if current_qos == QOS_M1:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.bind((CLIENT_IP, 0))
             sock.settimeout(TIMEOUT)
             
             try:
-                # CONNECT com Keep Alive de 360 segundos
-                client_id = f"p4ssn_m1_persistent_{random.randint(1000, 9999)}"
-                conn = struct.pack('>BBH', 0x04, 0x01, 360) + client_id.encode()
-                sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
-                
-                resp, _ = sock.recvfrom(1024)
-                if resp[1] == MQTTSN_CONNACK:
-                    print(f"   Sessão P4SSN QoS -1 estabelecida. Enviando {msgs_per_qos} msgs...")
-
+                print(f"   Enviando {msgs_per_qos} mensagens ...")
                 for i in range(msgs_per_qos):
-                    payload = b"P4SSN_DATA_BENCHMARK" + f"_{i}_{time.time()}".encode()
-                    
-                    # No QoS -1, salt de cabeçalho pode ser 0x0000 ou randômico para diversificar o tópico
-                    salt_header = random.randint(1, 0xFFFF) 
+                    payload = payload_base + f"_{i}_{time.time()}".encode()
+                    salt = random.randint(1, 0xFFFF)
+                    # PUBLISH (msg_id 0x0000 para QoS -1)
                     flags = (QOS_M1 << 5) | TOPICIDTYPE_PREDEFINED
                     
-                    t_enc = otp_encrypt_topic(PREDEFINED_TOPIC_ID, salt_header)
+                    t_enc = otp_encrypt_topic(PREDEFINED_TOPIC_ID, salt)
                     encrypted_payload = otp_process_data(payload)
                     
-                    header = struct.pack('>BB BHH', len(encrypted_payload) + 7, MQTTSN_PUBLISH, flags, t_enc, salt_header)
+                    header = struct.pack('>BB BHH', len(encrypted_payload)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
                     sock.sendto(header + encrypted_payload, (GW_IP, GW_PORT))
                     
-                    # Delay mínimo para o BMv2 processar sem dropar por buffer
                     time.sleep(0.001)
 
-                # DISCONNECT
-                sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
-                sock.recvfrom(1024)
-                print("   Sessão P4SSN QoS -1 encerrada com sucesso.")
-
+                print("   QoS -1 finalizado.")
             except Exception as e:
-                print(f"Erro no benchmark persistente QoS -1: {e}")
+                print(f"Erro no fluxo QoS -1: {e}")
             finally:
                 sock.close()
 
-        # --- CASO PADRÃO: QoS 0 (EFÊMERO - CONNECT/DISCONNECT POR MSG) ---
+        # --- CASO PADRÃO: QoS 0 ---
         else:
             for i in range(msgs_per_qos):
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -100,25 +88,25 @@ def run_benchmark_p4ssn(msgs_per_qos):
                 sock.settimeout(TIMEOUT)
                 
                 try:
-                    payload = b"P4SSN_DATA_BENCHMARK" + f"_{i}_{time.time()}".encode()
-                    client_id = f"p4ssn_client_0_{i}_{random.randint(1000, 9999)}"
-                    
+                    payload = payload_base + f"_{i}_{time.time()}".encode()
                     # CONNECT
+                    client_id = f"p4ssn_client_0_{i}_{random.randint(1000, 9999)}"
                     conn = struct.pack('>BBH', 0x04, 0x01, 60) + client_id.encode()
                     sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
                     
                     resp, _ = sock.recvfrom(1024)
-                    if resp[1] != MQTTSN_CONNACK: raise Exception("CONNACK falhou")
-
+                    if resp[1] != MQTTSN_CONNACK: 
+                        raise Exception("Sem CONNACK")
+                    
                     time.sleep(0.001)
 
-                    # PUBLISH (P4SSN)
-                    salt_header = random.randint(1, 0xFFFF)
+                    # PUBLISH P4SSN
+                    salt = random.randint(1, 0xFFFF)
                     flags = (QOS_0 << 5) | TOPICIDTYPE_PREDEFINED
-                    t_enc = otp_encrypt_topic(PREDEFINED_TOPIC_ID, salt_header)
+                    t_enc = otp_encrypt_topic(PREDEFINED_TOPIC_ID, salt)
                     encrypted_payload = otp_process_data(payload)
                     
-                    header = struct.pack('>BB BHH', len(encrypted_payload) + 7, MQTTSN_PUBLISH, flags, t_enc, salt_header)
+                    header = struct.pack('>BB BHH', len(encrypted_payload)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
                     sock.sendto(header + encrypted_payload, (GW_IP, GW_PORT))
 
                     time.sleep(0.001)

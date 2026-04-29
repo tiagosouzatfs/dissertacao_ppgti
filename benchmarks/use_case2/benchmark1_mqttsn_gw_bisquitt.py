@@ -23,10 +23,7 @@ class MQTTSNBenchmark:
         self.client_ip = client_ip
 
     def run_iteration(self, qos, retain, iteration, existing_sock=None):
-        """
-        Se existing_sock for passado, utiliza a sessão persistente (QoS -1).
-        Caso contrário, abre e fecha uma nova conexão (QoS 0, 1, 2).
-        """
+
         is_persistent = existing_sock is not None
         sock = existing_sock if is_persistent else socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
@@ -68,11 +65,10 @@ class MQTTSNBenchmark:
             if not is_persistent:
                 time.sleep(0.001)
                 sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
-                sock.recvfrom(1024)
+                sock.recvfrom(1024) # DISCONNECT Gateway
                 t_end_total = time.perf_counter()
-            else:
-                # Para o QoS -1, medimos apenas o tempo do disparo do Publish
-                t_end_total = time.perf_counter()
+
+            t_end_total = time.perf_counter()
 
         except (socket.timeout, Exception):
             t_start_flow = t_end_total = 0
@@ -106,7 +102,7 @@ if __name__ == "__main__":
                 p_sock.settimeout(TIMEOUT)
                 
                 # CONNECT 360s
-                c_id = f"mqttsn_m1_persistent_{random.randint(100,999)}"
+                c_id = f"mqttsn_m1_{random.randint(100,999)}"
                 conn_pkt = struct.pack('>BBH', 0x04, 0x01, 360) + c_id.encode()
                 p_sock.sendto(struct.pack('>BB', len(conn_pkt)+2, MQTTSN_CONNECT) + conn_pkt, (GW_IP, GW_PORT))
                 p_sock.recvfrom(1024) # Espera CONNACK

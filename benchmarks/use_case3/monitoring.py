@@ -11,7 +11,7 @@ except IndexError:
     sys.exit(1)
 
 CONTAINERS = ["mn.s1", "mn.gw", "mn.bk"]
-DURATION_SEC = 720
+DURATION_SEC = 240
 INTERVAL = 1
 OUTPUT_FILE = f"metrics_docker_stats_{MODE}_{N_MSGS}.csv"
 

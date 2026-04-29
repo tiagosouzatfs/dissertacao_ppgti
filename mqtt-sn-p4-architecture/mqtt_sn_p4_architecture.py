@@ -221,8 +221,8 @@ def topology():
         "PORT": "1884",
         "BISQUITT_USER": "bisquitt",
         "BISQUITT_GROUP": "bisquitt",
-        "PREDEFINED_TOPIC": "*;temperatura;10"
-        #"PREDEFINED_TOPIC": "*;umidade;20"
+        #"PREDEFINED_TOPIC": "*;temperatura;10"
+        "PREDEFINED_TOPIC": "*;umidade;20"
         #"PREDEFINED_TOPICS_FILE": "/etc/bisquitt/predefinedTopics.yaml"
     }
 

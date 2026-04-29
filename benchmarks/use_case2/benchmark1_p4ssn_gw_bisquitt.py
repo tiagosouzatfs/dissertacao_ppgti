@@ -46,9 +46,7 @@ class P4SSNBenchmark:
         self.client_ip = client_ip
 
     def run_iteration(self, qos, retain, iteration, existing_sock=None):
-        """
-        existing_sock: Se fornecido, pula CONNECT/DISCONNECT (Modo Persistente)
-        """
+
         is_persistent = existing_sock is not None
         sock = existing_sock if is_persistent else socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
@@ -69,7 +67,8 @@ class P4SSNBenchmark:
                 conn = struct.pack('>BBH', 0x04, 0x01, 60) + client_id.encode()
                 sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
                 resp, _ = sock.recvfrom(1024)
-                if resp[1] != MQTTSN_CONNACK: raise Exception("Sem CONNACK")
+                if resp[1] != MQTTSN_CONNACK:
+                    raise Exception("Erro CONNACK")
                 time.sleep(0.001)
 
             # --- PUBLISH P4SSN ---
@@ -95,7 +94,8 @@ class P4SSNBenchmark:
                 time.sleep(0.001)
                 sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
                 sock.recvfrom(1024) # DISCONNECT Gateway
-            
+                t_end_total = time.perf_counter()
+
             t_end_total = time.perf_counter()
 
         except (socket.timeout, Exception):
@@ -130,7 +130,7 @@ if __name__ == "__main__":
                 p_sock.settimeout(TIMEOUT)
                 
                 # CONNECT 360s
-                c_id = f"p4ssn_m1_persistent_{random.randint(100,999)}"
+                c_id = f"p4ssn_m1_{random.randint(100,999)}"
                 conn_pkt = struct.pack('>BBH', 0x04, 0x01, 360) + c_id.encode()
                 p_sock.sendto(struct.pack('>BB', len(conn_pkt)+2, MQTTSN_CONNECT) + conn_pkt, (GW_IP, GW_PORT))
                 p_sock.recvfrom(1024) # Espera CONNACK
