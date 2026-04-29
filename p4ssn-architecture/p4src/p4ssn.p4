@@ -862,7 +862,6 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
-
     //////////////////////////////////////////////////////
     /////// ACTION: ENCAMINHAMENTO EM BROADCAST //////////
     //////////////////////////////////////////////////////
@@ -1284,7 +1283,7 @@ control MyEgress(inout headers hdr,
             hdr.ipv4.setValid();
             hdr.udp.setValid();
 
-            if (standard_metadata.mcast_grp == 10) {
+            if (standard_metadata.mcast_grp == 20) {
                 multicast_acelerate_forwarding.apply();
                 hdr.udp.checksum = 0; // Crucial: ignora erro de checksum no receptor
             } else if (standard_metadata.mcast_grp == 100) {

@@ -47,24 +47,27 @@ def topology():
         'bk', 
         ip='10.0.0.1/8',
         mac="00:00:00:00:00:01", 
-        dimage='mqtt-sn-gw',
+        dimage='mqtt-sn-gw-bk-emqx',
         dcmd="emqx foreground",
-        environment=emqx_env_bk
+        #environment=emqx_env_bk
     )
 
     # Equivale a: /home/vboxuser/dissertacao_ppgti
     project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    client_pub_path = "/benchmarks/use_case1/publisher_mqttsn.py"
+    client_pub_path = "/benchmarks/use_case1/publisher_mqttsn_gw_bisquitt.py"
+    #client_pub_path = "/benchmarks/use_case1/publisher_mqttsn_gw_emqx.py"
     pub_path = project_path + "/" + client_pub_path
 
-    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_mqttsn.py"
+    client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_mqttsn_gw_bisquitt.py"
+    #client_pub_benchmark1_path = "/benchmarks/use_case2/benchmark1_mqttsn_gw_emqx.py"
     pub_benchmark1_path = project_path + "/" + client_pub_benchmark1_path
 
     client_pub_results_benchmark1_path = "/benchmarks/use_case2/mqttsn.csv"
     pub_results_benchmark1_path = project_path + "/" + client_pub_results_benchmark1_path
 
-    client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_mqttsn.py"
+    client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_mqttsn_gw_bisquitt.py"
+    #client_pub_benchmark2_path = "/benchmarks/use_case3/benchmark2_mqttsn_gw_emqx.py"
     pub_benchmark2_path = project_path + "/" + client_pub_benchmark2_path
 
     debug("Adicionando sensor publisher\n")
@@ -72,12 +75,15 @@ def topology():
         'pb',
         ip='10.0.0.3/8',
         mac="00:00:00:00:00:03",
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
-                 pub_path + ':/root/publisher_p4ssn.py',
-                 pub_benchmark1_path + ':/root/benchmark1_mqttsn.py',
-                 pub_benchmark2_path + ':/root/benchmark2_mqttsn.py',
-                 pub_results_benchmark1_path + ':/root/mqttsn.csv'
+                 pub_path + ':/app/mqtt-sn/publisher_mqttsn_gw_bisquitt.py',
+                 #pub_path + ':/app/mqtt-sn/publisher_mqttsn_gw_emqx.py',
+                 pub_benchmark1_path + ':/app/mqtt-sn/benchmark1_mqttsn_gw_bisquitt.py',
+                 #pub_benchmark1_path + ':/app/mqtt-sn/benchmark1_mqttsn_gw_emqx.py',
+                 pub_benchmark2_path + ':/app/mqtt-sn/benchmark2_mqttsn_gw_bisquitt.py',
+                 #pub_benchmark2_path + ':/app/mqtt-sn/benchmark2_mqttsn_gw_emqx.py',
+                 pub_results_benchmark1_path + ':/app/mqtt-sn/mqttsn.csv'
                 ],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
@@ -93,10 +99,10 @@ def topology():
         'ss1', 
         ip='10.0.0.4/8',
         mac="00:00:00:00:00:04", 
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw', 
-                 sub1_path + ':/root/subscriber_mqttsn1.py',
-                 sub1_time_publication_path + ':/root/time_publication_mqttsn1.csv'],
+                 sub1_path + ':/app/mqtt-sn/subscriber_mqttsn1.py',
+                 sub1_time_publication_path + ':/app/mqtt-sn/time_publication_mqttsn1.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -111,10 +117,10 @@ def topology():
         'ss2', 
         ip='10.0.0.5/8',
         mac="00:00:00:00:00:05", 
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
-                 sub2_path + ':/root/subscriber_mqttsn2.py',
-                 sub2_time_publication_path + ':/root/time_publication_mqttsn2.csv'],
+                 sub2_path + ':/app/mqtt-sn/subscriber_mqttsn2.py',
+                 sub2_time_publication_path + ':/app/mqtt-sn/time_publication_mqttsn2.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -129,10 +135,10 @@ def topology():
         'ss3', 
         ip='10.0.0.6/8',
         mac="00:00:00:00:00:06", 
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
-                 sub3_path + ':/root/subscriber_mqttsn3.py',
-                 sub3_time_publication_path + ':/root/time_publication_mqttsn3.csv'],
+                 sub3_path + ':/app/mqtt-sn/subscriber_mqttsn3.py',
+                 sub3_time_publication_path + ':/app/mqtt-sn/time_publication_mqttsn3.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -147,10 +153,10 @@ def topology():
         'ss4', 
         ip='10.0.0.7/8',
         mac="00:00:00:00:00:07", 
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
-                 sub4_path + ':/root/subscriber_mqttsn4.py',
-                 sub4_time_publication_path + ':/root/time_publication_mqttsn4.csv'],
+                 sub4_path + ':/app/mqtt-sn/subscriber_mqttsn4.py',
+                 sub4_time_publication_path + ':/app/mqtt-sn/time_publication_mqttsn4.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
@@ -165,15 +171,15 @@ def topology():
         'ss5', 
         ip='10.0.0.8/8',
         mac="00:00:00:00:00:08", 
-        dimage="mqtt-sn-client-python",
+        dimage="mqtt-sn-client-pub-sub:latest",
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw',
-                 sub5_path + ':/root/subscriber_mqttsn5.py',
-                 sub5_time_publication_path + ':/root/time_publication_mqttsn5.csv'],
+                 sub5_path + ':/app/mqtt-sn/subscriber_mqttsn5.py',
+                 sub5_time_publication_path + ':/app/mqtt-sn/time_publication_mqttsn5.csv'],
         environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
-    # Definindo variáveis para inicialização automática do EMQX Gateway
-    emqx_env_gw = {
+    # Definindo variáveis para inicialização automática do EMQX Gateway Aggreagating
+    emqx_env_gw_emqx = {
         "DISPLAY": ":{}".format(DISPLAY_ID),
 
         # Gateway
@@ -206,15 +212,32 @@ def topology():
         "EMQX_RULE_ENGINE__RULES__SEND_BROKER__ACTIONS__1": "mqtt:send_broker"
     }
 
+    # Definindo variáveis para inicialização automática do Bisquitt Gateway Transparent
+    emqx_env_gw_bisquitt = {
+        "DISPLAY": ":{}".format(DISPLAY_ID),
+        "MQTT_HOST": "10.0.0.1",
+        "MQTT_PORT": "1883",
+        "HOST": "0.0.0.0",
+        "PORT": "1884",
+        "BISQUITT_USER": "bisquitt",
+        "BISQUITT_GROUP": "bisquitt",
+        #"PREDEFINED_TOPIC": "*;temperatura;10"
+        "PREDEFINED_TOPIC": "*;umidade;20"
+        #"PREDEFINED_TOPICS_FILE": "/etc/bisquitt/predefinedTopics.yaml"
+    }
+
     debug('Adicionando Gateway MQTT-SN\n')
     gw = net.addDocker(
         'gw', 
         ip='10.0.0.2/8',
-        mac="00:00:00:00:00:02", 
-        dimage='mqtt-sn-gw',
+        mac="00:00:00:00:00:02",
+        #dimage='mqtt-sn-gw-bk-emqx',
+        dimage='mqtt-sn-gw-bisquitt',
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
-        dcmd="emqx foreground",
-        environment=emqx_env_gw
+        #dcmd="emqx foreground",
+        #environment=emqx_env_gw_emqx
+        dcmd="bisquitt --debug",
+        environment=emqx_env_gw_bisquitt
     )
 
     path = os.path.dirname(os.path.abspath(__file__))
@@ -251,10 +274,32 @@ def topology():
     s1.start([])
     net.staticArp()
 
-    #debug("Iniciando broker\n")
+    # --- Configurando grupos de portas ---
+    mc_cmds = """
+    mc_mgrp_create 100
+    mc_node_create 0 1
+    mc_node_create 1 2
+    mc_node_create 2 3
+    mc_node_create 3 4
+    mc_node_create 4 5
+    mc_node_create 5 6
+    mc_node_create 6 7
+    mc_node_create 7 8
+    mc_node_associate 100 0
+    mc_node_associate 100 1
+    mc_node_associate 100 2
+    mc_node_associate 100 3
+    mc_node_associate 100 4
+    mc_node_associate 100 5
+    mc_node_associate 100 6
+    mc_node_associate 100 7
+    """
+    s1.cmd('simple_switch_CLI --thrift-port 50001 <<< "{}"'.format(mc_cmds))
+
+    debug("Iniciando broker\n")
     #makeTerm(bk)
 
-    #debug("Iniciando gateway\n")
+    debug("Iniciando gateway\n")
     #makeTerm(gw)
 
     debug("Iniciando publisher\n")

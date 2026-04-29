@@ -9,6 +9,6 @@ RUN apt-get update && apt-get install ethtool net-tools iproute2 iputils-ping wi
 
 USER emqx
 
-EXPOSE 1884 18084
+EXPOSE 1884
 
-# docker build -t mqtt-sn-gw-bk:latest .
+# docker build -t mqtt-sn-gw-bk-emqx:latest .

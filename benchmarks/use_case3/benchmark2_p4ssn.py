@@ -6,18 +6,19 @@ import time
 # Configurações de Rede
 GW_IP, GW_PORT = "10.0.0.2", 1884
 CLIENT_IP = "10.0.0.3"
-PREDEFINED_TOPIC_ID = 10
+PREDEFINED_TOPIC_ID = 20
 TIMEOUT = 5.0
 
 # Constantes MQTT-SN
 MQTTSN_CONNECT, MQTTSN_DISCONNECT = 0x04, 0x18
+MQTTSN_CONNACK = 0x05
 MQTTSN_PUBLISH = 0x0C
 QOS_M1, QOS_0 = 0b11, 0b00
 TOPICIDTYPE_PREDEFINED = 0b01
 SECRET_TOPIC_ID = 0xB7A3
 SECRET_DATA_PUBLISH = 0x8D93D01BEE9B416847B69D483BDFB0D6D4D329D98B278AD866E6B17076638B6F7BA810790B07C638825AE5F9B05FABCF7EC35360992DB924F0ECFEEDA972170B
 
-# --- Funções de Criptografia ---
+# --- Funções de Criptografia P4SSN ---
 def generate_otp(salt):
     otp = ((salt << 7) & 0xFFFF) ^ (salt >> 9) ^ 0xA5A5
     otp = ((otp << 3) & 0xFFFF) | (otp >> 13)
@@ -43,62 +44,83 @@ def otp_process_data(data):
 
 # Lógica de Publicação
 def run_benchmark_p4ssn(msgs_per_qos):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind((CLIENT_IP, 0))
-    sock.settimeout(TIMEOUT)
-    
-    # QoS -1 (Disparo Direto)
-    print(f"Iniciando msgs QoS -1...")
-    payload_m1 = b"P4SSN_DATA_BENCHMARK" + f"_{time.time()}".encode()
-    
-    for i in range(msgs_per_qos):
-        salt = random.randint(1, 0xFFFF)
-        flags = (QOS_M1 << 5) | TOPICIDTYPE_PREDEFINED
-        # Header padrão: Length(1), Type(1), Flags(1), TopicId(2), MsgId(2) = 7 bytes
-        t_enc = otp_encrypt_topic(PREDEFINED_TOPIC_ID, salt)
-        encrypted_payload = otp_process_data(payload_m1)
-        
-        header = struct.pack('>BB BHH', len(encrypted_payload)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
-        sock.sendto(header + encrypted_payload, (GW_IP, GW_PORT))
 
-        time.sleep(0.0005)
+    test_qos = [QOS_M1, QOS_0]
 
-    time.sleep(0.001)
+    for current_qos in test_qos:
+        label = "-1" if current_qos == QOS_M1 else "0"
+        print(f"Iniciando msgs QoS {label}...")
+        payload_base = b"P4SSN_DATA_BENCHMARK"
 
-    # QoS 0 (Connect -> Publish -> Disconnect)
-    print("Iniciando msgs QoS 0 (Fluxo Completo)...")
-    payload_q0 = b"P4SSN_DATA_BENCHMARK" + f"_{time.time()}".encode()
-    
-    for i in range(msgs_per_qos):
-        try:
-            # CONNECT
-            client_id = f"p4ssn_client_{i}"
-            conn = struct.pack('>BBH', 0x04, 0x01, 60) + client_id.encode()
-            sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
-            sock.recvfrom(1024) # Espera CONNACK
+        # --- QoS -1 ---
+        if current_qos == QOS_M1:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.bind((CLIENT_IP, 0))
+            sock.settimeout(TIMEOUT)
+            
+            try:
+                print(f"   Enviando {msgs_per_qos} mensagens ...")
+                for i in range(msgs_per_qos):
+                    payload = payload_base + f"_{i}_{time.time()}".encode()
+                    salt = random.randint(1, 0xFFFF)
+                    # PUBLISH (msg_id 0x0000 para QoS -1)
+                    flags = (QOS_M1 << 5) | TOPICIDTYPE_PREDEFINED
+                    
+                    t_enc = otp_encrypt_topic(PREDEFINED_TOPIC_ID, salt)
+                    encrypted_payload = otp_process_data(payload)
+                    
+                    header = struct.pack('>BB BHH', len(encrypted_payload)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
+                    sock.sendto(header + encrypted_payload, (GW_IP, GW_PORT))
+                    
+                    time.sleep(0.001)
 
-            time.sleep(0.0005)
+                print("   QoS -1 finalizado.")
+            except Exception as e:
+                print(f"Erro no fluxo QoS -1: {e}")
+            finally:
+                sock.close()
 
-            # PUBLISH
-            salt = random.randint(1, 0xFFFF)
-            flags = (QOS_0 << 5) | TOPICIDTYPE_PREDEFINED 
-            t_enc = otp_encrypt_topic(PREDEFINED_TOPIC_ID, salt)
-            encrypted_payload = otp_process_data(payload_q0)
-            header = struct.pack('>BB BHH', len(encrypted_payload)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
-            sock.sendto(header + encrypted_payload, (GW_IP, GW_PORT))
+        # --- CASO PADRÃO: QoS 0 ---
+        else:
+            for i in range(msgs_per_qos):
+                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                sock.bind((CLIENT_IP, 0))
+                sock.settimeout(TIMEOUT)
+                
+                try:
+                    payload = payload_base + f"_{i}_{time.time()}".encode()
+                    # CONNECT
+                    client_id = f"p4ssn_client_0_{i}_{random.randint(1000, 9999)}"
+                    conn = struct.pack('>BBH', 0x04, 0x01, 60) + client_id.encode()
+                    sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
+                    
+                    resp, _ = sock.recvfrom(1024)
+                    if resp[1] != MQTTSN_CONNACK: 
+                        raise Exception("Sem CONNACK")
+                    
+                    time.sleep(0.001)
 
-            time.sleep(0.0005)
+                    # PUBLISH P4SSN
+                    salt = random.randint(1, 0xFFFF)
+                    flags = (QOS_0 << 5) | TOPICIDTYPE_PREDEFINED
+                    t_enc = otp_encrypt_topic(PREDEFINED_TOPIC_ID, salt)
+                    encrypted_payload = otp_process_data(payload)
+                    
+                    header = struct.pack('>BB BHH', len(encrypted_payload)+7, MQTTSN_PUBLISH, flags, t_enc, salt)
+                    sock.sendto(header + encrypted_payload, (GW_IP, GW_PORT))
 
-            # DISCONNECT
-            sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
-            sock.recvfrom(1024) # Espera DISCONNECT
+                    time.sleep(0.001)
 
-            time.sleep(0.0005)
+                    # DISCONNECT
+                    sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
+                    sock.recvfrom(1024) # Espera DISCONNECT
 
-        except Exception as e:
-            print(f"Erro: {e}")
+                    time.sleep(0.001)
 
-    sock.close()
+                except Exception as e:
+                    print(f"Erro no loop QoS 0, msg {i}: {e}")
+                finally:
+                    sock.close()
 
 if __name__ == "__main__":
 

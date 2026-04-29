@@ -1,0 +1,27 @@
+# Docs
+
+https://github.com/energostack/bisquitt
+
+
+# Com acesso anônimo
+
+bisquitt \
+  --mqtt-host 10.0.0.1 \
+  --mqtt-port 1883 \
+  --host 0.0.0.0 \
+  --port 1884 \
+  --debug
+
+
+# A image do bisquitt já vem além do gateway com os clientes pub e sub também
+
+bisquitt-pub -h 127.0.0.1 -p 1884 -t teste -m "hello world" -d
+
+# Com retenção de mensagens
+bisquitt-pub -h 127.0.0.1 -p 1884 -t teste -m "hello world" -r -d
+
+bisquitt-sub -h 127.0.0.1 -p 1884 -t teste -d
+
+# Tópicos pré-definidos
+
+bisquitt-pub -h 127.0.0.1 -p 1884 -q 3 --predefined-topic "*;umidade;20" -t umidade -m "hello world" -d

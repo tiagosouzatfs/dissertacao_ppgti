@@ -1,17 +1,35 @@
+# --- GRUPO MULTICAST PARA BROADCAST (8 portas) ---
+# Como os nomes das tebelas e actions são iguais no ingress e egresss tem que passar o nome todo
+
+# IP 255.255.255.255-> Grupo Multicast 100
+table_add MyIngress.broadcast_forwarding MyIngress.broadcast 255.255.255.255 => 100
+
+# Configuração do Egress para reescrever MAC e IP por porta para broadcast
+table_add MyEgress.broadcast_forwarding MyEgress.broadcast 1 => 00:00:00:00:00:01 10.0.0.1
+table_add MyEgress.broadcast_forwarding MyEgress.broadcast 2 => 00:00:00:00:00:02 10.0.0.2
+table_add MyEgress.broadcast_forwarding MyEgress.broadcast 3 => 00:00:00:00:00:03 10.0.0.3
+table_add MyEgress.broadcast_forwarding MyEgress.broadcast 4 => 00:00:00:00:00:04 10.0.0.4
+table_add MyEgress.broadcast_forwarding MyEgress.broadcast 5 => 00:00:00:00:00:05 10.0.0.5
+table_add MyEgress.broadcast_forwarding MyEgress.broadcast 6 => 00:00:00:00:00:06 10.0.0.6
+table_add MyEgress.broadcast_forwarding MyEgress.broadcast 7 => 00:00:00:00:00:07 10.0.0.7
+table_add MyEgress.broadcast_forwarding MyEgress.broadcast 8 => 00:00:00:00:00:08 10.0.0.8
+
+# --- ENCAMINHAMENTO UNICAST PADRÃO ---
+
 table_set_default static_forwarding drop
 # Broker
-table_add MyIngress.static_forwarding forwarding 10.0.0.1 => 00:00:00:00:00:01 1
+table_add MyIngress.static_forwarding static_ 10.0.0.1 => 00:00:00:00:00:01 1
 # Gateway
-table_add MyIngress.static_forwarding forwarding 10.0.0.2 => 00:00:00:00:00:02 2
+table_add MyIngress.static_forwarding static_ 10.0.0.2 => 00:00:00:00:00:02 2
 # Cliente Pub 1
-table_add MyIngress.static_forwarding forwarding 10.0.0.3 => 00:00:00:00:00:03 3
+table_add MyIngress.static_forwarding static_ 10.0.0.3 => 00:00:00:00:00:03 3
 # Cliente Sub 1
-table_add MyIngress.static_forwarding forwarding 10.0.0.4 => 00:00:00:00:00:04 4
+table_add MyIngress.static_forwarding static_ 10.0.0.4 => 00:00:00:00:00:04 4
 # Cliente Sub 2
-table_add MyIngress.static_forwarding forwarding 10.0.0.5 => 00:00:00:00:00:05 5
+table_add MyIngress.static_forwarding static_ 10.0.0.5 => 00:00:00:00:00:05 5
 # Cliente Sub 3
-table_add MyIngress.static_forwarding forwarding 10.0.0.6 => 00:00:00:00:00:06 6
+table_add MyIngress.static_forwarding static_ 10.0.0.6 => 00:00:00:00:00:06 6
 # Cliente Sub 4
-table_add MyIngress.static_forwarding forwarding 10.0.0.7 => 00:00:00:00:00:07 7
+table_add MyIngress.static_forwarding static_ 10.0.0.7 => 00:00:00:00:00:07 7
 # Cliente Sub 5
-table_add MyIngress.static_forwarding forwarding 10.0.0.8 => 00:00:00:00:00:08 8
+table_add MyIngress.static_forwarding static_ 10.0.0.8 => 00:00:00:00:00:08 8

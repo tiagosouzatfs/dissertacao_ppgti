@@ -15,11 +15,11 @@ table_add MyEgress.broadcast_forwarding MyEgress.broadcast 7 => 00:00:00:00:00:0
 table_add MyEgress.broadcast_forwarding MyEgress.broadcast 8 => 00:00:00:00:00:08 10.0.0.8
 
 
-# --- GRUPO MULTICAST ACELERADO PARA TÓPICO 10 (5 Clientes Sub) ---
+# --- GRUPO MULTICAST ACELERADO PARA TÓPICO 20 (5 Clientes Sub) ---
 # Como os nomes das tebelas e actions são iguais no ingress e egresss tem que passar o nome todo
 
-# Tópico 10 (também funciona com shorttopicname e topicname) -> Grupo Multicast 10
-table_add MyIngress.multicast_acelerate_forwarding MyIngress.multicast_acelerate 10 => 10
+# Tópico 20 (também funciona com shorttopicname e topicname) -> Grupo Multicast 20
+table_add MyIngress.multicast_acelerate_forwarding MyIngress.multicast_acelerate 20 => 20
 
 # Configuração do Egress para reescrever MAC e IP por porta para Multicast de vários clientes sub
 table_add MyEgress.multicast_acelerate_forwarding MyEgress.multicast_acelerate 4 => 00:00:00:00:00:04 10.0.0.4 1894
@@ -31,10 +31,10 @@ table_add MyEgress.multicast_acelerate_forwarding MyEgress.multicast_acelerate 8
 
 # --- UNICAST ACELERADO PARA OUTROS TÓPICOS ---
 
-# Tópico 20 -> Unicast
-table_add MyIngress.unicast_acelerate_forwarding MyIngress.unicast_acelerate 20 => 00:00:00:00:00:05 5 10.0.0.5 1895
+# Tópico 10 -> Unicast
+table_add MyIngress.unicast_acelerate_forwarding MyIngress.unicast_acelerate 10 => 00:00:00:00:00:04 4 10.0.0.4 1894
 # Tópico 0x6162 é representação hexadecimal do shorttopicname Unicast "ab"
-table_add MyIngress.unicast_acelerate_forwarding MyIngress.unicast_acelerate 0x6162 => 00:00:00:00:00:05 5 10.0.0.5 1895
+table_add MyIngress.unicast_acelerate_forwarding MyIngress.unicast_acelerate 0x6162 => 00:00:00:00:00:04 4 10.0.0.4 1894
 
 
 # --- ENCAMINHAMENTO UNICAST PADRÃO ---
