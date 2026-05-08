@@ -1,0 +1,17 @@
+Documentação basica
+
+https://docs.emqx.com/en/emqx/latest/gateway/mqttsn.html
+https://docs.emqx.com/en/emqx/latest/dashboard/introduction.html
+https://www.emqx.com/en/blog/connecting-mqtt-sn-devices-using-emqx
+
+Instruções de inicialização da imagem
+
+https://hub.docker.com/layers/library/emqx/5.8.6/images/sha256-449f47353f15bc9d8e4b9d5da07b73fdff30b8b3e5f21963cd9a1a067d2a24f2
+
+Inicie o xterm do serviço do gateway emqx e rode o comando:
+    emqx foreground
+
+usuário padrão
+admin
+senha padrão
+public
