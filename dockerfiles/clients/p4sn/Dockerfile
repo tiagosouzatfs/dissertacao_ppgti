@@ -18,6 +18,6 @@ RUN groupadd wireshark
 
 RUN usermod -aG wireshark root
 
-WORKDIR /app/p4ssn
+WORKDIR /app/p4sn
 
 # docker build -t p4sn-client-pub-sub:latest .

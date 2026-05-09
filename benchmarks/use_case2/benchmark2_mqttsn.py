@@ -40,7 +40,7 @@ def run_benchmark_mqttsn(msgs_per_qos):
                 
                 resp, _ = sock.recvfrom(1024)
                 if resp[1] == MQTTSN_CONNACK:
-                    print(f"   Enviando {msgs_per_qos} mensagens ...")
+                    print(f"### Enviando {msgs_per_qos} mensagens ...")
 
                 for i in range(msgs_per_qos):
                     payload = payload_base + f"_{i}_{time.time()}".encode()

@@ -11,7 +11,7 @@ cd ~/dissertacao_ppgti
 
 docker run -dit --name=p4c --rm ramonfontes/bmv2:latest
 
-docker cp mqtt-sn-p4-architecture/p4src/mqtt-sn.p4 p4c:/tmp/
+docker cp mqtt-sn-p4-topology/p4src/mqtt-sn.p4 p4c:/tmp/
 
 docker exec -it p4c bash
 
@@ -21,49 +21,35 @@ p4c --target bmv2 --arch v1model mqtt-sn.p4
 
 exit
 
-docker cp p4c:/tmp/mqtt-sn.json mqtt-sn-p4-architecture/
-
-
-------------------------------------------------------------------------------
-
-
-### Experimento - clientes - Use Case 1 ###
-
-
-# Iniciar topologia containernet
-sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
-
-# Inicie os clientes (Verifique no arquivo da arquitetura se: "PREDEFINED_TOPIC": "*;temperatura;10")
-python3 subscriber_mqttsn1.py
-
-python3 publisher_mqttsn.py
+docker cp p4c:/tmp/mqtt-sn.json mqtt-sn-p4-topology/
 
 
 -------------------------------------------------------------------------------
 
 
-### Experimento - Benchmark 1 - Use Case 2 ###
+### Experimento - Benchmark 1 - Use Case 1 ###
 
 
 # Iniciar topologia containernet
-sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
+sudo python3 mqtt-sn-p4-topology/mqtt_sn_p4_topology.py
 
-# Inicie os clientes (Verifique no arquivo da arquitetura se: "PREDEFINED_TOPIC": "*;temperatura;10")
+# Inicie os clientes (Verifique no arquivo da topologia se: "PREDEFINED_TOPIC": "*;temperatura;10")
+# Utilize o script 1 do cliente 1 (se quiser testar outro cliente, apenas crie a regra unicast no arquivo commands do switch)
 python3 subscriber_mqttsn1.py
 
-python3 benchmark1_mqttsn_gw_bisquitt.py
+python3 benchmark1_mqttsn.py
 
 
 -------------------------------------------------------------------------------
 
 
-### Experimento - Benchmark 2 - Use Case 3 ###
+### Experimento - Benchmark 2 - Use Case 2 ###
 
 
 # Iniciar topologia containernet
-sudo python3 mqtt-sn-p4-architecture/mqtt_sn_p4_architecture.py
+sudo python3 mqtt-sn-p4-topology/mqtt_sn_p4_topology.py
 
-# Inicie os clientes (Verifique no arquivo da arquitetura se: "PREDEFINED_TOPIC": "*;umidade;20")
+# Inicie os clientes (Verifique no arquivo da topologia se: "PREDEFINED_TOPIC": "*;umidade;20")
 python3 subscriber_mqttsn1.py
 python3 subscriber_mqttsn2.py
 python3 subscriber_mqttsn3.py
@@ -76,7 +62,7 @@ python3 monitoring.py mqttsn 1k
 # No script de benchmark de publicação altere o parêmtro abaixo de acordo com o seu teste
 #    MSGS_POR_QOS = 500 # 500 QoS -1 + 500 QoS 0 = 1k total
 
-python3 benchmark2_mqttsn_gw_bisquitt.py
+python3 benchmark2_mqttsn.py
 
 
 ------------------------------------------------------------------------------

@@ -11,4 +11,4 @@ USER emqx
 
 EXPOSE 1884
 
-# docker build -t mqtt-bk-emqx:latest .
+# docker build -t mqtt-bk:latest .

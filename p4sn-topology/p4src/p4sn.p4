@@ -604,7 +604,7 @@ parser MyParser(packet_in packet,
         verify(hdr.mqttsn_fixed.length == 7, error.MQTT_SN_InvalidLength);
         transition accept;
     }
-    
+
     state parse_mqttsn_publish {
         packet.extract(hdr.mqttsn_flags_publish);
         packet.extract(hdr.mqttsn_publish);
@@ -861,6 +861,65 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
+    ///////////////////////////////////////////////////////////////
+    /////////// ACTION: ENCAMINHAMENTO ACELERADO MULTICAST ////////
+    ///////////////////////////////////////////////////////////////
+
+    action multicast_acelerate(bit<16> mgid) {
+        standard_metadata.mcast_grp = mgid;
+    }
+
+    ///////////////////////////////////////////////////////////////
+    /////// TABELA DE ENCAMINHAMENTO ACELERADO MULTICAST //////////
+    ///////////////////////////////////////////////////////////////
+
+    table multicast_acelerate_forwarding {
+        key = {
+            hdr.mqttsn_publish.topicId: exact;
+        }
+        actions = {
+            multicast_acelerate;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
+    ///////////////////////////////////////////////////////////////
+    /////////// ACTION: ENCAMINHAMENTO ACELERADO UNICAST //////////
+    ///////////////////////////////////////////////////////////////
+
+    action unicast_acelerate(macAddr_t macDstAddr, egressSpec_t port, ipv4Addr_t IpDstAddr, bit<16> UdpDstPort) {
+
+        standard_metadata.egress_spec = port;
+        hdr.ethernet.dstAddr = macDstAddr;
+        hdr.ipv4.dstAddr = IpDstAddr;
+        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+        hdr.udp.dstPort = UdpDstPort;
+
+        hdr.ipv4.hdrChecksum = 0;
+        hdr.udp.checksum = 0;
+    }
+
+    ///////////////////////////////////////////////////////////////
+    /////// TABELA DE ENCAMINHAMENTO ACELERADO UNICAST ////////////
+    ///////////////////////////////////////////////////////////////
+
+    // Tem que deixar sem drop para que se o ponteiro não encontrar
+    //    correspondencias nessa tabela ele possa analisar a tabela
+    //    multicast, veja o exemplo na mensagem PUBLISH.
+    table unicast_acelerate_forwarding {
+        key = {
+            hdr.mqttsn_publish.topicId: exact;
+        }
+        actions = {
+            unicast_acelerate;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
     //////////////////////////////////////////////////////
     /////////////////// APPLY ////////////////////////////
     //////////////////////////////////////////////////////
@@ -947,7 +1006,27 @@ control MyIngress(inout headers hdr,
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_PUBLISH &&
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid()) {
-                        static_forwarding.apply();
+
+                        // QoS -1
+                        if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_MINUS1) {
+                            unicast_acelerate_forwarding.apply();
+                            multicast_acelerate_forwarding.apply();
+                        }
+                        // QoS 0 && flag retain = 0 (do not need remember last message, so não should to pass gateway)
+                        else if (hdr.mqttsn_flags_publish.qos == FLAGS_QOS_LEVEL_0) {
+                            if (hdr.mqttsn_flags_publish.retain == 0) {
+                                unicast_acelerate_forwarding.apply();
+                                multicast_acelerate_forwarding.apply();
+                            }
+                            // QoS 0 && flag retain = 1 (remember last message, so should to pass gateway)
+                            else {
+                                static_forwarding.apply();
+                            }
+                        }
+                        // QoS 1 ou 2
+                        else {
+                            static_forwarding.apply();
+                        }
                 }
                 // SUBSCRIBE
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_SUBSCRIBE &&
@@ -961,7 +1040,7 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_unsubscribe.isValid() && 
                     hdr.mqttsn_unsubscribe.isValid() &&
                     hdr.mqttsn_variable_field.isValid()) {
-                            static_forwarding.apply();
+                        static_forwarding.apply();
                 }
                 // WILLTOPIC
                 else if (hdr.mqttsn_fixed.msgType == MQTTSN_WILLTOPIC &&
@@ -1010,7 +1089,6 @@ control MyIngress(inout headers hdr,
                     hdr.mqttsn_flags_publish.isValid() &&
                     hdr.mqttsn_publish.isValid()) {
                         // Encaminhar sempre, já que o gateway tratou o QoS ao receber a mensagem
-                        // Egress cuidará da re-criptografia do PUBLISH
                         static_forwarding.apply();
                 }
                 // SUBACK
@@ -1115,6 +1193,41 @@ control MyEgress(inout headers hdr,
         default_action = NoAction();
     }
 
+    ///////////////////////////////////////////////////////////////
+    /////////// ACTION: ENCAMINHAMENTO ACELERADO MULTICAST ////////
+    ///////////////////////////////////////////////////////////////
+
+    action multicast_acelerate(macAddr_t macDstAddr, ipv4Addr_t IpDstAddr, bit<16> UdpDstPort) {
+
+        hdr.ethernet.dstAddr = macDstAddr;
+        hdr.ipv4.dstAddr = IpDstAddr;
+        // hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+        hdr.udp.dstPort = UdpDstPort;
+
+        hdr.ipv4.hdrChecksum = 0;
+        hdr.udp.checksum = 0;
+    }
+
+    ///////////////////////////////////////////////////////////////
+    /////// TABELA DE ENCAMINHAMENTO ACELERADO MULTICAST //////////
+    ///////////////////////////////////////////////////////////////
+
+    table multicast_acelerate_forwarding {
+        key = {
+            standard_metadata.egress_port: exact;
+        }
+        actions = {
+            multicast_acelerate;
+            NoAction;
+        }
+        size = 1024;
+        default_action = NoAction();
+    }
+
+    //////////////////////////////////////////////////////
+    /////////////////// APPLY ////////////////////////////
+    //////////////////////////////////////////////////////
+
     apply {
         // 1. Tratamento de Multicast/Broadcast
         if (standard_metadata.mcast_grp != 0) {
@@ -1122,7 +1235,10 @@ control MyEgress(inout headers hdr,
             hdr.ipv4.setValid();
             hdr.udp.setValid();
 
-            if (standard_metadata.mcast_grp == 100) {
+            if (standard_metadata.mcast_grp == 20) {
+                multicast_acelerate_forwarding.apply();
+                hdr.udp.checksum = 0;
+            } else if (standard_metadata.mcast_grp == 100) {
                 broadcast_forwarding.apply();
             }
             
@@ -1132,7 +1248,6 @@ control MyEgress(inout headers hdr,
                 hdr.mqttsn_publish.setValid();
             }
         }
-
     }
 }
 

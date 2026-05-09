@@ -5,7 +5,6 @@ import random
 import time
 
 # Constantes MQTT-SN
-
 MQTTSN_CONNECT      = 0x04
 MQTTSN_CONNACK      = 0x05
 MQTTSN_SUBSCRIBE    = 0x12
@@ -27,46 +26,15 @@ TOPICIDTYPE_TOPICNAME  = 0b00
 TOPICIDTYPE_PREDEFINED = 0b01
 TOPICIDTYPE_SHORT      = 0b10
 
-SECRET_TOPIC_ID = 0xB7A3
-SECRET_DATA_PUBLISH = 0x8D93D01BEE9B416847B69D483BDFB0D6D4D329D98B278AD866E6B17076638B6F7BA810790B07C638825AE5F9B05FABCF7EC35360992DB924F0ECFEEDA972170B
-
 GW_IP = "10.0.0.2"
 GW_PORT = 1884
 CLIENT_IP = "10.0.0.6"
 CLIENT_PORT = 1896
 
 TIMEOUT = 5
-#KEEPALIVE = 30
 KEEPALIVE = 720
 
-# Lógica OTP (One-Time Pad) - Sincronizada com P4
-
-def generate_otp(salt):
-    otp = ((salt << 7) & 0xFFFF) ^ (salt >> 9) ^ 0xA5A5
-    otp = ((otp << 3) & 0xFFFF) | (otp >> 13)
-    return otp & 0xFFFF
-
-def otp_decrypt_topic(encrypted_topic, salt):
-    otp = generate_otp(salt)
-    # Reverte Rotação (Direita)
-    val = ((encrypted_topic >> 4) | (encrypted_topic << 12)) & 0xFFFF
-    return val ^ otp ^ SECRET_TOPIC_ID
-
-def otp_process_data(payload_raw, salt_ignored):
-    # Extrai o salt de 2 bytes do início do payload recebido
-    payload_salt = struct.unpack('>H', payload_raw[:2])[0]
-    encrypted_data = payload_raw[2:]
-    
-    otp = generate_otp(payload_salt)
-    mask_bytes = SECRET_DATA_PUBLISH.to_bytes(64, "big")
-    output = []
-    for i, b in enumerate(encrypted_data):
-        dynamic_mask = mask_bytes[i % 64] ^ (otp & 0xFF if i % 2 == 0 else (otp >> 8) & 0xFF)
-        output.append(b ^ dynamic_mask)
-    return bytes(output)
-
 # Comunicação e Builders
-
 def recv_packet(sock):
     sock.settimeout(TIMEOUT)
     try:
@@ -99,10 +67,10 @@ def build_puback(topic_id, msg_id):
 
 # Subscriber
 
-def p4ssn_subscriber():
+def p4sn_subscriber():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((CLIENT_IP, CLIENT_PORT))
-    client_id = f"p4ssn_sub_{random.randint(1000,9999)}"
+    client_id = f"p4sn_sub_{random.randint(1000,9999)}"
 
     topic_input = input("Digite o tópico ou ID: ").strip()
     topic_type = int(input("Tipo (0=Name,1=Predefined,2=Short): ").strip())
@@ -127,7 +95,7 @@ def p4ssn_subscriber():
     last_ping = time.time()
     msg_count = 0  # Contador de mensagens
 
-    with open("/app/p4ssn/time_publication_p4ssn3.csv", "w") as f:
+    with open("/app/p4sn/time_publication_p4sn3.csv", "w") as f:
         f.write("id,t_pub_ms\n")
         while True:
             pkt = recv_packet(sock)
@@ -145,15 +113,12 @@ def p4ssn_subscriber():
                 flags = data[2]
                 qos_bits = (flags >> 5) & 0x03
                 
-                # Decodificação OTP usando o msgId (Salt)
-                topic_enc = struct.unpack(">H", data[3:5])[0]
-                salt = struct.unpack(">H", data[5:7])[0]
-                payload_raw = data[7:]
+                # Extração padrão MQTT-SN: TopicID(2 bytes), MsgId(2 bytes)
+                topic_id_rcv = struct.unpack(">H", data[3:5])[0]
+                msg_id_rcv = struct.unpack(">H", data[5:7])[0]
 
-                topic_id_rcv = otp_decrypt_topic(topic_enc, salt)
-                
-                # Altera apenas a chamada do data para usar a nova lógica de salt embutido
-                decoded = otp_process_data(payload_raw, salt).decode(errors="ignore").rstrip("*")
+                # No MQTT-SN, o payload começa no byte 7
+                decoded = data[7:].decode(errors="ignore")
 
                 # Cálculo de tempo de publicação
                 try:
@@ -168,9 +133,9 @@ def p4ssn_subscriber():
                 print(f"## Conteúdo: '{decoded}'\n")
 
                 if qos_bits == QOS_1:
-                    sock.sendto(build_puback(topic_id_rcv, salt), (GW_IP, GW_PORT))
+                    sock.sendto(build_puback(topic_id_rcv, msg_id_rcv), (GW_IP, GW_PORT))
                 elif qos_bits == QOS_2:
-                    sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBREC, salt), (GW_IP, GW_PORT))
+                    sock.sendto(struct.pack(">BBH", 4, MQTTSN_PUBREC, msg_id_rcv), (GW_IP, GW_PORT))
 
             elif msgType == MQTTSN_PUBREL:
                 msg_id_rel = struct.unpack(">H", data[2:4])[0]
@@ -180,4 +145,4 @@ def p4ssn_subscriber():
                 last_ping = time.time()
 
 if __name__ == "__main__":
-    p4ssn_subscriber()
+    p4sn_subscriber()

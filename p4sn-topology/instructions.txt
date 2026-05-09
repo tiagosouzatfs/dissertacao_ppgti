@@ -11,7 +11,7 @@ cd ~/dissertacao_ppgti
 
 docker run -dit --name=p4c --rm ramonfontes/bmv2:latest
 
-docker cp p4sn-architecture/p4src/p4sn.p4 p4c:/tmp/
+docker cp p4sn-topology/p4src/p4sn.p4 p4c:/tmp/
 
 docker exec -it p4c bash
 
@@ -21,49 +21,35 @@ p4c --target bmv2 --arch v1model p4sn.p4
 
 exit
 
-docker cp p4c:/tmp/p4sn.json p4sn-architecture/
-
-
-------------------------------------------------------------------------------
-
-
-### Experimento - clientes - Use Case 1 ###
-
-
-# Iniciar topologia containernet
-sudo python3 p4sn-architecture/p4sn_architecture.py
-
-# Inicie os clientes (Verifique no arquivo da arquitetura se: "PREDEFINED_TOPIC": "*;temperatura;10")
-python3 subscriber_p4sn1.py
-
-python3 publisher_p4sn.py
+docker cp p4c:/tmp/p4sn.json p4sn-topology/
 
 
 -------------------------------------------------------------------------------
 
 
-### Experimento - Benchmark 1 - Use Case 2 ###
+### Experimento - Benchmark 1 - Use Case 1 ###
 
 
 # Iniciar topologia containernet
-sudo python3 p4sn-architecture/p4sn_architecture.py
+sudo python3 p4sn-topology/p4sn_topology.py
 
-# Inicie os clientes (Verifique no arquivo da arquitetura se: "PREDEFINED_TOPIC": "*;temperatura;10")
+# Inicie os clientes (Verifique no arquivo da topologia se: "PREDEFINED_TOPIC": "*;temperatura;10")
+# Utilize o script 1 do cliente 1 (se quiser testar outro cliente, apenas crie a regra unicast no arquivo commands do switch)
 python3 subscriber_p4sn1.py
 
-python3 benchmark1_p4sn_gw_bisquitt.py
+python3 benchmark1_p4sn.py
 
 
 -------------------------------------------------------------------------------
 
 
-### Experimento - Benchmark 2 - Use Case 3 ###
+### Experimento - Benchmark 2 - Use Case 2 ###
 
 
 # Iniciar topologia containernet
-sudo python3 p4sn-architecture/p4sn_architecture.py
+sudo python3 p4sn-topology/p4sn_topology.py
 
-# Inicie os clientes (Verifique no arquivo da arquitetura se: "PREDEFINED_TOPIC": "*;umidade;20")
+# Inicie os clientes (Verifique no arquivo da topologia se: "PREDEFINED_TOPIC": "*;umidade;20")
 python3 subscriber_p4sn1.py
 python3 subscriber_p4sn2.py
 python3 subscriber_p4sn3.py
