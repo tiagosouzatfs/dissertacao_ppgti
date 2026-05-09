@@ -67,10 +67,10 @@ def build_puback(topic_id, msg_id):
 
 # Subscriber
 
-def mqttsn_subscriber():
+def p4sn_subscriber():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((CLIENT_IP, CLIENT_PORT))
-    client_id = f"mqttsn_sub_{random.randint(1000,9999)}"
+    client_id = f"p4sn_sub_{random.randint(1000,9999)}"
 
     topic_input = input("Digite o tópico ou ID: ").strip()
     topic_type = int(input("Tipo (0=Name,1=Predefined,2=Short): ").strip())
@@ -95,7 +95,7 @@ def mqttsn_subscriber():
     last_ping = time.time()
     msg_count = 0  # Contador de mensagens
 
-    with open("/app/mqtt-sn/time_publication_mqttsn3.csv", "w") as f:
+    with open("/app/p4sn/time_publication_p4sn3.csv", "w") as f:
         f.write("id,t_pub_ms\n")
         while True:
             pkt = recv_packet(sock)
@@ -145,4 +145,4 @@ def mqttsn_subscriber():
                 last_ping = time.time()
 
 if __name__ == "__main__":
-    mqttsn_subscriber()
+    p4sn_subscriber()

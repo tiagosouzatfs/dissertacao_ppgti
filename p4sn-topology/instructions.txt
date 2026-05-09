@@ -1,0 +1,85 @@
+### Entrar na pasta do projeto ###
+
+cd ~/dissertacao_ppgti
+
+
+-----------------------------------------------------------------------------
+
+
+### Compilação do programa p4###
+
+
+docker run -dit --name=p4c --rm ramonfontes/bmv2:latest
+
+docker cp p4sn-topology/p4src/p4sn.p4 p4c:/tmp/
+
+docker exec -it p4c bash
+
+cd /tmp
+
+p4c --target bmv2 --arch v1model p4sn.p4
+
+exit
+
+docker cp p4c:/tmp/p4sn.json p4sn-topology/
+
+
+-------------------------------------------------------------------------------
+
+
+### Experimento - Benchmark 1 - Use Case 1 ###
+
+
+# Iniciar topologia containernet
+sudo python3 p4sn-topology/p4sn_topology.py
+
+# Inicie os clientes (Verifique no arquivo da topologia se: "PREDEFINED_TOPIC": "*;temperatura;10")
+# Utilize o script 1 do cliente 1 (se quiser testar outro cliente, apenas crie a regra unicast no arquivo commands do switch)
+python3 subscriber_p4sn1.py
+
+python3 benchmark1_p4sn.py
+
+
+-------------------------------------------------------------------------------
+
+
+### Experimento - Benchmark 2 - Use Case 2 ###
+
+
+# Iniciar topologia containernet
+sudo python3 p4sn-topology/p4sn_topology.py
+
+# Inicie os clientes (Verifique no arquivo da topologia se: "PREDEFINED_TOPIC": "*;umidade;20")
+python3 subscriber_p4sn1.py
+python3 subscriber_p4sn2.py
+python3 subscriber_p4sn3.py
+python3 subscriber_p4sn4.py
+python3 subscriber_p4sn5.py
+
+# Iniciar o script de monitoramento de métricas (ele verifica se os containers do broker e gateway iniciaram)
+python3 monitoring.py p4sn 1k
+
+# No script de benchmark de publicação altere o parêmtro abaixo de acordo com o seu teste
+#    MSGS_POR_QOS = 500 # 500 QoS -1 + 500 QoS 0 = 1k total
+
+python3 benchmark2_p4sn.py
+
+
+------------------------------------------------------------------------------
+
+
+### Encerrando a topologia ###
+
+
+exit
+
+# Se houver alguma falha ao encerrar a rede containernet!
+sudo mn -c
+
+# Ou, ainda
+docker stop mn.s1 mn.gw mn.bk mn.pb mn.ss1 mn.ss2 mn.ss3 mn.ss4 mn.ss5
+
+docker rm mn.s1 mn.gw mn.bk mn.pb mn.ss1 mn.ss2 mn.ss3 mn.ss4 mn.ss5
+
+# Encerrar o compilador
+docker stop p4c
