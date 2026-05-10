@@ -79,7 +79,7 @@ class P4SNBenchmark:
         total_ms = (t_end_total - t_start_flow) * 1000 if t_end_total > 0 else 0
         q_label = -1 if qos == 0b11 else qos
         status = "OK" if total_ms > 0 else "FAIL"
-        print(f"[{iteration:03}/100] P4SN | QoS: {q_label} | {status} | {round(total_ms, 2)}ms")
+        print(f"[{iteration:03}/125] P4SN | QoS: {q_label} | {status} | {round(total_ms, 2)}ms")
 
         return {"cenario": "p4sn", "qos": qos, "retain": retain, "t_flow_ms": round(total_ms, 4)}
 
@@ -102,14 +102,14 @@ if __name__ == "__main__":
                 p_sock.settimeout(TIMEOUT)
                 
                 # CONNECT 360s
-                c_id = f"p4ssn_m1_{random.randint(100,999)}"
+                c_id = f"p4sn_client_m1_{random.randint(100,999)}"
                 conn_pkt = struct.pack('>BBH', 0x04, 0x01, 360) + c_id.encode()
                 p_sock.sendto(struct.pack('>BB', len(conn_pkt)+2, MQTTSN_CONNECT) + conn_pkt, (GW_IP, GW_PORT))
                 p_sock.recvfrom(1024) # Espera CONNACK
                 
-                for i in range(1, 101):
+                for i in range(1, 126):
                     writer.writerow(bench.run_iteration(qos, ret, i, existing_sock=p_sock))
-                    time.sleep(0.01)
+                    time.sleep(0.05)
                 
                 # DISCONNECT Final
                 p_sock.sendto(struct.pack('>BB', 2, MQTTSN_DISCONNECT), (GW_IP, GW_PORT))
@@ -118,6 +118,6 @@ if __name__ == "__main__":
             
             # --- Lógica Padrão para QoS 0, 1, 2 ---
             else:
-                for i in range(1, 101):
+                for i in range(1, 126):
                     writer.writerow(bench.run_iteration(qos, ret, i))
                     time.sleep(0.05)
