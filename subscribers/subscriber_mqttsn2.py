@@ -5,7 +5,6 @@ import random
 import time
 
 # Constantes MQTT-SN
-
 MQTTSN_CONNECT      = 0x04
 MQTTSN_CONNACK      = 0x05
 MQTTSN_SUBSCRIBE    = 0x12
@@ -33,11 +32,9 @@ CLIENT_IP = "10.0.0.5"
 CLIENT_PORT = 1895
 
 TIMEOUT = 5
-#KEEPALIVE = 30
 KEEPALIVE = 720
 
 # Comunicação e Builders
-
 def recv_packet(sock):
     sock.settimeout(TIMEOUT)
     try:
