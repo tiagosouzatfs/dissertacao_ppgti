@@ -241,7 +241,7 @@ def topology():
     #makeTerm(bk)
 
     debug("Iniciando gateway\n")
-    #makeTerm(gw)
+    makeTerm(gw)
 
     debug("Iniciando publisher\n")
     makeTerm(pb)
