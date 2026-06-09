@@ -34,7 +34,7 @@ def run_benchmark_mqttsn(msgs_per_qos):
             
             try:
                 # CONNECT com Keep Alive de 360 segundos
-                client_id = f"mqttsn_m1_{random.randint(1000, 9999)}"
+                client_id = f"mqttsn_client_qos_m1_{random.randint(1000, 9999)}"
                 conn = struct.pack('>BBH', 0x04, 0x01, 360) + client_id.encode()
                 sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
                 
@@ -43,7 +43,7 @@ def run_benchmark_mqttsn(msgs_per_qos):
                     print(f"### Enviando {msgs_per_qos} mensagens ...")
 
                 for i in range(msgs_per_qos):
-                    payload = payload_base + f"_{i}_{time.time()}".encode()
+                    payload = payload_base + f"qos_m1_{i}_{time.time()}".encode()
                     # PUBLISH (msg_id 0x0000 para QoS -1)
                     flags = (QOS_M1 << 5) | TOPICIDTYPE_PREDEFINED
                     header = struct.pack('>BB BHH', len(payload) + 7, MQTTSN_PUBLISH, flags, PREDEFINED_TOPIC_ID, 0x0000)
@@ -69,9 +69,9 @@ def run_benchmark_mqttsn(msgs_per_qos):
                 sock.settimeout(TIMEOUT)
                 
                 try:
-                    payload = payload_base + f"_{i}_{time.time()}".encode()
+                    payload = payload_base + f"qos_0_{i}_{time.time()}".encode()
                     # CONNECT
-                    client_id = f"mqttsn_client_0_{i}_{random.randint(1000, 9999)}"
+                    client_id = f"mqttsn_client_qos_0_{i}_{random.randint(1000, 9999)}"
                     conn = struct.pack('>BBH', 0x04, 0x01, 60) + client_id.encode()
                     sock.sendto(struct.pack('>BB', len(conn)+2, MQTTSN_CONNECT) + conn, (GW_IP, GW_PORT))
                     
