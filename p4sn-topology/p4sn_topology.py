@@ -238,7 +238,7 @@ def topology():
     s1.cmd('simple_switch_CLI --thrift-port 50001 <<< "{}"'.format(mc_cmds))
 
     debug("Iniciando broker\n")
-    #makeTerm(bk)
+    makeTerm(bk)
 
     debug("Iniciando gateway\n")
     makeTerm(gw)
