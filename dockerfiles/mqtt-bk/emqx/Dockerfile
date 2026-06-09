@@ -5,10 +5,8 @@ USER root
 # Define variável para não pedir confirmação interativa
 RUN export DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install ethtool net-tools iproute2 iputils-ping wireshark -y
+RUN apt-get update && apt-get install ethtool net-tools iproute2 iputils-ping x11-utils wireshark -y
 
 USER emqx
-
-EXPOSE 1884
 
 # docker build -t mqtt-bk:latest .

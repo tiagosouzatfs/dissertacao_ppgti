@@ -24,7 +24,9 @@ def topology():
         ip='10.0.0.1/8',
         mac="00:00:00:00:00:01", 
         dimage='mqtt-bk',
-        dcmd="emqx foreground"
+        dcmd="emqx foreground",
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
+        environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
     # Equivale a: /home/vboxuser/dissertacao_ppgti
