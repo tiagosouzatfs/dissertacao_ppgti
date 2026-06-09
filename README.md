@@ -1,6 +1,6 @@
-# Dissertação PPgTI
+# Dissertation PPgTI
 
-Repositório criado para armazenar os arquivos da dissertação do PPgTI
+Repository created to store the dissertation files for the PPgTI program.
 
 - **Requirements**:
     * Host: SO Windows 11 Pro 24H2
