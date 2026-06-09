@@ -73,8 +73,8 @@ def mqttsn_subscriber():
     client_id = f"mqttsn_sub_{random.randint(1000,9999)}"
 
     topic_input = input("Digite o tópico ou ID: ").strip()
-    topic_type = int(input("Tipo (0=Name,1=Predefined,2=Short): ").strip())
-    qos_level = int(input("QoS (0,1,2): ").strip())
+    topic_type = int(input("Tipo (0=Name, 1=Predefined, 2=Short): ").strip())
+    qos_level = QOS_0  # Alteração: QoS fixado em 0
 
     # CONNECT
     sock.sendto(build_connect(client_id), (GW_IP, GW_PORT))
@@ -96,7 +96,7 @@ def mqttsn_subscriber():
     msg_count = 0  # Contador de mensagens
 
     with open("/app/mqtt-sn/time_publication_mqttsn2.csv", "w") as f:
-        f.write("id,t_pub_ms\n")
+        f.write("id,t_pub_ms,qos\n")
         while True:
             pkt = recv_packet(sock)
             t_chegada = time.time() # Captura imediata na chegada
@@ -124,12 +124,20 @@ def mqttsn_subscriber():
                 try:
                     t_saida = float(decoded.split('_')[-1])
                     latencia = (t_chegada - t_saida) * 1000
-                    f.write(f"{msg_count},{latencia:.4f}\n")
+                    
+                    # Alteração: Lógica para extrair o QoS do payload
+                    qos_payload = ""
+                    if "qos_m1_" in decoded:
+                        qos_payload = "-1"
+                    elif "qos_0_" in decoded:
+                        qos_payload = "0"
+                        
+                    f.write(f"{msg_count},{latencia:.4f},{qos_payload}\n")
                     f.flush()
                 except:
                     latencia = 0
 
-                print(f"## PUBLISH {msg_count} (Tempo de Publicação: {latencia:.3f}ms)")
+                print(f"## PUBLISH {msg_count} - Tempo de Publicação: {latencia:.4f}ms - Nível de QoS: {qos_payload}")
                 print(f"## Conteúdo: '{decoded}'\n")
 
                 if qos_bits == QOS_1:

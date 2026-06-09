@@ -24,7 +24,9 @@ def topology():
         ip='10.0.0.1/8',
         mac="00:00:00:00:00:01", 
         dimage='mqtt-bk',
-        dcmd="emqx foreground"
+        dcmd="emqx foreground",
+        volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
+        environment={'DISPLAY':":{}".format(DISPLAY_ID)}
     )
 
     # Equivale a: /home/vboxuser/dissertacao_ppgti
@@ -146,7 +148,7 @@ def topology():
 
 
     # Definindo variáveis para inicialização automática do Bisquitt Gateway Transparent
-    emqx_env_gw = {
+    env_gw = {
         "DISPLAY": ":{}".format(DISPLAY_ID),
         "MQTT_HOST": "10.0.0.1",
         "MQTT_PORT": "1883",
@@ -167,7 +169,7 @@ def topology():
         dimage='mqtt-sn-gw',
         volumes=['/tmp/.X11-unix:/tmp/.X11-unix:rw'],
         dcmd="bisquitt --debug",
-        environment=emqx_env_gw
+        environment=env_gw
     )
 
     path = os.path.dirname(os.path.abspath(__file__))
@@ -238,7 +240,7 @@ def topology():
     s1.cmd('simple_switch_CLI --thrift-port 50001 <<< "{}"'.format(mc_cmds))
 
     debug("Iniciando broker\n")
-    #makeTerm(bk)
+    makeTerm(bk)
 
     debug("Iniciando gateway\n")
     makeTerm(gw)
